@@ -261,10 +261,7 @@ cascade returns data with a token, similar names without parent → 400.
 
 **Deviations from plan:** route refinements and member replace-set (ADR-015); grouped use-case files for small masters (ADR-012).
 
-**Carry-over / known gaps:**
-- Open decision (Akash, later – before S09): keep issue **Type** as the fixed list (plan 7.1) or make it an admin-editable
-  master like sprint phases.
-- S07 builds the Masters page, the entity-picker and quick-add dialogs on top.
+**Carry-over / known gaps:** none for the API. S07 builds the Masters page, the entity-picker and quick-add dialogs on top.
 
 **Libraries added (licence):** none.
 
