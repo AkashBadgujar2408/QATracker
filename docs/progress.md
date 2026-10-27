@@ -9,8 +9,8 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | S03 | Domain entities & database (database-first) | ✅ Done (27-Oct-2026) |
 | S04 | Authentication API (UserName login, plain-text passwords) | ✅ Done (27-Oct-2026) |
 | S05 | Authentication UI & users admin | ✅ Done (27-Oct-2026) |
-| S06 | Masters API | ⏭ Next |
-| S07 | Masters UI + entity-picker | |
+| S06 | Masters API | ✅ Done (27-Oct-2026) |
+| S07 | Masters UI + entity-picker | ⏭ Next |
 | S08 | Testing Sprint API | |
 | S09 | Issue API – create, edit, list | |
 | S10 | Attachments | |
@@ -238,3 +238,31 @@ neither sees Users; Developer opening /admin/users goes Home.
 **Libraries added (licence):** none (Angular Material/CDK already present).
 
 **Next session:** S06 – Masters API.
+
+---
+
+## S06 – Masters API   (27-Oct-2026)
+
+**Done:**
+- Clients: list (search, include inactive), get, create (quick-add = name only), update (rowversion), activate/deactivate.
+- Projects: list per client, get (with module/environment/member counts, hasIssues), create (key validated, normalised,
+  globally unique; name unique per client; client must be active), update (key locked once issues exist), activate/deactivate.
+- Modules and environments (type UAT/LIVE/Other, http(s) URL): list per project, create, update, activate/deactivate;
+  names unique per project.
+- Members: list, replace set (active users only).
+- Lookups: cascade (clients → projects → modules/environments/members, active only), similar names, project key suggestion.
+- Shared `ExpectRowVersion` / `TrySaveAsync` (concurrency → 409, unique-index race → 409) / `ValidRowVersion`.
+- Tests: 17 unit tests (similarity, key suggestion/validation) + 10 integration tests (hierarchy build, developer 403 on writes
+  but can read, uniqueness per scope, key rules, 409 on stale edit, inactive client rules, URL validation, similar names,
+  key suggestion, member validation).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 61/61 · dev API: all 16 masters routes in OpenAPI (Scalar),
+cascade returns data with a token, similar names without parent → 400.
+
+**Deviations from plan:** route refinements and member replace-set (ADR-015); grouped use-case files for small masters (ADR-012).
+
+**Carry-over / known gaps:** none for the API. S07 builds the Masters page, the entity-picker and quick-add dialogs on top.
+
+**Libraries added (licence):** none.
+
+**Next session:** S07 – Masters UI + entity-picker.

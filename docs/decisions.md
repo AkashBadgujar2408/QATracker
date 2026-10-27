@@ -93,7 +93,7 @@ Plan section 12 with these deviations:
 - Handlers use `IApplicationDbContext` (Application) which the scaffolded `QaTrackerDbContext` implements through a
   partial class. Application therefore references `Microsoft.EntityFrameworkCore` (abstractions/LINQ only – no provider).
 - **One file per use case** (`Features/Auth/Login.cs` = command record + validator + handler) instead of four files
-  (plan 11.2). DTOs shared by a feature live in one file (`Features/Users/UserDto.cs`).
+  (plan 11.2). Small master entities keep all their use cases in one file (`Features/Modules/Modules.cs`). DTOs shared by a feature live in one file (`Features/Users/UserDto.cs`).
 - Handlers validate their own command first (`validator.CheckAsync`) and return `Result<T>`; endpoints map errors to
   ProblemDetails (`ResultHttpExtensions`, field names camelCase, `code` extension for the client).
 - Handlers are registered by convention (class name ends with `Handler`).
@@ -122,3 +122,16 @@ Requested by Akash during S05 review:
   form. Sample people on public-facing screens use neutral names (John, Emily …), never real staff.
 - List pages put their filters in a toolbar on top of the table card; Material table header/row tokens set globally.
 - Icons: ng-icon is centred (not baseline-aligned) and Material icon buttons keep the svg at the ng-icon size.
+
+## ADR-015 – Masters API shape (27-Oct-2026, S06)
+- Plan 14 routes, refined: projects are created/listed under `/api/clients/{clientId}/projects` but edited at
+  `PUT /api/projects/{id}`; modules/environments are created under `/api/projects/{id}/…` and edited at
+  `/api/modules/{id}` / `/api/environments/{id}`; every master has `PATCH …/{id}/active`.
+- Members: `PUT /api/projects/{id}/members {userIds}` replaces the whole set (fits a multi-select); only active users can be added.
+- Quick-add = the normal POST with only the required fields; it returns the created item (201) for the picker.
+- `GET /api/lookups/similar?kind=&name=&parentId=`: same-scope names that match ignoring case/spaces/punctuation, contain each
+  other, or are a few edits apart (typos); `exact` marks a would-be duplicate. `GET /api/lookups/project-key` suggests a free key
+  (client initials + project initials/short name, number suffix when taken).
+- Rules: project key 2–8 chars, letter first, stored upper-case, globally unique, **locked once the project has issues**;
+  inactive clients/projects cannot get new children (422). Deactivation does not cascade – the cascade lookup hides inactive items.
+- Reads: any signed-in user (developers view masters); writes: Tester or Admin.

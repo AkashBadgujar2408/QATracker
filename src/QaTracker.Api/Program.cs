@@ -75,6 +75,7 @@ try
     app.MapHealthChecks("/health").AllowAnonymous();
     app.MapAuthEndpoints();
     app.MapUsersEndpoints();
+    app.MapMastersEndpoints();
 
     await app.RunAsync();
 }
