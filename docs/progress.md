@@ -162,7 +162,7 @@ lower-case project key rejected · API start seeded the local dev DB (admin, 5 p
 passwords (ADR-009); naming/extra columns (ADR-010); UserName login (ADR-011).
 
 **Carry-over / known gaps:**
-- Due-date rule for severity `NotAssessed` (no SLA row) – decide in S08.
+- ~~Due-date rule for severity `NotAssessed`~~ – decided: default SLA 30 working days, admin-configurable (ADR-016).
 - Issue delete handler must remove inbound `IssueLinks` (ToIssueId) first – S09.
 - Local dev admin password is in user-secrets: `dotnet user-secrets list --project src/QaTracker.Api`
   (or read `dbo.Users.Password`).

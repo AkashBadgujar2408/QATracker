@@ -20,13 +20,17 @@ public sealed partial class DatabaseSeeder(
     /// <summary>Plan 3 / 12: default sprint phases in display order.</summary>
     public static readonly IReadOnlyList<string> DefaultPhases = ["Early Testing", "UAT", "LIVE", "Regression", "Other"];
 
-    /// <summary>Plan 8.3: Critical 1, High 3, Medium 7, Low 15 working days (8 working hours per day).</summary>
+    /// <summary>
+    /// Plan 8.3: Critical 1, High 3, Medium 7, Low 15 working days (8 working hours per day); Not assessed 30 working days
+    /// so unclassified issues still become overdue (ADR-016). Admin can change all of them (S28).
+    /// </summary>
     public static readonly IReadOnlyDictionary<Severity, int> DefaultSlaWorkingHours = new Dictionary<Severity, int>
     {
         [Severity.Critical] = 1 * 8,
         [Severity.High] = 3 * 8,
         [Severity.Medium] = 7 * 8,
         [Severity.Low] = 15 * 8,
+        [Severity.NotAssessed] = 30 * 8,
     };
 
     public async Task SeedAsync(CancellationToken cancellationToken)

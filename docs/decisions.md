@@ -135,3 +135,13 @@ Requested by Akash during S05 review:
 - Rules: project key 2–8 chars, letter first, stored upper-case, globally unique, **locked once the project has issues**;
   inactive clients/projects cannot get new children (422). Deactivation does not cascade – the cascade lookup hides inactive items.
 - Reads: any signed-in user (developers view masters); writes: Tester or Admin.
+
+## ADR-016 – SLA and due dates (27-Oct-2026)
+**Decision (Akash):**
+- Severity is **required** on every issue (no default in the form); "Not assessed" is a valid choice (also used by the
+  legacy Excel import for "Not yet assessed").
+- SLA hours per severity are **admin-configurable** (Settings, S28). Seeded **defaults**: Critical 1, High 3, Medium 7,
+  Low 15 and **Not assessed 30 working days** (8 working hours/day; working days skip Sundays and holidays).
+- Due date = TestingCompletedAt + SLA(severity); the tester may edit it.
+- Pending confirmation: when severity changes after testing completed, recalculate the due date unless the tester set it
+  by hand (default assumption for S08/S13).

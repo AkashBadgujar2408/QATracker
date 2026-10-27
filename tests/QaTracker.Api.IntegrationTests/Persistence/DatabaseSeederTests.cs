@@ -42,7 +42,8 @@ public sealed class DatabaseSeederTests(TestDatabase database) : IClassFixture<T
         await using var check = database.CreateDbContext();
         (await check.SprintPhases.OrderBy(p => p.SortOrder).Select(p => p.Name).ToListAsync(ct))
             .ShouldBe(DatabaseSeeder.DefaultPhases);
-        (await check.SlaPolicies.CountAsync(ct)).ShouldBe(4);
+        (await check.SlaPolicies.CountAsync(ct)).ShouldBe(5);
+        (await check.SlaPolicies.SingleAsync(p => p.Severity == Severity.NotAssessed, ct)).WorkingHours.ShouldBe(240);
         (await check.SlaPolicies.SingleAsync(p => p.Severity == Severity.Critical, ct)).WorkingHours.ShouldBe(8);
 
         var admin = await check.Users.SingleAsync(ct);
