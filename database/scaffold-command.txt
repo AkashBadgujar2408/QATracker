@@ -10,20 +10,27 @@ After changing the schema, re-scaffold the EF Core model with ONE of the command
   * -Force overwrites generated files. NEVER hand-edit generated files - put custom code in a
     separate "partial class" file (e.g. Issue.Rules.cs) or in QaTrackerDbContext.Partial.cs
     (implement OnModelCreatingPartial there for query filters, conversions, etc.).
+  * Only the dbo schema is scaffolded (meta.SchemaVersions belongs to apply-scripts.ps1).
+  * Enum columns: the customised template src/QaTracker.Infrastructure/CodeTemplates/EFCore/EntityType.t4 maps
+    "Table.Column" -> enum type (QaTracker.Domain.Enums). New enum column = add it to that map, the CHECK
+    constraint and (if it is a new enum type) QaTrackerDbContext.Conventions.cs.
   * Use -Tables / -t to scaffold only some tables, if needed.
 
 
 1) Visual Studio - Package Manager Console (Default project: QaTracker.Infrastructure)
 -------------------------------------------------------------------------------------
 
-Scaffold-DbContext "Name=ConnectionStrings:QaTracker" Microsoft.EntityFrameworkCore.SqlServer -Project QaTracker.Infrastructure -StartupProject QaTracker.Api -Context QaTrackerDbContext -ContextDir Persistence -ContextNamespace QaTracker.Infrastructure.Persistence -OutputDir ..\QaTracker.Domain\Entities -Namespace QaTracker.Domain.Entities -NoOnConfiguring -Force
+Scaffold-DbContext "Name=ConnectionStrings:QaTracker" Microsoft.EntityFrameworkCore.SqlServer -Project QaTracker.Infrastructure -StartupProject QaTracker.Api -Context QaTrackerDbContext -ContextDir Persistence -ContextNamespace QaTracker.Infrastructure.Persistence -OutputDir ..\QaTracker.Domain\Entities -Namespace QaTracker.Domain.Entities -Schemas dbo -NoOnConfiguring -Force
 
 
 2) Command line (run from the repository root; restore the tool once with: dotnet tool restore)
 ---------------------------------------------------------------------------------------------
 
-dotnet ef dbcontext scaffold "Name=ConnectionStrings:QaTracker" Microsoft.EntityFrameworkCore.SqlServer --project src/QaTracker.Infrastructure --startup-project src/QaTracker.Api --context QaTrackerDbContext --context-dir Persistence --context-namespace QaTracker.Infrastructure.Persistence --output-dir ../QaTracker.Domain/Entities --namespace QaTracker.Domain.Entities --no-onconfiguring --force
+dotnet ef dbcontext scaffold "Name=ConnectionStrings:QaTracker" Microsoft.EntityFrameworkCore.SqlServer --project src/QaTracker.Infrastructure --startup-project src/QaTracker.Api --context QaTrackerDbContext --context-dir Persistence --context-namespace QaTracker.Infrastructure.Persistence --output-dir ../QaTracker.Domain/Entities --namespace QaTracker.Domain.Entities --schema dbo --no-onconfiguring --force
 
+
+Tip: if the build fails because code already uses a new column, add --no-build (CLI) / -NoBuild (PMC):
+the scaffolder then uses the last successful build, which is enough to read the connection string.
 
 After scaffolding
 -----------------

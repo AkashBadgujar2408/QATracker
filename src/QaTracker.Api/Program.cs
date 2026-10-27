@@ -1,3 +1,5 @@
+using QaTracker.Infrastructure;
+using QaTracker.Infrastructure.Persistence.Seeding;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -14,6 +16,8 @@ try
         .ReadFrom.Services(services)
         .Enrich.FromLogContext());
 
+    builder.Services.AddInfrastructure(builder.Configuration);
+
     builder.Services.AddProblemDetails();
     builder.Services.AddOpenApi();
     builder.Services.AddHealthChecks();
@@ -26,6 +30,13 @@ try
         .AllowCredentials()));
 
     var app = builder.Build();
+
+    // Schema comes from database/apply-scripts.ps1 (database-first); only reference data is seeded here.
+    if (app.Configuration.GetValue<bool>("Database:SeedOnStartup"))
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        await scope.ServiceProvider.GetRequiredService<DatabaseSeeder>().SeedAsync(CancellationToken.None);
+    }
 
     app.UseExceptionHandler();
     app.UseStatusCodePages();

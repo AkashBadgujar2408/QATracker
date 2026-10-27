@@ -21,10 +21,14 @@
 - Pick is atomic. All updates use rowversion (409 on conflict).
 
 ## Database (database-first – see docs/decisions.md ADR-001)
-- Schema lives in `database/scripts/NNN_Description.sql`, applied in order. Never edit an applied script – add a new one.
+- Schema lives in `database/scripts/NNN_Description.sql`, applied in order by `database/apply-scripts.ps1` (tracks `meta.SchemaVersions`). Never edit an applied script – add a new one.
 - EF Core model is generated with **Scaffold-DbContext**; the exact command is in `database/scaffold-command.txt`.
   Entities -> `src/QaTracker.Domain/Entities`, DbContext -> `src/QaTracker.Infrastructure/Persistence/QaTrackerDbContext.cs`.
 - Never hand-edit scaffolded files; extend via `partial` classes / `OnModelCreatingPartial` in separate files.
+- Enum columns: nvarchar + CHECK, mapped to `QaTracker.Domain.Enums` by `src/QaTracker.Infrastructure/CodeTemplates/EFCore/EntityType.t4` (column map) and `QaTrackerDbContext.Conventions.cs` (string conversion). No DEFAULT constraints – code sets every value.
+- Table/column names: see ADR-010 (`ProjectEnvironments`, `IssueKey`, `ProjectKey`…).
+- Users log in with **UserName** (ADR-011). Passwords are stored **plain text** by product-owner decision (ADR-009): never log or return them; compare in constant time.
+- Seeder (`DatabaseSeeder`, idempotent) runs on API start when `Database:SeedOnStartup` is true (Development). Admin password only via user-secrets `Seed:AdminPassword`.
 - Connection string: `ConnectionStrings:QaTracker` in `src/QaTracker.Api/appsettings.json` (local `.\SQLEXPRESS`, Windows auth).
 - No EF migrations.
 
@@ -34,6 +38,7 @@
 - FluentValidation, Serilog, IClock, ICurrentUser. UTC datetimeoffset.
 - Central package versions in Directory.Packages.props; warnings are errors.
 - Tests: xUnit v3 + Shouldly on Microsoft.Testing.Platform (`dotnet test`). Domain rules fully covered.
+  DB tests use the `TestDatabase` fixture (throw-away DB on `.\SQLEXPRESS` built from database/scripts).
 
 ## Frontend (qa-tracker-web)
 - Angular 22 standalone, zoneless, OnPush, signals, inject(), @if/@for/@defer.
@@ -47,7 +52,7 @@
 ## Commands
 - Backend: `dotnet build` · `dotnet test` · `dotnet run --project src/QaTracker.Api` (http://localhost:5029, Scalar at /scalar)
 - Frontend (in qa-tracker-web): `npm start` (http://localhost:4200) · `npm run build` · `npm test -- --watch=false` · `npm run lint` · `npm run format`
-- DB: `sqlcmd -S .\SQLEXPRESS -E -i database\scripts\<file>.sql`, then the scaffold command.
+- DB: `.\database\apply-scripts.ps1`, then the scaffold command in `database/scaffold-command.txt` (add `--no-build` if code already uses the new columns).
 
 ## Never
 - Add libraries without noting name + licence in docs/progress.md.

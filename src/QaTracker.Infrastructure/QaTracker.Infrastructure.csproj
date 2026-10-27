@@ -5,6 +5,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- ASP.NET Core shared framework: options validation, hosting, logging. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <!-- Required for Scaffold-DbContext (Package Manager Console). -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">

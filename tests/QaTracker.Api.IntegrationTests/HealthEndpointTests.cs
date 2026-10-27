@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace QaTracker.Api.IntegrationTests;
@@ -9,7 +10,10 @@ public sealed class HealthEndpointTests(WebApplicationFactory<Program> factory)
     [Fact]
     public async Task Health_ReturnsOk()
     {
-        using var client = factory.CreateClient();
+        // Never seed the developer's database from tests.
+        using var client = factory
+            .WithWebHostBuilder(builder => builder.UseSetting("Database:SeedOnStartup", "false"))
+            .CreateClient();
 
         var response = await client.GetAsync(new Uri("/health", UriKind.Relative), TestContext.Current.CancellationToken);
 

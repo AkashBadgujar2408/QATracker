@@ -6,8 +6,8 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | --- | --- | --- |
 | S01 | Solution & workspace scaffold | ✅ Done (27-Oct-2026) |
 | S02 | App shell & shared UI primitives | ✅ Done (27-Oct-2026) |
-| S03 | Domain entities & database (database-first) | ⏭ Next |
-| S04 | Authentication API | |
+| S03 | Domain entities & database (database-first) | ✅ Done (27-Oct-2026) |
+| S04 | Authentication API (UserName login, plain-text passwords) | ⏭ Next |
 | S05 | Authentication UI & users admin | |
 | S06 | Masters API | |
 | S07 | Masters UI + entity-picker | |
@@ -131,3 +131,44 @@ Project switcher in the top bar (plan 10.3) not in the S02 card – deferred to 
 **Libraries removed:** primeng, @primeuix/themes, primeicons (PrimeUI commercial licence).
 
 **Next session:** S03 – Domain entities & database (database-first).
+
+---
+
+## S03 – Domain entities & database (database-first)   (27-Oct-2026)
+
+**Done:**
+- `database/scripts/001_InitialSchema.sql`: all 24 tables of plan section 12 (ADR-010 naming), FKs, CHECK constraints for
+  every enum column and the project key, unique keys, plan indexes, filtered unique index
+  `UX_TestingSprints_OneTestingPerProject`, rowversion on Issues, TestingSprints, masters and Users, issue-child cascades.
+- `database/apply-scripts.ps1`: creates the DB if missing and applies each script once (`meta.SchemaVersions`).
+- Scaffold (`Scaffold-DbContext`, command in `database/scaffold-command.txt`, now with `--schema dbo`):
+  24 POCO entities in `QaTracker.Domain/Entities`, `QaTrackerDbContext` in Infrastructure/Persistence.
+  Customised `CodeTemplates/EFCore/EntityType.t4` generates enum-typed properties (13 enums in `Domain/Enums`);
+  `QaTrackerDbContext.Conventions.cs` stores all domain enums as strings.
+- `IClock` (Application) + `SystemClock`; `AddInfrastructure()` (DbContext, clock, seed options validated on start).
+- `DatabaseSeeder` (idempotent): 5 sprint phases, SLA defaults (8/24/56/120 working hours), first admin
+  (UserName `admin`, password from user-secrets `Seed:AdminPassword`, must change on first login). Runs at API start
+  when `Database:SeedOnStartup` = true (Development only).
+- Mid-session decisions from Akash: **login by UserName** (ADR-011), **plain-text passwords** (ADR-009, risk recorded).
+- Tests: `TestDatabase` fixture (throw-away DB from the scripts), model tests (24 tables, 17 enum columns as strings,
+  filtered index), seeder runs twice without duplicates, enum names accepted by CHECK constraints; health test no longer
+  seeds the dev DB.
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 9/9 · cascade delete of an issue with deployment/activity/
+attachment/mention/watcher/link/notification leaves no children (manual SQL, rolled back) · second Testing sprint and
+lower-case project key rejected · API start seeded the local dev DB (admin, 5 phases, 4 SLA rows) · no test DBs left behind.
+
+**Deviations from plan:** database-first instead of migrations (ADR-001); custom auth tables instead of Identity, plain-text
+passwords (ADR-009); naming/extra columns (ADR-010); UserName login (ADR-011).
+
+**Carry-over / known gaps:**
+- Due-date rule for severity `NotAssessed` (no SLA row) – decide in S08.
+- Issue delete handler must remove inbound `IssueLinks` (ToIssueId) first – S09.
+- Local dev admin password is in user-secrets: `dotnet user-secrets list --project src/QaTracker.Api`
+  (or read `dbo.Users.Password`).
+- `Microsoft.EntityFrameworkCore.Templates` dotnet-new template installed on this machine (needed only to regenerate
+  the T4 files, not to scaffold).
+
+**Libraries added (licence):** none new. Infrastructure now references the ASP.NET Core shared framework (MIT).
+
+**Next session:** S04 – Authentication API (UserName + password, roles, JWT + refresh cookie, users admin endpoints).

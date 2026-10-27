@@ -56,3 +56,35 @@ confirm = MatDialog (ConfirmService + ConfirmDialog). Data table (S15) will be M
 ## ADR-008 – Lucide icons via @ng-icons (27-Oct-2026, S02)
 Icons are Lucide SVGs through `@ng-icons/core` + `@ng-icons/lucide` (MIT / ISC), registered per component with
 `provideIcons` so only used icons are bundled. Material Symbols font was rejected (≈ 4 MB font file).
+
+## ADR-009 – Custom authentication with plain-text passwords (27-Oct-2026, S03)
+**Decision (Akash, after the risk was explained):** passwords are stored **unencrypted** in `Users.Password`
+so they can be checked and read directly in the database ("internal application").
+**Replaces:** plan 11.1 "ASP.NET Core Identity", 15.2 password handling. No Identity tables/stores; users,
+roles and lockout live in our own `Users` table (Role column, AccessFailedCount, LockoutEndAt, SecurityStamp).
+**Accepted risks:** anyone with database, backup or log access can read every password; reused passwords
+leak other accounts; does not meet common audit / data-protection expectations.
+**Mitigations kept:** passwords never logged or returned by the API; constant-time comparison; login rate limit +
+lockout (S04); forced change on first login; initial admin password only via user-secrets/env, never in git;
+DB backups must be access-restricted. Revisit before any external exposure – switching to hashing later needs
+a new script (column rename) + forced password reset.
+
+## ADR-010 – Schema naming refinements (27-Oct-2026, S03)
+Plan section 12 with these deviations:
+- `Environments` → **`ProjectEnvironments`** (entity `ProjectEnvironment`, avoids clashing with `System.Environment`).
+- Issue key column **`IssueKey`** stored on insert (KEY is reserved; a computed column cannot read Projects.Key).
+  Project key column **`ProjectKey`**. EmailOutbox `To` → **`ToAddress`**. DeployNotices `ById/At` → `CreatedById/CreatedAt`.
+- Added: Users auth columns (UserName, Password, SecurityStamp, AccessFailedCount, LockoutEndAt, LastLoginAt);
+  `AddedAt` on ProjectMembers/IssueWatchers, `Id` on Mentions, `CreatedAt` on IssueLinks/SavedViews (explicit entities
+  instead of implicit many-to-many); audit columns + RowVersion on all masters and Users; `SprintSnapshots.AssigneeAtCloseId`.
+- No DEFAULT constraints (EF sentinel pitfall with false/0); the application sets every value.
+- Enums stored by name (nvarchar + CHECK); generated as C# enums by the customised `EntityType.t4` and converted
+  in `QaTrackerDbContext.Conventions.cs`.
+- Issue children cascade on delete (only allowed while the sprint is in Testing); `IssueLinks.ToIssueId` does not.
+- SLA defaults = working days × 8 h (Critical 8, High 24, Medium 56, Low 120). `NotAssessed` has no SLA row yet –
+  decide the due-date rule in S08.
+
+## ADR-011 – Login with user name, not e-mail (27-Oct-2026, S03)
+**Decision (Akash):** users log in with **UserName + password**. `Users.UserName` is unique (case-insensitive),
+3–50 chars of letters, digits, `.`, `_`, `-`. E-mail stays required and unique but is used only for notifications.
+**Replaces:** plan 8.2 Login "Email + password" (S04/S05 build the login on UserName).
