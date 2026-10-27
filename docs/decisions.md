@@ -140,8 +140,8 @@ Requested by Akash during S05 review:
 **Decision (Akash):**
 - Severity is **required** on every issue (no default in the form); "Not assessed" is a valid choice (also used by the
   legacy Excel import for "Not yet assessed").
-- SLA hours per severity are **admin-configurable** (Settings, S28). Seeded **defaults**: Critical 1, High 3, Medium 7,
-  Low 15 and **Not assessed 30 working days** (8 working hours/day; working days skip Sundays and holidays).
+- SLA hours per severity are **admin-configurable** (Settings, S28). Seeded **defaults** (changed by Akash, replacing plan 8.3): **Critical 7,
+  High 14, Medium 21, Low 28, Not assessed 35 working days** (8 working hours/day; working days skip Sundays and holidays).
 - Due date = TestingCompletedAt + SLA(severity); the tester may edit it.
 - Pending confirmation: when severity changes after testing completed, recalculate the due date unless the tester set it
   by hand (default assumption for S08/S13).

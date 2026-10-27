@@ -21,16 +21,16 @@ public sealed partial class DatabaseSeeder(
     public static readonly IReadOnlyList<string> DefaultPhases = ["Early Testing", "UAT", "LIVE", "Regression", "Other"];
 
     /// <summary>
-    /// Plan 8.3: Critical 1, High 3, Medium 7, Low 15 working days (8 working hours per day); Not assessed 30 working days
-    /// so unclassified issues still become overdue (ADR-016). Admin can change all of them (S28).
+    /// Default SLA in working days (8 working hours per day) set by Akash (ADR-016): Critical 7, High 14, Medium 21,
+    /// Low 28, Not assessed 35. Admin can change all of them (S28).
     /// </summary>
     public static readonly IReadOnlyDictionary<Severity, int> DefaultSlaWorkingHours = new Dictionary<Severity, int>
     {
-        [Severity.Critical] = 1 * 8,
-        [Severity.High] = 3 * 8,
-        [Severity.Medium] = 7 * 8,
-        [Severity.Low] = 15 * 8,
-        [Severity.NotAssessed] = 30 * 8,
+        [Severity.Critical] = 7 * 8,
+        [Severity.High] = 14 * 8,
+        [Severity.Medium] = 21 * 8,
+        [Severity.Low] = 28 * 8,
+        [Severity.NotAssessed] = 35 * 8,
     };
 
     public async Task SeedAsync(CancellationToken cancellationToken)
