@@ -47,7 +47,7 @@ public static class AuthEndpoints
             .WithSummary("The signed-in user.");
 
         group.MapPost("/change-password", async (ChangePasswordCommand command, ChangePasswordHandler handler, HttpContext http, CancellationToken ct) =>
-                (await handler.HandleAsync(command, ct)).ToHttp(session => SignIn(http, session)))
+                (await handler.HandleAsync(command, http.Request.Cookies[RefreshCookie.Name], ct)).ToHttp(session => SignIn(http, session)))
             .RequireAuthorization(Policies.SignedIn)
             .WithSummary("Change own password (also completes a forced change). Returns a fresh session.");
 
@@ -62,7 +62,8 @@ public static class AuthEndpoints
             Secure = true,
             SameSite = SameSiteMode.Strict,
             Path = RefreshCookie.Path,
-            Expires = session.RefreshTokenExpiresAt,
+            // No Expires = browser-session cookie ("remember me" off).
+            Expires = session.IsPersistent ? session.RefreshTokenExpiresAt : null,
             IsEssential = true,
         });
         return TypedResults.Ok(new AuthResponse(session.AccessToken.Token, session.AccessToken.ExpiresAt, session.User));

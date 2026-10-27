@@ -1,0 +1,33 @@
+import { Pipe, PipeTransform } from '@angular/core';
+
+export type IstDateFormat = 'date' | 'datetime';
+
+const parts = (format: IstDateFormat) =>
+  new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    ...(format === 'datetime' ? { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' } : {}),
+  });
+
+const FORMATTERS: Readonly<Record<IstDateFormat, Intl.DateTimeFormat>> = {
+  date: parts('date'),
+  datetime: parts('datetime'),
+};
+
+/** "27/Oct/2026" / "27/Oct/2026 18:00" in IST (format set by Akash – ADR-014), from an ISO string or Date. */
+export function formatIst(value: string | Date, format: IstDateFormat = 'date'): string {
+  const map = Object.fromEntries(
+    FORMATTERS[format].formatToParts(new Date(value)).map((p) => [p.type, p.value]),
+  );
+  const date = `${map['day']}/${map['month']}/${map['year']}`;
+  return format === 'datetime' ? `${date} ${map['hour']}:${map['minute']}` : date;
+}
+
+@Pipe({ name: 'istDate' })
+export class IstDatePipe implements PipeTransform {
+  transform(value: string | Date | null | undefined, format: IstDateFormat = 'date'): string {
+    return value ? formatIst(value, format) : '';
+  }
+}

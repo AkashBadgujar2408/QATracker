@@ -5,7 +5,7 @@ export interface NavItem {
   /** Lucide icon name registered in the sidebar. */
   readonly icon: string;
   readonly link: string;
-  /** Roles that see the item; undefined = everyone. Enforced once auth exists (S05). */
+  /** Roles that see the item; undefined = everyone. Routes enforce the same roles (roleGuard). */
   readonly roles?: readonly Role[];
   readonly children?: readonly NavItem[];
 }
@@ -37,5 +37,14 @@ export const NAV_ITEMS: readonly NavItem[] = [
     ],
   },
   { label: 'Masters', icon: 'lucideFolderTree', link: '/masters', roles: ['Tester', 'Admin'] },
-  { label: 'Admin', icon: 'lucideSettings', link: '/admin', roles: ['Admin'] },
+  { label: 'Users', icon: 'lucideSettings', link: '/admin/users', roles: ['Admin'] },
 ];
+
+/** Navigation for a role: the items (and dashboard children) that role may see. */
+export function navItemsFor(role: Role | null, items: readonly NavItem[] = NAV_ITEMS): NavItem[] {
+  return items
+    .filter((item) => !item.roles || (role !== null && item.roles.includes(role)))
+    .map((item) =>
+      item.children ? { ...item, children: navItemsFor(role, item.children) } : item,
+    );
+}

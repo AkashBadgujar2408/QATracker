@@ -31,6 +31,25 @@ public sealed class AuthTests(ApiFactory api)
         cookie.ShouldContain("path=/api/auth", Case.Insensitive);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Login_RememberMe_ControlsCookieLifetime_AndSurvivesRotation(bool rememberMe)
+    {
+        var user = await api.CreateUserAsync(UserRole.Tester);
+        var browser = api.CreateBrowser();
+
+        var login = await browser.PostAsJsonAsync("/api/auth/login", new { user.UserName, password = "Passw0rd!", rememberMe }, Ct);
+        var refreshed = await browser.PostAsync("/api/auth/refresh", null, Ct);
+
+        foreach (var response in new[] { login, refreshed })
+        {
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            var cookie = response.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("qa_refresh=", StringComparison.Ordinal));
+            cookie.Contains("expires=", StringComparison.OrdinalIgnoreCase).ShouldBe(rememberMe);
+        }
+    }
+
     [Fact]
     public async Task Login_UserNameIsCaseInsensitive_AndEmailIsNotAccepted()
     {

@@ -11,6 +11,7 @@ import {
   SEVERITY_META,
 } from '../../shared/models/issue-enums';
 import { Breadcrumb } from '../../shared/ui/breadcrumb/breadcrumb';
+import { Logo } from '../../shared/ui/logo/logo';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { PriorityIcon } from '../../shared/ui/priority-icon/priority-icon';
@@ -31,6 +32,7 @@ interface Swatch {
     MatButton,
     PageHeader,
     Breadcrumb,
+    Logo,
     EmptyState,
     StatusPill,
     SeverityBadge,
@@ -51,11 +53,11 @@ export class UiShowcase {
   protected readonly severities = SEVERITIES;
   protected readonly priorities = PRIORITIES;
   protected readonly people = [
-    'Akash Badgujar',
-    'Nitin Patil',
-    'Rahul Sharma',
-    'Priya Deshmukh',
-    'Sneha',
+    'John Carter',
+    'Emily Clark',
+    'Michael Brown',
+    'Sarah Miller',
+    'Olivia',
   ];
   protected readonly lastConfirm = signal<string>('–');
 
@@ -98,10 +100,10 @@ export class UiShowcase {
 
   protected showToast(kind: 'success' | 'info' | 'warn' | 'error'): void {
     const messages = {
-      success: 'PGERP-142 assigned to Nitin.',
+      success: 'PGERP-142 assigned to Emily.',
       info: 'Sprint 1 – UAT is still in testing.',
       warn: '3 issues have severity "Not assessed".',
-      error: 'PGERP-142 was changed by Rahul. Reload to see the latest version.',
+      error: 'PGERP-142 was changed by Michael. Reload to see the latest version.',
     };
     this.toast[kind](messages[kind]);
   }

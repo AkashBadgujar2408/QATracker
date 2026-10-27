@@ -27,7 +27,7 @@ html {
           sans-serif,
         ),
       ),
-      density: -2,
+      density: -1,
     )
   );
 
@@ -47,6 +47,16 @@ html {
       corner-small: var(--qa-radius-control),
       corner-medium: var(--qa-radius-card),
       corner-large: var(--qa-radius-card),
+      // Type one step above the M3 defaults (ADR-014).
+      body-large-size: 16px,
+      body-medium-size: 15px,
+      body-small-size: 13px,
+      label-large-size: 15px,
+      label-medium-size: 13px,
+      label-small-size: 12px,
+      title-medium-size: 17px,
+      title-large-size: 22px,
+      headline-small-size: 24px,
     )
   );
 

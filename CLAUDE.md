@@ -46,7 +46,8 @@
   (`bg-surface`, `text-muted`, `text-severity-critical`, `rounded-card`…). No hard-coded colours.
 - Dark mode = `app-dark` class on <html> (ThemeService); Tailwind `dark:` variant uses the same class.
 - Shared UI in src/app/shared/ui (page-header, empty-state, status-pill, severity-badge, priority-icon, user-avatar, skeleton-*, breadcrumb, confirm-dialog); feedback via ToastService / ConfirmService (core/feedback). Living style guide: /dev/ui – add every new shared component there.
-- Every page: loading skeleton, empty state, error state. Dates dd-MMM-yyyy, IST.
+- Every page: loading skeleton, empty state, error state. Dates **dd/MMM/yyyy** (27/Oct/2026, `istDate` pipe), IST.
+- Type scale is one step above plan 10.2 (body 15 px) and the sidebar is the dark "ink" panel with the app logo (`app-logo`, `public/favicon.svg`) – ADR-014.
 - Charts only through shared ECharts wrappers; aggregation server-side.
 
 ## Commands

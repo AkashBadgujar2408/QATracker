@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Breadcrumb } from '../../../shared/ui/breadcrumb/breadcrumb';
+import { AuthService } from '../../auth/auth.service';
 import { BreadcrumbService } from '../breadcrumb.service';
 import { LayoutService } from '../layout.service';
-import { NAV_ITEMS } from '../nav-items';
+import { navItemsFor } from '../nav-items';
 import { Sidebar } from '../sidebar/sidebar';
 import { Topbar } from '../topbar/topbar';
 
@@ -18,7 +19,7 @@ import { Topbar } from '../topbar/topbar';
       >Skip to content</a
     >
     <app-sidebar
-      [items]="navItems"
+      [items]="navItems()"
       [collapsed]="layout.sidebarCollapsed()"
       (toggleCollapsed)="layout.toggleSidebar()"
     />
@@ -38,5 +39,6 @@ import { Topbar } from '../topbar/topbar';
 export class Shell {
   protected readonly layout = inject(LayoutService);
   protected readonly breadcrumbs = inject(BreadcrumbService);
-  protected readonly navItems = NAV_ITEMS;
+  private readonly auth = inject(AuthService);
+  protected readonly navItems = computed(() => navItemsFor(this.auth.role()));
 }

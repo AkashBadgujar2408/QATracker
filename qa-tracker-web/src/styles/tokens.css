@@ -4,15 +4,15 @@
  * Dark theme is activated by the `app-dark` class on <html> (see ThemeService).
  */
 :root {
-  /* Typography */
+  /* Typography – one step above plan 10.2 for readability (ADR-014) */
   --qa-font-sans: 'Inter Variable', 'Segoe UI', system-ui, sans-serif;
-  --qa-text-xs: 12px;
-  --qa-text-sm: 13px;
-  --qa-text-base: 14px;
-  --qa-text-md: 16px;
-  --qa-text-lg: 20px;
-  --qa-text-xl: 24px;
-  --qa-text-2xl: 30px;
+  --qa-text-xs: 13px;
+  --qa-text-sm: 14px;
+  --qa-text-base: 15px;
+  --qa-text-md: 17px;
+  --qa-text-lg: 21px;
+  --qa-text-xl: 26px;
+  --qa-text-2xl: 32px;
 
   /* Spacing (4 px grid) */
   --qa-space-1: 4px;
@@ -82,6 +82,21 @@
   --qa-sprint-testing-completed: #6366f1;
   --qa-sprint-closed: #64748b;
 
+  /* Brand mark (same in both themes) */
+  --qa-brand: #4f46e5;
+  --qa-brand-ink: #ffffff;
+
+  /* Sidebar (ink panel in both themes) */
+  --qa-sidebar-bg: var(--qa-slate-900);
+  --qa-sidebar-border: var(--qa-slate-800);
+  --qa-sidebar-text: var(--qa-slate-400);
+  --qa-sidebar-text-strong: var(--qa-slate-50);
+  --qa-sidebar-hover: var(--qa-slate-800);
+  --qa-sidebar-active-bg: rgb(129 140 248 / 0.14);
+  --qa-sidebar-accent: #818cf8;
+  --qa-sidebar-font-size: 16px;
+  --qa-sidebar-child-font-size: 15px;
+
   /* User avatars (white initials; all ≥ 4.5:1 contrast) */
   --qa-danger-contrast: #ffffff;
   --qa-avatar-text: #ffffff;
@@ -95,9 +110,9 @@
   --qa-avatar-8: #475569;
 
   /* Layout */
-  --qa-sidebar-width: 240px;
+  --qa-sidebar-width: 248px;
   --qa-sidebar-width-collapsed: 64px;
-  --qa-topbar-height: 56px;
+  --qa-topbar-height: 60px;
 
   color-scheme: light;
 }
@@ -114,6 +129,7 @@
   --qa-text-muted: var(--qa-slate-400);
   --qa-shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
   --qa-shadow-dialog: 0 10px 30px rgb(0 0 0 / 0.5);
+  --qa-sidebar-bg: var(--qa-slate-950);
 
   color-scheme: dark;
 }

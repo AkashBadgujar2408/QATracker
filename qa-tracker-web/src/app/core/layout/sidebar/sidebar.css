@@ -1,30 +1,105 @@
+:host {
+  background: var(--qa-sidebar-bg);
+  border-right: 1px solid var(--qa-sidebar-border);
+  color: var(--qa-sidebar-text);
+}
+
+.brand {
+  height: var(--qa-topbar-height);
+  border-bottom: 1px solid var(--qa-sidebar-border);
+  color: var(--qa-sidebar-text-strong);
+}
+
+.footer {
+  border-top: 1px solid var(--qa-sidebar-border);
+}
+
 .nav-link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 36px;
+  height: 42px;
   padding: 0 12px;
   border: 0;
   border-radius: var(--qa-radius-control);
   background: transparent;
-  color: var(--qa-text-muted);
+  color: var(--qa-sidebar-text);
   font: inherit;
-  font-size: var(--qa-text-base);
+  font-size: var(--qa-sidebar-font-size);
   text-decoration: none;
   cursor: pointer;
 }
 
 .nav-link:hover {
-  background: var(--qa-surface-muted);
-  color: var(--qa-text);
+  background: var(--qa-sidebar-hover);
+  color: var(--qa-sidebar-text-strong);
 }
 
+.nav-link:focus-visible {
+  outline: 2px solid var(--qa-sidebar-accent);
+  outline-offset: -2px;
+}
+
+/* Active page: lit text, faint indigo wash and a bar on the left edge. */
 .nav-link.active {
-  background: color-mix(in srgb, var(--qa-primary) 12%, transparent);
-  color: var(--qa-primary);
+  background: var(--qa-sidebar-active-bg);
+  color: var(--qa-sidebar-text-strong);
   font-weight: 500;
 }
 
+.nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--qa-sidebar-accent);
+}
+
+/* Submenu: rows grow from 0 to auto height; items sit on an indented guide line. */
+.submenu {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 220ms cubic-bezier(0.2, 0, 0, 1),
+    opacity 180ms ease-out;
+}
+
+.submenu.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.submenu > ul {
+  min-height: 0;
+  overflow: hidden;
+  margin: 2px 0 4px 26px;
+  padding-left: 10px;
+  border-left: 1px solid var(--qa-sidebar-border);
+}
+
 .nav-child {
-  padding-left: 42px;
+  height: 36px;
+  margin-top: 2px;
+  padding-left: 12px;
+  font-size: var(--qa-sidebar-child-font-size);
+}
+
+.nav-child.active::before {
+  left: -11px;
+}
+
+.chevron {
+  transition: transform 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submenu,
+  .chevron {
+    transition: none;
+  }
 }

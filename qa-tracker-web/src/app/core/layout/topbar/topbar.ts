@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatIconButton } from '@angular/material/button';
 import { MatDivider } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
@@ -13,12 +14,13 @@ import {
   lucideSun,
 } from '@ng-icons/lucide';
 import { UserAvatar } from '../../../shared/ui/user-avatar/user-avatar';
+import { AuthService } from '../../auth/auth.service';
 import { ThemeService } from '../../theme/theme.service';
 
-/** Top bar: global search (placeholder until S15), theme toggle, notifications (S18) and user menu (S05). */
+/** Top bar: global search (placeholder until S15), theme toggle, notifications (S18) and user menu. */
 @Component({
   selector: 'app-topbar',
-  imports: [MatIconButton, MatMenuModule, MatDivider, MatTooltip, NgIcon, UserAvatar],
+  imports: [MatIconButton, MatMenuModule, MatDivider, MatTooltip, NgIcon, UserAvatar, RouterLink],
   viewProviders: [
     provideIcons({ lucideBell, lucideKeyRound, lucideLogOut, lucideMoon, lucideSearch, lucideSun }),
   ],
@@ -32,6 +34,5 @@ import { ThemeService } from '../../theme/theme.service';
 export class Topbar {
   protected readonly theme = inject(ThemeService);
 
-  /** Placeholder identity until authentication (S05). */
-  protected readonly userName = 'Guest User';
+  protected readonly auth = inject(AuthService);
 }

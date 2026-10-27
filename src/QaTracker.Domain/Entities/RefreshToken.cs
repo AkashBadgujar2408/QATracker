@@ -19,5 +19,7 @@ public partial class RefreshToken
 
     public string? CreatedByIp { get; set; }
 
+    public bool IsPersistent { get; set; }
+
     public virtual User User { get; set; } = null!;
 }

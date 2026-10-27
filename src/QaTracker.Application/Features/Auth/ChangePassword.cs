@@ -18,9 +18,16 @@ public sealed class ChangePasswordValidator : AbstractValidator<ChangePasswordCo
 }
 
 /// <summary>Own password change (also the forced change after a temporary password). Ends all other sessions.</summary>
-public sealed class ChangePasswordHandler(IValidator<ChangePasswordCommand> validator, IApplicationDbContext db, ICurrentUser currentUser, IClock clock, AuthSessions sessions)
+public sealed class ChangePasswordHandler(
+    IValidator<ChangePasswordCommand> validator,
+    IApplicationDbContext db,
+    ICurrentUser currentUser,
+    ITokenService tokens,
+    IClock clock,
+    AuthSessions sessions)
 {
-    public async Task<Result<AuthResult>> HandleAsync(ChangePasswordCommand command, CancellationToken cancellationToken)
+    /// <param name="currentRefreshToken">The caller's refresh cookie – the new session keeps its "remember me" choice.</param>
+    public async Task<Result<AuthResult>> HandleAsync(ChangePasswordCommand command, string? currentRefreshToken, CancellationToken cancellationToken)
     {
         if (await validator.CheckAsync(command, cancellationToken) is { } invalid)
         {
@@ -38,12 +45,16 @@ public sealed class ChangePasswordHandler(IValidator<ChangePasswordCommand> vali
             return Error.Validation(nameof(command.CurrentPassword), "Current password is incorrect.");
         }
 
+        var currentHash = currentRefreshToken is null ? null : tokens.HashRefreshToken(currentRefreshToken);
+        var isPersistent = currentHash is not null
+            && await db.RefreshTokens.AnyAsync(t => t.TokenHash == currentHash && t.IsPersistent, cancellationToken);
+
         user.Password = command.NewPassword;
         user.MustChangePassword = false;
         user.UpdatedAt = clock.UtcNow;
         AuthSessions.InvalidateTokens(user);
         await sessions.RevokeAllAsync(user.Id, cancellationToken);
 
-        return await sessions.IssueAsync(user, cancellationToken);
+        return await sessions.IssueAsync(user, isPersistent, cancellationToken);
     }
 }

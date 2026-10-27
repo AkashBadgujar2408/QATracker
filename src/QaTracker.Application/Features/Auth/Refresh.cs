@@ -40,6 +40,6 @@ public sealed class RefreshHandler(IApplicationDbContext db, ITokenService token
         }
 
         stored.RevokedAt = now;
-        return await sessions.IssueAsync(stored.User, cancellationToken);
+        return await sessions.IssueAsync(stored.User, stored.IsPersistent, cancellationToken);
     }
 }

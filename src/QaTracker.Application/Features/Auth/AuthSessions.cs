@@ -22,10 +22,12 @@ public sealed record CurrentUserDto(
 }
 
 /// <summary>New session: access token for the response body, refresh token for the httpOnly cookie.</summary>
+/// <param name="IsPersistent">"Remember me": the cookie survives closing the browser.</param>
 public sealed record AuthResult(
     AccessToken AccessToken,
     string RefreshToken,
     DateTimeOffset RefreshTokenExpiresAt,
+    bool IsPersistent,
     CurrentUserDto User);
 
 /// <summary>Creates and revokes sessions (refresh tokens rotate on every use).</summary>
@@ -37,7 +39,7 @@ public sealed class AuthSessions(
     IOptions<AuthOptions> options)
 {
     /// <summary>Stores a new refresh token for <paramref name="user"/>, saves all pending changes and returns the session.</summary>
-    public async Task<AuthResult> IssueAsync(User user, CancellationToken cancellationToken)
+    public async Task<AuthResult> IssueAsync(User user, bool isPersistent, CancellationToken cancellationToken)
     {
         var now = clock.UtcNow;
         var refreshToken = tokens.CreateRefreshToken();
@@ -50,10 +52,11 @@ public sealed class AuthSessions(
             CreatedAt = now,
             ExpiresAt = expiresAt,
             CreatedByIp = currentUser.IpAddress,
+            IsPersistent = isPersistent,
         });
         await db.SaveChangesAsync(cancellationToken);
 
-        return new AuthResult(tokens.CreateAccessToken(user), refreshToken, expiresAt, CurrentUserDto.From(user));
+        return new AuthResult(tokens.CreateAccessToken(user), refreshToken, expiresAt, isPersistent, CurrentUserDto.From(user));
     }
 
     /// <summary>Ends every session of the user (password change/reset, deactivation, role change, token reuse).</summary>

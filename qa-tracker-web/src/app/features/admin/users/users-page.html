@@ -1,0 +1,167 @@
+<app-page-header title="Users" subtitle="Who can sign in, and with which role.">
+  <button actions matButton="filled" type="button" (click)="openCreate()">
+    <ng-icon name="lucidePlus" size="16" class="mr-1" />
+    New user
+  </button>
+</app-page-header>
+
+<section class="qa-card overflow-hidden">
+  <div class="flex flex-wrap items-center gap-3 border-b border-border px-4 pt-4 pb-3">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-72">
+      <mat-label>Search</mat-label>
+      <ng-icon matPrefix name="lucideSearch" size="16" class="ml-3 mr-1 text-muted" />
+      <input
+        matInput
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+        placeholder="Name, user name or e-mail"
+      />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-44">
+      <mat-label>Role</mat-label>
+      <mat-select [value]="role()" (valueChange)="role.set($event)">
+        <mat-option [value]="null">All roles</mat-option>
+        @for (r of roles; track r) {
+          <mat-option [value]="r">{{ r }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
+      <mat-label>Status</mat-label>
+      <mat-select [value]="status()" (valueChange)="status.set($event)">
+        <mat-option value="active">Active</mat-option>
+        <mat-option value="inactive">Inactive</mat-option>
+        <mat-option value="all">All</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <span class="ml-auto text-sm text-muted tabular-nums" aria-live="polite">{{
+      countLabel()
+    }}</span>
+  </div>
+
+  @if (users.isLoading() && !users.hasValue()) {
+    <app-skeleton-table [rows]="5" [columns]="5" class="!rounded-none !border-0 !shadow-none" />
+  } @else if (errorMessage()) {
+    <app-empty-state kind="error" title="Could not load users" [message]="errorMessage()!">
+      <button matButton="outlined" type="button" (click)="users.reload()">Try again</button>
+    </app-empty-state>
+  } @else if (users.value()?.length === 0) {
+    @if (hasFilters()) {
+      <app-empty-state
+        kind="no-results"
+        title="No users match these filters"
+        message="Change the search or filters to see more people."
+      >
+        <button matButton="outlined" type="button" (click)="clearFilters()">Clear filters</button>
+      </app-empty-state>
+    } @else {
+      <app-empty-state
+        title="No users yet"
+        message="Add the testers, developers and admins who will use QA Tracker."
+      >
+        <button matButton="filled" type="button" (click)="openCreate()">New user</button>
+      </app-empty-state>
+    }
+  } @else {
+    <div class="overflow-x-auto transition-opacity" [class.opacity-60]="users.isLoading()">
+      <table mat-table [dataSource]="users.value() ?? []" class="w-full">
+        <ng-container matColumnDef="user">
+          <th mat-header-cell *matHeaderCellDef>User</th>
+          <td mat-cell *matCellDef="let user">
+            <div class="flex items-center gap-3 py-2">
+              <app-user-avatar [name]="user.fullName" [color]="user.avatarColor" size="sm" />
+              <div class="min-w-0">
+                <div class="truncate font-medium text-text">{{ user.fullName }}</div>
+                <div class="truncate text-xs text-muted">{{ user.userName }}</div>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>E-mail</th>
+          <td mat-cell *matCellDef="let user" class="text-muted">{{ user.email }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef>Role</th>
+          <td mat-cell *matCellDef="let user">
+            <span
+              class="rounded-pill bg-surface-muted px-2.5 py-0.5 text-xs font-medium text-text"
+              >{{ user.role }}</span
+            >
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let user">
+            @if (user.isActive) {
+              <span class="inline-flex items-center gap-1.5 text-sm text-text">
+                <span class="size-2 rounded-full bg-status-verified" aria-hidden="true"></span
+                >Active
+              </span>
+              @if (user.mustChangePassword) {
+                <div class="text-xs text-muted">Must change password</div>
+              }
+            } @else {
+              <span class="inline-flex items-center gap-1.5 text-sm text-muted">
+                <span class="size-2 rounded-full bg-status-rejected" aria-hidden="true"></span
+                >Inactive
+              </span>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="lastLogin">
+          <th mat-header-cell *matHeaderCellDef>Last sign-in</th>
+          <td mat-cell *matCellDef="let user" class="tabular-nums text-muted">
+            {{ user.lastLoginAt ? (user.lastLoginAt | istDate: 'datetime') : 'Never' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef><span class="sr-only">Actions</span></th>
+          <td mat-cell *matCellDef="let user" class="w-12 text-right">
+            <button
+              matIconButton
+              type="button"
+              [matMenuTriggerFor]="rowMenu"
+              [matMenuTriggerData]="{ user }"
+              [attr.aria-label]="'Actions for ' + user.fullName"
+            >
+              <ng-icon name="lucideEllipsisVertical" size="18" />
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns" [class.opacity-60]="!row.isActive"></tr>
+      </table>
+    </div>
+  }
+</section>
+
+<mat-menu #rowMenu="matMenu" xPosition="before">
+  <ng-template matMenuContent let-user="user">
+    <button mat-menu-item (click)="openEdit(user)">
+      <ng-icon name="lucidePencil" size="16" class="mr-3" /><span>Edit</span>
+    </button>
+    <button mat-menu-item (click)="resetPassword(user)">
+      <ng-icon name="lucideKeyRound" size="16" class="mr-3" /><span>Reset password</span>
+    </button>
+    @if (user.isActive) {
+      <button
+        mat-menu-item
+        (click)="setActive(user, false)"
+        [disabled]="user.id === auth.user()?.id"
+      >
+        <ng-icon name="lucideUserX" size="16" class="mr-3" /><span>Deactivate</span>
+      </button>
+    } @else {
+      <button mat-menu-item (click)="setActive(user, true)">
+        <ng-icon name="lucideUserCheck" size="16" class="mr-3" /><span>Activate</span>
+      </button>
+    }
+  </ng-template>
+</mat-menu>

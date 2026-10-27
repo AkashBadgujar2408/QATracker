@@ -6,7 +6,8 @@ using QaTracker.Application.Common;
 
 namespace QaTracker.Application.Features.Auth;
 
-public sealed record LoginCommand(string UserName, string Password);
+/// <param name="RememberMe">Keep the session after the browser is closed (persistent refresh cookie).</param>
+public sealed record LoginCommand(string UserName, string Password, bool RememberMe = false);
 
 public sealed class LoginValidator : AbstractValidator<LoginCommand>
 {
@@ -70,6 +71,6 @@ public sealed class LoginHandler(
         user.AccessFailedCount = 0;
         user.LockoutEndAt = null;
         user.LastLoginAt = now;
-        return await sessions.IssueAsync(user, cancellationToken);
+        return await sessions.IssueAsync(user, command.RememberMe, cancellationToken);
     }
 }

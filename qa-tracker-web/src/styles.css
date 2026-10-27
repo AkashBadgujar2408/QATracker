@@ -25,6 +25,19 @@
   --shadow-card: var(--qa-shadow-card);
   --shadow-dialog: var(--qa-shadow-dialog);
 
+  /* Tailwind slate-* = our slate tokens (same values), so slate utilities stay on the token system. */
+  --color-slate-50: var(--qa-slate-50);
+  --color-slate-100: var(--qa-slate-100);
+  --color-slate-200: var(--qa-slate-200);
+  --color-slate-300: var(--qa-slate-300);
+  --color-slate-400: var(--qa-slate-400);
+  --color-slate-500: var(--qa-slate-500);
+  --color-slate-600: var(--qa-slate-600);
+  --color-slate-700: var(--qa-slate-700);
+  --color-slate-800: var(--qa-slate-800);
+  --color-slate-900: var(--qa-slate-900);
+  --color-slate-950: var(--qa-slate-950);
+
   --color-primary: var(--qa-primary);
   --color-primary-contrast: var(--qa-primary-contrast);
   --color-bg: var(--qa-bg);
@@ -106,6 +119,21 @@
   }
 }
 
+/* Material tables: quiet header, comfortable rows, hover highlight. */
+.mat-mdc-table {
+  --mat-table-background-color: var(--qa-surface);
+  --mat-table-header-headline-color: var(--qa-text-muted);
+  --mat-table-header-headline-size: var(--qa-text-sm);
+  --mat-table-header-headline-weight: 500;
+  --mat-table-row-item-label-text-size: var(--qa-text-base);
+  --mat-table-row-item-outline-color: var(--qa-border);
+  --mat-table-header-container-height: 44px;
+  --mat-table-row-item-container-height: 56px;
+}
+.mat-mdc-table .mat-mdc-row:hover {
+  background: var(--qa-surface-muted);
+}
+
 /* Toasts (MatSnackBar panelClass set by ToastService): coloured accent bar per kind. */
 .qa-toast .mdc-snackbar__surface {
   border-left: 4px solid var(--qa-toast-accent);
@@ -121,4 +149,31 @@
 }
 .qa-toast-error {
   --qa-toast-accent: var(--qa-severity-critical);
+}
+
+/*
+ * Icons (ng-icon) sit centred, never on the text baseline. ":not(.qa-icon-inline)" lifts the specificity above
+ * ng-icon's own :host style. Inside Material icon buttons the svg is forced to 24px by Material – keep it at the
+ * ng-icon size so nothing spills out of the button.
+ */
+ng-icon:not(.qa-icon-inline) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+/* Doubled class: Material injects its component styles after this file, so equal specificity would lose. */
+.mat-mdc-icon-button.mat-mdc-icon-button {
+  --mat-icon-button-icon-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mat-mdc-icon-button ng-icon svg {
+  width: var(--ng-icon__size, 20px);
+  height: var(--ng-icon__size, 20px);
 }

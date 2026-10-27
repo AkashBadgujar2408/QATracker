@@ -8,8 +8,8 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | S02 | App shell & shared UI primitives | ✅ Done (27-Oct-2026) |
 | S03 | Domain entities & database (database-first) | ✅ Done (27-Oct-2026) |
 | S04 | Authentication API (UserName login, plain-text passwords) | ✅ Done (27-Oct-2026) |
-| S05 | Authentication UI & users admin | ⏭ Next |
-| S06 | Masters API | |
+| S05 | Authentication UI & users admin | ✅ Done (27-Oct-2026) |
+| S06 | Masters API | ⏭ Next |
 | S07 | Masters UI + entity-picker | |
 | S08 | Testing Sprint API | |
 | S09 | Issue API – create, edit, list | |
@@ -203,3 +203,38 @@ token → 401, OpenAPI document contains the Bearer scheme.
 FluentValidation.DependencyInjectionExtensions 12.2.0 (Apache-2.0) · Microsoft.EntityFrameworkCore 10.0.14 in Application (MIT).
 
 **Next session:** S05 – Authentication UI & users admin.
+
+---
+
+## S05 – Authentication UI & users admin   (27-Oct-2026)
+
+**Done:**
+- API: "Remember me" – `003_RefreshTokenPersistence.sql` (IsPersistent carried through rotation and password change);
+  session cookie when off. 2 new integration tests.
+- Angular: dev proxy (`proxy.conf.json`, /api → :5029, same-origin cookie); `AuthService` (signals, in-memory access token,
+  shared refresh, session restore on app start); `authInterceptor` (bearer + one refresh-and-retry on 401);
+  `errorToastInterceptor` (offline/403/429/5xx; forms opt out with `SILENT_ERRORS`); guards (auth, role from route data,
+  signed-in, guest, forced password change); `*appHasRole`; `istDate` pipe; shared form error helpers.
+- Pages: Sign in (user name, show/hide password, remember me, safe returnUrl), Change password (forced + voluntary),
+  Admin › Users (search/role/status toolbar, table, create/edit dialog, one-time temporary password dialog with copy,
+  reset password, activate/deactivate with confirmation; loading/empty/error states).
+- Shell: sidebar filtered by role, real user menu (change password, sign out).
+- Design pass (frontend-design skill, ADR-014): app logo + favicon, ink sidebar with animated indented submenu, split
+  sign-in screen, larger type scale, dd/MMM/yyyy dates, table polish, icon alignment fix.
+
+**Verified:** `ng build` clean · `ng test` 58/58 · `ng lint` clean · `dotnet test` 34/34 · in Chrome against the real API:
+admin first sign-in forced a password change; created a tester and a developer in Admin › Users (temporary passwords
+shown once); signed in as each (forced change) – Tester sees Testing/Retest queue/Masters, Developer sees My work,
+neither sees Users; Developer opening /admin/users goes Home.
+
+**Deviations from plan:** ADR-014 (type scale, date format, visual identity).
+
+**Carry-over / known gaps:**
+- Dev accounts on the local DB: `admin`, `akash.tester`, `nitin.dev` – passwords are readable in `dbo.Users`
+  (ADR-009); the admin password is also in user-secrets `Seed:AdminPassword`.
+- Avatar colour is API-only (no picker in the UI yet).
+- Once, after a password change the Chrome automation tab stopped responding; not reproducible manually or in tests.
+
+**Libraries added (licence):** none (Angular Material/CDK already present).
+
+**Next session:** S06 – Masters API.

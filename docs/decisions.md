@@ -109,3 +109,16 @@ Plan section 12 with these deviations:
 - Lockout: 5 wrong passwords → 15 minutes. Login rate limit: 10 requests/minute per IP (configurable).
 - Admin cannot deactivate themselves; the last active admin cannot be deactivated or lose the Admin role.
 - User name is immutable after creation.
+
+## ADR-014 – Visual identity and readability (27-Oct-2026, S05)
+Requested by Akash during S05 review:
+- **Type one step larger** than plan 10.2: 13 / 14 / **15 (body)** / 17 / 21 / 26 / 32 px; Material system type and
+  density (-1) matched. Sidebar items 16 px, sub-items 15 px.
+- **Dates on the UI: `dd/MMM/yyyy`** (27/Oct/2026, with time 27/Oct/2026 18:00), IST – replaces plan "dd-MMM-yyyy".
+- **App mark** (`app-logo`, `public/favicon.svg`): an inspection lens with a check inside. Angular's favicon removed.
+- **Ink sidebar** (slate-900, slate-950 in dark mode) with an indigo active bar; Dashboards submenu animates open
+  (grid-rows transition, respects reduced motion) and sits indented on a guide line.
+- **Sign-in screen** split: brand panel showing one issue's journey (New → In Progress → Fixed → Verified) next to the
+  form. Sample people on public-facing screens use neutral names (John, Emily …), never real staff.
+- List pages put their filters in a toolbar on top of the table card; Material table header/row tokens set globally.
+- Icons: ng-icon is centred (not baseline-aligned) and Material icon buttons keep the svg at the ng-icon size.

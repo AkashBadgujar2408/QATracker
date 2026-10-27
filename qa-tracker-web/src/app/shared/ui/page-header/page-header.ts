@@ -8,7 +8,9 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   selector: 'app-page-header',
   template: `
     <div class="min-w-0">
-      <h1 class="m-0 truncate text-xl font-semibold leading-tight text-text">{{ title() }}</h1>
+      <h1 class="m-0 truncate text-xl font-semibold leading-tight tracking-tight text-text">
+        {{ title() }}
+      </h1>
       @if (subtitle()) {
         <p class="mt-1 mb-0 text-sm text-muted">{{ subtitle() }}</p>
       }

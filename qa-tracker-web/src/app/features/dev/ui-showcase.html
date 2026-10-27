@@ -8,6 +8,17 @@
 </app-page-header>
 
 <div class="grid gap-6">
+  <!-- Brand -->
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-4 text-lg font-semibold">Brand mark (app-logo, public/favicon.svg)</h2>
+    <div class="flex items-end gap-6">
+      <app-logo [size]="16" />
+      <app-logo [size]="24" />
+      <app-logo [size]="32" />
+      <app-logo [size]="56" />
+    </div>
+  </section>
+
   <!-- Tokens -->
   <section class="qa-card p-6">
     <h2 class="mt-0 mb-4 text-lg font-semibold">Colour tokens</h2>
@@ -50,7 +61,7 @@
       }
       <div class="flex items-baseline gap-4">
         <code class="w-24 shrink-0 text-xs text-muted">tabular-nums</code>
-        <span class="text-base tabular-nums">PGERP-142 · 1 234 · 27-Oct-2026 18:00</span>
+        <span class="text-base tabular-nums">PGERP-142 · 1 234 · 27/Oct/2026 18:00</span>
       </div>
     </div>
   </section>
@@ -89,8 +100,8 @@
       @for (person of people; track person) {
         <app-user-avatar [name]="person" />
       }
-      <app-user-avatar name="Akash Badgujar" size="sm" />
-      <app-user-avatar name="Akash Badgujar" size="lg" />
+      <app-user-avatar name="John Carter" size="sm" />
+      <app-user-avatar name="John Carter" size="lg" />
     </div>
   </section>
 
@@ -99,7 +110,7 @@
     <h2 class="mt-0 mb-4 text-lg font-semibold">app-breadcrumb + app-page-header</h2>
     <div class="rounded-card border border-dashed border-border p-4">
       <app-breadcrumb class="mb-2 block" [items]="sampleTrail" />
-      <app-page-header title="Sprint 1 – UAT" subtitle="Started 27-Oct-2026 · 74 issues · Day 3">
+      <app-page-header title="Sprint 1 – UAT" subtitle="Started 27/Oct/2026 · 74 issues · Day 3">
         <button actions matButton="outlined" type="button">Export</button>
         <button actions matButton="filled" type="button">Mark testing completed</button>
       </app-page-header>

@@ -1,33 +1,55 @@
-import { Routes } from '@angular/router';
+import { Route, Routes } from '@angular/router';
+import { authGuard, guestGuard, roleGuard, signedInGuard } from './core/auth/auth.guards';
 import { Shell } from './core/layout/shell/shell';
 import { PlaceholderData } from './features/placeholder/placeholder-page';
+import { Role } from './shared/models/role';
 
 const placeholderPage = () =>
   import('./features/placeholder/placeholder-page').then((m) => m.PlaceholderPage);
 
-/** A not-yet-built page: title, breadcrumb and the session that delivers it. */
-function placeholder(path: string, heading: string, session: string) {
+/** A not-yet-built page: title, breadcrumb, the session that delivers it and (optionally) who may open it. */
+function placeholder(
+  path: string,
+  heading: string,
+  session: string,
+  roles?: readonly Role[],
+): Route {
   const placeholderData: PlaceholderData = { heading, session };
   return {
     path,
     title: heading,
-    data: { breadcrumb: heading, placeholder: placeholderData },
+    data: { breadcrumb: heading, placeholder: placeholderData, roles },
     loadComponent: placeholderPage,
   };
 }
 
 export const routes: Routes = [
   {
+    path: 'login',
+    title: 'Sign in',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/login-page').then((m) => m.LoginPage),
+  },
+  {
+    path: 'change-password',
+    title: 'Change password',
+    canActivate: [signedInGuard],
+    loadComponent: () =>
+      import('./features/auth/change-password-page').then((m) => m.ChangePasswordPage),
+  },
+  {
     path: '',
     component: Shell,
+    canActivate: [authGuard],
+    canActivateChild: [authGuard, roleGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'home' },
       placeholder('home', 'Home', 'S22'),
-      placeholder('testing', 'Testing', 'S11'),
-      placeholder('my-work', 'My work', 'S17'),
+      placeholder('testing', 'Testing', 'S11', ['Tester', 'Admin']),
+      placeholder('my-work', 'My work', 'S17', ['Developer', 'Admin']),
       placeholder('issues', 'Issues', 'S15'),
       placeholder('board', 'Board', 'S20'),
-      placeholder('retest-queue', 'Retest queue', 'S17'),
+      placeholder('retest-queue', 'Retest queue', 'S17', ['Tester', 'Admin']),
       placeholder('sprints', 'Sprints', 'S08 / S29'),
       {
         path: 'dashboards',
@@ -41,8 +63,21 @@ export const routes: Routes = [
           placeholder('clients', 'Client health', 'S24'),
         ],
       },
-      placeholder('masters', 'Masters', 'S07'),
-      placeholder('admin', 'Admin', 'S05 / S28'),
+      placeholder('masters', 'Masters', 'S07', ['Tester', 'Admin']),
+      {
+        path: 'admin',
+        data: { breadcrumb: 'Admin', roles: ['Admin'] satisfies Role[] },
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'users' },
+          {
+            path: 'users',
+            title: 'Users',
+            data: { breadcrumb: 'Users' },
+            loadComponent: () =>
+              import('./features/admin/users/users-page').then((m) => m.UsersPage),
+          },
+        ],
+      },
       {
         // Hidden living style guide (not in the navigation).
         path: 'dev/ui',

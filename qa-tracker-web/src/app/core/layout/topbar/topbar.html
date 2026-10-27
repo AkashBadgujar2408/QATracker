@@ -41,20 +41,24 @@
     [matMenuTriggerFor]="userMenu"
     aria-label="User menu"
   >
-    <app-user-avatar [name]="userName" size="sm" />
+    <app-user-avatar
+      [name]="auth.user()?.fullName ?? '?'"
+      [color]="auth.user()?.avatarColor ?? null"
+      size="sm"
+    />
   </button>
 
   <mat-menu #userMenu="matMenu" xPosition="before">
     <div class="px-4 py-2">
-      <div class="text-sm font-semibold text-text">{{ userName }}</div>
-      <div class="text-xs text-muted">Not signed in</div>
+      <div class="text-sm font-semibold text-text">{{ auth.user()?.fullName }}</div>
+      <div class="text-xs text-muted">{{ auth.user()?.userName }} · {{ auth.user()?.role }}</div>
     </div>
     <mat-divider />
-    <button mat-menu-item disabled>
+    <a mat-menu-item routerLink="/change-password">
       <ng-icon name="lucideKeyRound" size="16" class="mr-3" />
       <span>Change password</span>
-    </button>
-    <button mat-menu-item disabled>
+    </a>
+    <button mat-menu-item (click)="auth.logout()">
       <ng-icon name="lucideLogOut" size="16" class="mr-3" />
       <span>Sign out</span>
     </button>

@@ -4,7 +4,6 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideBriefcase,
-  lucideBug,
   lucideChartPie,
   lucideChevronDown,
   lucideFlag,
@@ -18,16 +17,16 @@ import {
   lucideSettings,
   lucideSquareKanban,
 } from '@ng-icons/lucide';
+import { Logo } from '../../../shared/ui/logo/logo';
 import { NavItem } from '../nav-items';
 
 /** Collapsible left navigation (icons + labels; icons + tooltips when collapsed). */
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive, NgIcon, MatTooltip],
+  imports: [RouterLink, RouterLinkActive, NgIcon, MatTooltip, Logo],
   viewProviders: [
     provideIcons({
       lucideBriefcase,
-      lucideBug,
       lucideChartPie,
       lucideChevronDown,
       lucideFlag,
@@ -45,8 +44,7 @@ import { NavItem } from '../nav-items';
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
   host: {
-    class:
-      'flex h-full flex-col border-r border-border bg-surface transition-[width] duration-150 motion-reduce:transition-none',
+    class: 'flex h-full flex-col transition-[width] duration-150 motion-reduce:transition-none',
     '[style.width]': `collapsed() ? 'var(--qa-sidebar-width-collapsed)' : 'var(--qa-sidebar-width)'`,
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
