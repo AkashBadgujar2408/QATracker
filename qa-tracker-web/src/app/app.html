@@ -1,0 +1,16 @@
+<header
+  class="flex items-center justify-between border-b border-border bg-surface px-6 py-3 shadow-card"
+>
+  <h1 class="m-0 text-lg font-semibold">QA Tracker</h1>
+  <p-button
+    [label]="theme.mode() === 'dark' ? 'Light mode' : 'Dark mode'"
+    severity="secondary"
+    [outlined]="true"
+    size="small"
+    (onClick)="theme.toggle()"
+  />
+</header>
+
+<main class="p-6">
+  <router-outlet />
+</main>

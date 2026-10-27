@@ -1,0 +1,100 @@
+/*
+ * QA Tracker design tokens (plan section 10.2).
+ * Components must use these variables (directly or via Tailwind theme classes) – never raw hex values.
+ * Dark theme is activated by the `app-dark` class on <html> (see ThemeService).
+ */
+:root {
+  /* Typography */
+  --qa-font-sans: 'Inter Variable', 'Segoe UI', system-ui, sans-serif;
+  --qa-text-xs: 12px;
+  --qa-text-sm: 13px;
+  --qa-text-base: 14px;
+  --qa-text-md: 16px;
+  --qa-text-lg: 20px;
+  --qa-text-xl: 24px;
+  --qa-text-2xl: 30px;
+
+  /* Spacing (4 px grid) */
+  --qa-space-1: 4px;
+  --qa-space-2: 8px;
+  --qa-space-3: 12px;
+  --qa-space-4: 16px;
+  --qa-space-6: 24px;
+  --qa-space-8: 32px;
+  --qa-space-12: 48px;
+
+  /* Radius */
+  --qa-radius-control: 6px;
+  --qa-radius-card: 10px;
+  --qa-radius-pill: 999px;
+
+  /* Elevation */
+  --qa-shadow-card: 0 1px 2px rgb(0 0 0 / 0.06);
+  --qa-shadow-dialog: 0 10px 30px rgb(0 0 0 / 0.15);
+
+  /* Slate neutral scale */
+  --qa-slate-50: #f8fafc;
+  --qa-slate-100: #f1f5f9;
+  --qa-slate-200: #e2e8f0;
+  --qa-slate-300: #cbd5e1;
+  --qa-slate-400: #94a3b8;
+  --qa-slate-500: #64748b;
+  --qa-slate-600: #475569;
+  --qa-slate-700: #334155;
+  --qa-slate-800: #1e293b;
+  --qa-slate-900: #0f172a;
+  --qa-slate-950: #020617;
+
+  /* Semantic surface / text (light) */
+  --qa-primary: #4f46e5;
+  --qa-primary-contrast: #ffffff;
+  --qa-bg: var(--qa-slate-50);
+  --qa-surface: #ffffff;
+  --qa-surface-muted: var(--qa-slate-100);
+  --qa-border: var(--qa-slate-200);
+  --qa-text: var(--qa-slate-900);
+  --qa-text-muted: var(--qa-slate-500);
+  --qa-focus-ring: var(--qa-primary);
+
+  /* Severity */
+  --qa-severity-critical: #dc2626;
+  --qa-severity-high: #ea580c;
+  --qa-severity-medium: #d97706;
+  --qa-severity-low: #2563eb;
+  --qa-severity-not-assessed: #64748b;
+
+  /* Issue status */
+  --qa-status-new: #64748b;
+  --qa-status-assigned: #6366f1;
+  --qa-status-in-progress: #0ea5e9;
+  --qa-status-need-info: #a855f7;
+  --qa-status-on-hold: #f59e0b;
+  --qa-status-disputed: #ec4899;
+  --qa-status-fixed: #14b8a6;
+  --qa-status-verified: #22c55e;
+  --qa-status-closed: #15803d;
+  --qa-status-reopened: #ef4444;
+  --qa-status-rejected: #94a3b8;
+
+  /* Sprint state */
+  --qa-sprint-testing: #0ea5e9;
+  --qa-sprint-testing-completed: #6366f1;
+  --qa-sprint-closed: #64748b;
+
+  color-scheme: light;
+}
+
+:root.app-dark {
+  --qa-primary: #818cf8;
+  --qa-primary-contrast: var(--qa-slate-950);
+  --qa-bg: var(--qa-slate-950);
+  --qa-surface: var(--qa-slate-900);
+  --qa-surface-muted: var(--qa-slate-800);
+  --qa-border: var(--qa-slate-700);
+  --qa-text: var(--qa-slate-50);
+  --qa-text-muted: var(--qa-slate-400);
+  --qa-shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --qa-shadow-dialog: 0 10px 30px rgb(0 0 0 / 0.5);
+
+  color-scheme: dark;
+}

@@ -1,0 +1,31 @@
+QA Tracker - Database-first scaffold command
+=============================================
+
+The schema is owned by the SQL scripts in database/scripts (run in file-name order).
+After changing the schema, re-scaffold the EF Core model with ONE of the commands below.
+
+  * Connection string is read from src/QaTracker.Api/appsettings.json -> ConnectionStrings:QaTracker
+  * Entity classes go to QaTracker.Domain/Entities (plain POCO partial classes, no EF dependency).
+  * DbContext goes to QaTracker.Infrastructure/Persistence.
+  * -Force overwrites generated files. NEVER hand-edit generated files - put custom code in a
+    separate "partial class" file (e.g. Issue.Rules.cs) or in QaTrackerDbContext.Partial.cs
+    (implement OnModelCreatingPartial there for query filters, conversions, etc.).
+  * Use -Tables / -t to scaffold only some tables, if needed.
+
+
+1) Visual Studio - Package Manager Console (Default project: QaTracker.Infrastructure)
+-------------------------------------------------------------------------------------
+
+Scaffold-DbContext "Name=ConnectionStrings:QaTracker" Microsoft.EntityFrameworkCore.SqlServer -Project QaTracker.Infrastructure -StartupProject QaTracker.Api -Context QaTrackerDbContext -ContextDir Persistence -ContextNamespace QaTracker.Infrastructure.Persistence -OutputDir ..\QaTracker.Domain\Entities -Namespace QaTracker.Domain.Entities -NoOnConfiguring -Force
+
+
+2) Command line (run from the repository root; restore the tool once with: dotnet tool restore)
+---------------------------------------------------------------------------------------------
+
+dotnet ef dbcontext scaffold "Name=ConnectionStrings:QaTracker" Microsoft.EntityFrameworkCore.SqlServer --project src/QaTracker.Infrastructure --startup-project src/QaTracker.Api --context QaTrackerDbContext --context-dir Persistence --context-namespace QaTracker.Infrastructure.Persistence --output-dir ../QaTracker.Domain/Entities --namespace QaTracker.Domain.Entities --no-onconfiguring --force
+
+
+After scaffolding
+-----------------
+  dotnet build      (must be clean - zero warnings)
+  dotnet test

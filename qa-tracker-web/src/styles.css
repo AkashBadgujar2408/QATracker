@@ -1,0 +1,79 @@
+/* Layer order: Tailwind theme/base first, PrimeNG styles next, Tailwind utilities last so they can override. */
+@layer theme, base, primeng, components, utilities;
+
+@import '@fontsource-variable/inter';
+@import 'tailwindcss';
+@import './styles/tokens.css';
+
+@custom-variant dark (&:where(.app-dark, .app-dark *));
+
+/* Expose tokens as Tailwind theme values, e.g. bg-surface, text-muted, text-severity-critical, rounded-card. */
+@theme inline {
+  --font-sans: var(--qa-font-sans);
+
+  --text-xs: var(--qa-text-xs);
+  --text-sm: var(--qa-text-sm);
+  --text-base: var(--qa-text-base);
+  --text-md: var(--qa-text-md);
+  --text-lg: var(--qa-text-lg);
+  --text-xl: var(--qa-text-xl);
+  --text-2xl: var(--qa-text-2xl);
+
+  --radius-control: var(--qa-radius-control);
+  --radius-card: var(--qa-radius-card);
+  --radius-pill: var(--qa-radius-pill);
+
+  --shadow-card: var(--qa-shadow-card);
+  --shadow-dialog: var(--qa-shadow-dialog);
+
+  --color-primary: var(--qa-primary);
+  --color-primary-contrast: var(--qa-primary-contrast);
+  --color-bg: var(--qa-bg);
+  --color-surface: var(--qa-surface);
+  --color-surface-muted: var(--qa-surface-muted);
+  --color-border: var(--qa-border);
+  --color-text: var(--qa-text);
+  --color-muted: var(--qa-text-muted);
+
+  --color-severity-critical: var(--qa-severity-critical);
+  --color-severity-high: var(--qa-severity-high);
+  --color-severity-medium: var(--qa-severity-medium);
+  --color-severity-low: var(--qa-severity-low);
+  --color-severity-not-assessed: var(--qa-severity-not-assessed);
+
+  --color-status-new: var(--qa-status-new);
+  --color-status-assigned: var(--qa-status-assigned);
+  --color-status-in-progress: var(--qa-status-in-progress);
+  --color-status-need-info: var(--qa-status-need-info);
+  --color-status-on-hold: var(--qa-status-on-hold);
+  --color-status-disputed: var(--qa-status-disputed);
+  --color-status-fixed: var(--qa-status-fixed);
+  --color-status-verified: var(--qa-status-verified);
+  --color-status-closed: var(--qa-status-closed);
+  --color-status-reopened: var(--qa-status-reopened);
+  --color-status-rejected: var(--qa-status-rejected);
+
+  --color-sprint-testing: var(--qa-sprint-testing);
+  --color-sprint-testing-completed: var(--qa-sprint-testing-completed);
+  --color-sprint-closed: var(--qa-sprint-closed);
+}
+
+@layer base {
+  html {
+    font-size: var(--qa-text-base);
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--qa-font-sans);
+    font-size: var(--qa-text-base);
+    background: var(--qa-bg);
+    color: var(--qa-text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--qa-focus-ring);
+    outline-offset: 2px;
+  }
+}

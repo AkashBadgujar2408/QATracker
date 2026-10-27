@@ -1,0 +1,15 @@
+# Optional: SQL Server in Docker (local dev uses .\SQLEXPRESS by default - see docs/decisions.md).
+# If you use this, point ConnectionStrings:QaTracker at Server=localhost,1433;User Id=sa;Password=...;TrustServerCertificate=True
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?set MSSQL_SA_PASSWORD in .env}"
+      MSSQL_PID: Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - qa-tracker-sql:/var/opt/mssql
+volumes:
+  qa-tracker-sql:
