@@ -1,0 +1,62 @@
+<label class="relative flex w-full max-w-md items-center">
+  <span class="sr-only">Search issues</span>
+  <ng-icon
+    name="lucideSearch"
+    size="16"
+    class="pointer-events-none absolute left-3 text-muted"
+    aria-hidden="true"
+  />
+  <input
+    type="search"
+    class="h-9 w-full rounded-control border border-border bg-bg pl-9 pr-3 text-sm text-text outline-none placeholder:text-muted focus:border-primary"
+    placeholder="Search issue key or text…"
+    disabled
+    title="Global search arrives with the issue list (S15)"
+  />
+</label>
+
+<div class="ml-auto flex items-center gap-1">
+  <button
+    matIconButton
+    type="button"
+    (click)="theme.toggle()"
+    [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+    [matTooltip]="theme.mode() === 'dark' ? 'Light theme' : 'Dark theme'"
+  >
+    <ng-icon [name]="theme.mode() === 'dark' ? 'lucideSun' : 'lucideMoon'" size="20" />
+  </button>
+
+  <button
+    matIconButton
+    type="button"
+    aria-label="Notifications"
+    matTooltip="Notifications (coming in S18)"
+  >
+    <ng-icon name="lucideBell" size="20" />
+  </button>
+
+  <button
+    type="button"
+    class="ml-1 flex cursor-pointer items-center rounded-full border-0 bg-transparent p-1 hover:bg-surface-muted"
+    [matMenuTriggerFor]="userMenu"
+    aria-label="User menu"
+  >
+    <app-user-avatar [name]="userName" size="sm" />
+  </button>
+
+  <mat-menu #userMenu="matMenu" xPosition="before">
+    <div class="px-4 py-2">
+      <div class="text-sm font-semibold text-text">{{ userName }}</div>
+      <div class="text-xs text-muted">Not signed in</div>
+    </div>
+    <mat-divider />
+    <button mat-menu-item disabled>
+      <ng-icon name="lucideKeyRound" size="16" class="mr-3" />
+      <span>Change password</span>
+    </button>
+    <button mat-menu-item disabled>
+      <ng-icon name="lucideLogOut" size="16" class="mr-3" />
+      <span>Sign out</span>
+    </button>
+  </mat-menu>
+</div>

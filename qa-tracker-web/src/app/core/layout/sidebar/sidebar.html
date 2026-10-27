@@ -1,0 +1,94 @@
+<div
+  class="flex shrink-0 items-center gap-2 border-b border-border px-4"
+  [style.height]="'var(--qa-topbar-height)'"
+>
+  <span
+    class="flex size-8 shrink-0 items-center justify-center rounded-control bg-primary text-primary-contrast"
+    aria-hidden="true"
+  >
+    <ng-icon name="lucideBug" size="18" />
+  </span>
+  @if (!collapsed()) {
+    <span class="truncate text-md font-semibold text-text">QA Tracker</span>
+  }
+</div>
+
+<nav class="flex-1 overflow-y-auto overflow-x-hidden p-2" aria-label="Main">
+  <ul class="m-0 flex list-none flex-col gap-0.5 p-0">
+    @for (item of items(); track item.link) {
+      <li>
+        @if (item.children && !collapsed()) {
+          <button
+            type="button"
+            class="nav-link w-full"
+            [attr.aria-expanded]="openGroups().has(item.link)"
+            (click)="toggleGroup(item.link)"
+          >
+            <ng-icon [name]="item.icon" size="18" aria-hidden="true" />
+            <span class="flex-1 truncate text-left">{{ item.label }}</span>
+            <ng-icon
+              name="lucideChevronDown"
+              size="16"
+              aria-hidden="true"
+              class="transition-transform motion-reduce:transition-none"
+              [class.-rotate-90]="!openGroups().has(item.link)"
+            />
+          </button>
+          @if (openGroups().has(item.link)) {
+            <ul class="m-0 mt-0.5 flex list-none flex-col gap-0.5 p-0">
+              @for (child of item.children; track child.link) {
+                <li>
+                  <a
+                    class="nav-link nav-child"
+                    [routerLink]="child.link"
+                    routerLinkActive="active"
+                    ariaCurrentWhenActive="page"
+                    >{{ child.label }}</a
+                  >
+                </li>
+              }
+            </ul>
+          }
+        } @else {
+          <a
+            class="nav-link"
+            [class.justify-center]="collapsed()"
+            [routerLink]="item.children ? item.children[0].link : item.link"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: false }"
+            ariaCurrentWhenActive="page"
+            [matTooltip]="collapsed() ? item.label : ''"
+            matTooltipPosition="right"
+            [attr.aria-label]="collapsed() ? item.label : null"
+          >
+            <ng-icon [name]="item.icon" size="18" aria-hidden="true" />
+            @if (!collapsed()) {
+              <span class="truncate">{{ item.label }}</span>
+            }
+          </a>
+        }
+      </li>
+    }
+  </ul>
+</nav>
+
+<div class="shrink-0 border-t border-border p-2">
+  <button
+    type="button"
+    class="nav-link w-full"
+    [class.justify-center]="collapsed()"
+    (click)="toggleCollapsed.emit()"
+    [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+    [matTooltip]="collapsed() ? 'Expand sidebar' : ''"
+    matTooltipPosition="right"
+  >
+    <ng-icon
+      [name]="collapsed() ? 'lucidePanelLeftOpen' : 'lucidePanelLeftClose'"
+      size="18"
+      aria-hidden="true"
+    />
+    @if (!collapsed()) {
+      <span>Collapse</span>
+    }
+  </button>
+</div>

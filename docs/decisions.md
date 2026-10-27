@@ -41,3 +41,18 @@ PrimeNG + theme pushes the initial bundle just over the CLI default 500 kB warni
 ## ADR-006 – Transitive pin for System.Security.Cryptography.Pkcs (27-Oct-2026)
 EF Core tooling pulls in Pkcs 9.0.11 (GHSA-2fmv-rv2c-59x7, GHSA-846f-f764-76mx). With warnings-as-errors this
 fails the build, so `Directory.Packages.props` enables transitive pinning and pins 10.0.14.
+
+## ADR-007 – Angular Material + CDK instead of PrimeNG (27-Oct-2026, S02)
+**Finding:** PrimeNG ≥ 20, `@primeuix/themes` and primeicons 8 are no longer MIT – they ship under the commercial
+"PrimeUI License" (licence key required; free Community tier only for organisations with < 5 developers and
+< 10 employees). No MIT PrimeNG release supports Angular 22. S01 wrongly recorded PrimeNG as MIT.
+**Decision (Akash):** use Angular Material 22 + CDK (MIT). PrimeNG packages removed.
+**Replaces:** plan 10.3 "Components from PrimeNG", 11.1 "UI kit PrimeNG".
+**Details:** M3 theme in `src/styles/material-theme.scss` – palettes generated from our token colours
+(`ng generate @angular/material:theme-color` → `_theme-colors.scss`), then key system colours, corner radii and
+button shapes mapped directly onto `--qa-*` tokens. Density -2. Toasts = MatSnackBar (ToastService),
+confirm = MatDialog (ConfirmService + ConfirmDialog). Data table (S15) will be MatTable + CDK, tree (S07) MatTree.
+
+## ADR-008 – Lucide icons via @ng-icons (27-Oct-2026, S02)
+Icons are Lucide SVGs through `@ng-icons/core` + `@ng-icons/lucide` (MIT / ISC), registered per component with
+`provideIcons` so only used icons are bundled. Material Symbols font was rejected (≈ 4 MB font file).

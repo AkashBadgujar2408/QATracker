@@ -1,0 +1,63 @@
+// Angular Material (M3) theme. Palettes come from _theme-colors.scss (generated from the design tokens with
+// `ng generate @angular/material:theme-color`); the key system colours are then mapped straight onto our tokens
+// so Material, Tailwind utilities and our own components always agree. Light/dark follows `color-scheme`,
+// which tokens.css switches with the `app-dark` class.
+@use '@angular/material' as mat;
+@use './theme-colors' as colors;
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: colors.$primary-palette,
+        tertiary: colors.$tertiary-palette,
+        theme-type: color-scheme,
+      ),
+      typography: (
+        plain-family: (
+          'Inter Variable',
+          'Segoe UI',
+          system-ui,
+          sans-serif,
+        ),
+        brand-family: (
+          'Inter Variable',
+          'Segoe UI',
+          system-ui,
+          sans-serif,
+        ),
+      ),
+      density: -2,
+    )
+  );
+
+  @include mat.theme-overrides(
+    (
+      primary: var(--qa-primary),
+      on-primary: var(--qa-primary-contrast),
+      background: var(--qa-bg),
+      on-background: var(--qa-text),
+      surface: var(--qa-surface),
+      on-surface: var(--qa-text),
+      on-surface-variant: var(--qa-text-muted),
+      outline: var(--qa-border-strong),
+      outline-variant: var(--qa-border),
+      error: var(--qa-severity-critical),
+      corner-extra-small: var(--qa-radius-control),
+      corner-small: var(--qa-radius-control),
+      corner-medium: var(--qa-radius-card),
+      corner-large: var(--qa-radius-card),
+    )
+  );
+
+  // Plan 10.2: controls use a 6 px radius (Material 3 buttons default to full pills).
+  @include mat.button-overrides(
+    (
+      filled-container-shape: var(--qa-radius-control),
+      outlined-container-shape: var(--qa-radius-control),
+      protected-container-shape: var(--qa-radius-control),
+      text-container-shape: var(--qa-radius-control),
+      tonal-container-shape: var(--qa-radius-control),
+    )
+  );
+}

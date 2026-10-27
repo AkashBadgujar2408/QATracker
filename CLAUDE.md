@@ -37,9 +37,10 @@
 
 ## Frontend (qa-tracker-web)
 - Angular 22 standalone, zoneless, OnPush, signals, inject(), @if/@for/@defer.
-- PrimeNG (QaPreset) + Tailwind 4. Tokens in `src/styles/tokens.css`, exposed as Tailwind classes in `src/styles.css`
+- Angular Material 22 (M3 theme in src/styles/material-theme.scss, ADR-007) + Tailwind 4. Icons: Lucide via @ng-icons (`provideIcons` per component). Tokens in `src/styles/tokens.css`, exposed as Tailwind classes in `src/styles.css`
   (`bg-surface`, `text-muted`, `text-severity-critical`, `rounded-card`…). No hard-coded colours.
 - Dark mode = `app-dark` class on <html> (ThemeService); Tailwind `dark:` variant uses the same class.
+- Shared UI in src/app/shared/ui (page-header, empty-state, status-pill, severity-badge, priority-icon, user-avatar, skeleton-*, breadcrumb, confirm-dialog); feedback via ToastService / ConfirmService (core/feedback). Living style guide: /dev/ui – add every new shared component there.
 - Every page: loading skeleton, empty state, error state. Dates dd-MMM-yyyy, IST.
 - Charts only through shared ECharts wrappers; aggregation server-side.
 

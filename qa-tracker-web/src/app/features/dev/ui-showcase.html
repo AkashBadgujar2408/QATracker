@@ -1,0 +1,174 @@
+<app-page-header
+  title="UI style guide"
+  subtitle="Every shared component and token. Check both themes before using a component in a feature."
+>
+  <button actions matButton="outlined" type="button" (click)="theme.toggle()">
+    Switch to {{ theme.mode() === 'dark' ? 'light' : 'dark' }} theme
+  </button>
+</app-page-header>
+
+<div class="grid gap-6">
+  <!-- Tokens -->
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-4 text-lg font-semibold">Colour tokens</h2>
+    @for (
+      group of [
+        { name: 'Surfaces & text', items: surfaceSwatches },
+        { name: 'Severity', items: severitySwatches },
+        { name: 'Issue status', items: statusSwatches },
+        { name: 'Sprint state', items: sprintSwatches },
+      ];
+      track group.name
+    ) {
+      <h3 class="mt-4 mb-2 text-sm font-semibold text-muted first:mt-0">{{ group.name }}</h3>
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
+        @for (swatch of group.items; track swatch.token) {
+          <div class="flex items-center gap-2">
+            <span
+              class="size-8 shrink-0 rounded-control border border-border"
+              [style.background]="'var(' + swatch.token + ')'"
+            ></span>
+            <div class="min-w-0">
+              <div class="truncate text-sm">{{ swatch.label }}</div>
+              <code class="block truncate text-xs text-muted">{{ swatch.token }}</code>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Typography -->
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-4 text-lg font-semibold">Typography (Inter)</h2>
+    <div class="flex flex-col gap-2">
+      @for (step of typeScale; track step.cls) {
+        <div class="flex items-baseline gap-4">
+          <code class="w-24 shrink-0 text-xs text-muted">{{ step.cls }}</code>
+          <span [class]="step.cls">{{ step.label }} – Retest failed on UAT 1</span>
+        </div>
+      }
+      <div class="flex items-baseline gap-4">
+        <code class="w-24 shrink-0 text-xs text-muted">tabular-nums</code>
+        <span class="text-base tabular-nums">PGERP-142 · 1 234 · 27-Oct-2026 18:00</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Badges -->
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-4 text-lg font-semibold">Status, severity, priority</h2>
+    <h3 class="mt-0 mb-2 text-sm font-semibold text-muted">app-status-pill</h3>
+    <div class="flex flex-wrap gap-2">
+      @for (status of statuses; track status) {
+        <app-status-pill [status]="status" />
+      }
+    </div>
+    <h3 class="mt-4 mb-2 text-sm font-semibold text-muted">app-severity-badge</h3>
+    <div class="flex flex-wrap gap-2">
+      @for (severity of severities; track severity) {
+        <app-severity-badge [severity]="severity" />
+      }
+    </div>
+    <h3 class="mt-4 mb-2 text-sm font-semibold text-muted">app-priority-icon</h3>
+    <div class="flex flex-wrap items-center gap-6">
+      @for (priority of priorities; track priority) {
+        <app-priority-icon [priority]="priority" [showLabel]="true" />
+      }
+      <span class="text-sm text-muted">icon only:</span>
+      @for (priority of priorities; track priority) {
+        <app-priority-icon [priority]="priority" />
+      }
+    </div>
+  </section>
+
+  <!-- Avatars -->
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-4 text-lg font-semibold">app-user-avatar</h2>
+    <div class="flex flex-wrap items-center gap-4">
+      @for (person of people; track person) {
+        <app-user-avatar [name]="person" />
+      }
+      <app-user-avatar name="Akash Badgujar" size="sm" />
+      <app-user-avatar name="Akash Badgujar" size="lg" />
+    </div>
+  </section>
+
+  <!-- Page header + breadcrumb -->
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-4 text-lg font-semibold">app-breadcrumb + app-page-header</h2>
+    <div class="rounded-card border border-dashed border-border p-4">
+      <app-breadcrumb class="mb-2 block" [items]="sampleTrail" />
+      <app-page-header title="Sprint 1 – UAT" subtitle="Started 27-Oct-2026 · 74 issues · Day 3">
+        <button actions matButton="outlined" type="button">Export</button>
+        <button actions matButton="filled" type="button">Mark testing completed</button>
+      </app-page-header>
+    </div>
+  </section>
+
+  <!-- Buttons -->
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-4 text-lg font-semibold">Buttons (Angular Material)</h2>
+    <div class="flex flex-wrap items-center gap-3">
+      <button matButton="filled" type="button">Primary</button>
+      <button matButton="tonal" type="button">Tonal</button>
+      <button matButton="outlined" type="button">Secondary</button>
+      <button matButton type="button">Text</button>
+      <button matButton="filled" type="button" disabled>Disabled</button>
+    </div>
+  </section>
+
+  <!-- Feedback -->
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-4 text-lg font-semibold">Toasts & confirm dialog</h2>
+    <div class="flex flex-wrap items-center gap-3">
+      <button matButton="outlined" type="button" (click)="showToast('success')">
+        Success toast
+      </button>
+      <button matButton="outlined" type="button" (click)="showToast('info')">Info toast</button>
+      <button matButton="outlined" type="button" (click)="showToast('warn')">Warning toast</button>
+      <button matButton="outlined" type="button" (click)="showToast('error')">Error toast</button>
+      <span class="mx-2 h-6 border-l border-border"></span>
+      <button matButton="filled" type="button" (click)="askConfirm(false)">Confirm</button>
+      <button matButton="outlined" type="button" (click)="askConfirm(true)">Danger confirm</button>
+      <span class="text-sm text-muted">Last result: {{ lastConfirm() }}</span>
+    </div>
+  </section>
+
+  <!-- States -->
+  <section class="grid gap-6 lg:grid-cols-2">
+    <div class="qa-card">
+      <app-empty-state
+        title="No issues yet"
+        message="Issues logged in this sprint will appear here."
+      >
+        <button matButton="filled" type="button">Log first issue</button>
+      </app-empty-state>
+    </div>
+    <div class="qa-card">
+      <app-empty-state
+        kind="error"
+        title="Could not load issues"
+        message="The server did not respond. Check your connection and try again."
+      >
+        <button matButton="outlined" type="button">Retry</button>
+      </app-empty-state>
+    </div>
+    <div class="qa-card">
+      <app-empty-state
+        kind="no-results"
+        title="No matching issues"
+        message="Try removing a filter."
+      />
+    </div>
+    <div class="qa-card p-6">
+      <h3 class="mt-0 mb-3 text-sm font-semibold text-muted">app-skeleton-lines</h3>
+      <app-skeleton-lines [lines]="4" />
+    </div>
+  </section>
+
+  <section>
+    <h3 class="mt-0 mb-2 text-sm font-semibold text-muted">app-skeleton-table</h3>
+    <app-skeleton-table [rows]="4" [columns]="5" />
+  </section>
+</div>

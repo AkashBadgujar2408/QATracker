@@ -1,5 +1,4 @@
-/* Layer order: Tailwind theme/base first, PrimeNG styles next, Tailwind utilities last so they can override. */
-@layer theme, base, primeng, components, utilities;
+/* Angular Material styles (material-theme.scss) load before this file and are unlayered. */
 
 @import '@fontsource-variable/inter';
 @import 'tailwindcss';
@@ -32,6 +31,7 @@
   --color-surface: var(--qa-surface);
   --color-surface-muted: var(--qa-surface-muted);
   --color-border: var(--qa-border);
+  --color-border-strong: var(--qa-border-strong);
   --color-text: var(--qa-text);
   --color-muted: var(--qa-text-muted);
 
@@ -76,4 +76,49 @@
     outline: 2px solid var(--qa-focus-ring);
     outline-offset: 2px;
   }
+}
+
+@layer components {
+  /* Skeleton block – used by shared skeleton components. */
+  .qa-skeleton {
+    background: var(--qa-surface-muted);
+    border-radius: var(--qa-radius-control);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .qa-skeleton {
+      animation: qa-pulse 1.6s ease-in-out infinite;
+    }
+  }
+
+  @keyframes qa-pulse {
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  /* Card surface used by page sections. */
+  .qa-card {
+    background: var(--qa-surface);
+    border: 1px solid var(--qa-border);
+    border-radius: var(--qa-radius-card);
+    box-shadow: var(--qa-shadow-card);
+  }
+}
+
+/* Toasts (MatSnackBar panelClass set by ToastService): coloured accent bar per kind. */
+.qa-toast .mdc-snackbar__surface {
+  border-left: 4px solid var(--qa-toast-accent);
+}
+.qa-toast-success {
+  --qa-toast-accent: var(--qa-status-verified);
+}
+.qa-toast-info {
+  --qa-toast-accent: var(--qa-primary);
+}
+.qa-toast-warn {
+  --qa-toast-accent: var(--qa-severity-medium);
+}
+.qa-toast-error {
+  --qa-toast-accent: var(--qa-severity-critical);
 }

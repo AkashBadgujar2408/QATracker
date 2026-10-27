@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 import { ThemeService } from './core/theme/theme.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ButtonModule],
-  templateUrl: './app.html',
+  imports: [RouterOutlet],
+  template: '<router-outlet />',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  protected readonly theme = inject(ThemeService);
+  // Instantiated at startup so the saved theme is applied before the first page renders.
+  private readonly theme = inject(ThemeService);
 }

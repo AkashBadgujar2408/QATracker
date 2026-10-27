@@ -5,8 +5,8 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | Session | Title | Status |
 | --- | --- | --- |
 | S01 | Solution & workspace scaffold | ✅ Done (27-Oct-2026) |
-| S02 | App shell & shared UI primitives | ⏭ Next |
-| S03 | Domain entities & database (database-first) | |
+| S02 | App shell & shared UI primitives | ✅ Done (27-Oct-2026) |
+| S03 | Domain entities & database (database-first) | ⏭ Next |
 | S04 | Authentication API | |
 | S05 | Authentication UI & users admin | |
 | S06 | Masters API | |
@@ -84,8 +84,8 @@ Solution file kept as `.sln` (plan 11.2) rather than the new `.slnx` default.
 | Microsoft.AspNetCore.Mvc.Testing | 10.0.14 | MIT |
 | Angular (core/common/router/forms/…) / CLI | 22.2.3 / 22.2.4 | MIT |
 | @angular/cdk | 22.2.4 | MIT |
-| primeng | 22.1.4 | MIT |
-| @primeuix/themes | 3.1.0 | MIT |
+| ~~primeng~~ | ~~22.1.4~~ | **Not MIT – PrimeUI commercial licence; removed in S02 (ADR-007)** |
+| ~~@primeuix/themes~~ | ~~3.1.0~~ | **PrimeUI licence; removed in S02** |
 | tailwindcss / @tailwindcss/postcss | 4.3.3 | MIT |
 | @fontsource-variable/inter | 5.3.0 | OFL-1.1 |
 | angular-eslint / eslint / typescript-eslint | 22.6.0 / 10.13.0 / 8.71.0 | MIT |
@@ -96,3 +96,38 @@ Solution file kept as `.sln` (plan 11.2) rather than the new `.slnx` default.
 Checked for later sessions: FluentValidation 12.2.0 (Apache-2.0), ngx-echarts 22.0.0 + echarts 6.1.0 (MIT / Apache-2.0).
 
 **Next session:** S02 – App shell & shared UI primitives.
+
+---
+
+## S02 – App shell & shared UI primitives   (27-Oct-2026)
+
+**Done:**
+- **UI kit switched to Angular Material 22 + CDK** (PrimeNG is no longer MIT – ADR-007); M3 theme mapped onto our
+  tokens (colours, radii, button shape), density -2. Lucide icons via @ng-icons (ADR-008).
+- Shell (`core/layout`): collapsible sidebar (remembered, tooltips when collapsed, Dashboards group, active state with
+  aria-current), top bar (search placeholder, theme toggle, bell placeholder, user menu placeholder), skip link,
+  breadcrumb bar fed by `BreadcrumbService` (route `data.breadcrumb`, pages can `set()` a trail),
+  `PageTitleStrategy` ("Issues · QA Tracker"), `LayoutService`.
+- Shared UI (`shared/ui`): page-header, empty-state (empty / no-results / error / info), status-pill, severity-badge,
+  priority-icon, user-avatar (initials, stable token colour or Users.AvatarColor), skeleton-lines, skeleton-table,
+  breadcrumb, confirm-dialog. Services: `ToastService` (success 3 s), `ConfirmService.ask()` (danger → focus Cancel).
+- Models: IssueStatus / Severity / Priority with labels + colour tokens; Role.
+- Routes: every nav item opens a placeholder page naming the session that builds it; not-found page;
+  hidden living style guide at **/dev/ui**.
+- New tokens: border-strong, avatar palette (8) + avatar text, danger contrast, sidebar/topbar sizes.
+
+**Verified:** `ng build` clean (initial 494 kB) · `ng test` 31/31 · `ng lint` clean · no hex colours in src/app ·
+/dev/ui checked in Chrome in light and dark (tokens, badges, avatars, buttons, dialog, toast).
+
+**Deviations from plan:** Angular Material instead of PrimeNG (ADR-007); Lucide icons (ADR-008).
+Project switcher in the top bar (plan 10.3) not in the S02 card – deferred to S07 (needs masters API).
+
+**Carry-over / known gaps:**
+- Role-based nav filtering waits for auth (S05) – `NavItem.roles` is already defined.
+- Global search and "/" shortcut → S15; bell → S18; user menu actions → S05.
+- ADR-005 budget raise is no longer needed (initial bundle back under 500 kB) – keep 1 MB budget anyway.
+
+**Libraries added (licence):** @angular/material 22.2.4 (MIT) · @ng-icons/core 36.1.0 (MIT) · @ng-icons/lucide 36.1.0 (ISC).
+**Libraries removed:** primeng, @primeuix/themes, primeicons (PrimeUI commercial licence).
+
+**Next session:** S03 – Domain entities & database (database-first).

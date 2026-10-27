@@ -1,0 +1,30 @@
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--qa-radius-control);
+  background: transparent;
+  color: var(--qa-text-muted);
+  font: inherit;
+  font-size: var(--qa-text-base);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  background: var(--qa-surface-muted);
+  color: var(--qa-text);
+}
+
+.nav-link.active {
+  background: color-mix(in srgb, var(--qa-primary) 12%, transparent);
+  color: var(--qa-primary);
+  font-weight: 500;
+}
+
+.nav-child {
+  padding-left: 42px;
+}
