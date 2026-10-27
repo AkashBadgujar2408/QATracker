@@ -88,3 +88,24 @@ Plan section 12 with these deviations:
 **Decision (Akash):** users log in with **UserName + password**. `Users.UserName` is unique (case-insensitive),
 3–50 chars of letters, digits, `.`, `_`, `-`. E-mail stays required and unique but is used only for notifications.
 **Replaces:** plan 8.2 Login "Email + password" (S04/S05 build the login on UserName).
+
+## ADR-012 – Application layer conventions (27-Oct-2026, S04)
+- Handlers use `IApplicationDbContext` (Application) which the scaffolded `QaTrackerDbContext` implements through a
+  partial class. Application therefore references `Microsoft.EntityFrameworkCore` (abstractions/LINQ only – no provider).
+- **One file per use case** (`Features/Auth/Login.cs` = command record + validator + handler) instead of four files
+  (plan 11.2). DTOs shared by a feature live in one file (`Features/Users/UserDto.cs`).
+- Handlers validate their own command first (`validator.CheckAsync`) and return `Result<T>`; endpoints map errors to
+  ProblemDetails (`ResultHttpExtensions`, field names camelCase, `code` extension for the client).
+- Handlers are registered by convention (class name ends with `Handler`).
+
+## ADR-013 – Authentication details (27-Oct-2026, S04)
+- JWT access token (15 min, HMAC-SHA256, key `Auth:SigningKey` from user-secrets/env) + opaque refresh token in an
+  httpOnly, Secure, SameSite=Strict cookie `qa_refresh` limited to `/api/auth`; refresh tokens stored as SHA-256 hashes
+  (`002_RefreshTokens.sql`), rotated on every refresh; replaying a rotated token revokes all of the user's sessions.
+- Every request re-checks the user's `IsActive` and `SecurityStamp`; deactivation, password change/reset and role change
+  replace the stamp, so old access tokens stop working immediately.
+- Users with `MustChangePassword` get a `pwd_change` claim: only `/api/auth/me`, `/change-password`, `/logout` are allowed
+  (policy `SignedIn`); every other endpoint uses the default/fallback policy `Authenticated` (signed in + password changed).
+- Lockout: 5 wrong passwords → 15 minutes. Login rate limit: 10 requests/minute per IP (configurable).
+- Admin cannot deactivate themselves; the last active admin cannot be deactivated or lose the Admin role.
+- User name is immutable after creation.

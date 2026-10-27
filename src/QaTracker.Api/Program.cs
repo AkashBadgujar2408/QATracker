@@ -1,3 +1,8 @@
+using System.Text.Json.Serialization;
+using QaTracker.Api.Auth;
+using QaTracker.Api.Common;
+using QaTracker.Api.Endpoints;
+using QaTracker.Application;
 using QaTracker.Infrastructure;
 using QaTracker.Infrastructure.Persistence.Seeding;
 using Scalar.AspNetCore;
@@ -11,15 +16,22 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Services.AddSerilog((services, configuration) => configuration
-        .ReadFrom.Configuration(builder.Configuration)
-        .ReadFrom.Services(services)
-        .Enrich.FromLogContext());
+    // preserveStaticLogger: the bootstrap logger is not frozen, so several hosts (integration tests) can start.
+    builder.Services.AddSerilog(
+        (services, configuration) => configuration
+            .ReadFrom.Configuration(builder.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext(),
+        preserveStaticLogger: true);
 
+    builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddQaAuth(builder.Configuration);
+    builder.Services.ConfigureHttpJsonOptions(options =>
+        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
     builder.Services.AddProblemDetails();
-    builder.Services.AddOpenApi();
+    builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecurityTransformer>());
     builder.Services.AddHealthChecks();
 
     const string AngularDevCorsPolicy = "AngularDev";
@@ -46,8 +58,8 @@ try
 
     if (app.Environment.IsDevelopment())
     {
-        app.MapOpenApi();
-        app.MapScalarApiReference();
+        app.MapOpenApi().AllowAnonymous();
+        app.MapScalarApiReference().AllowAnonymous();
         app.UseCors(AngularDevCorsPolicy);
     }
     else
@@ -56,8 +68,13 @@ try
     }
 
     app.UseHttpsRedirection();
+    app.UseAuthentication();
+    app.UseAuthorization();
+    app.UseRateLimiter();
 
-    app.MapHealthChecks("/health");
+    app.MapHealthChecks("/health").AllowAnonymous();
+    app.MapAuthEndpoints();
+    app.MapUsersEndpoints();
 
     await app.RunAsync();
 }

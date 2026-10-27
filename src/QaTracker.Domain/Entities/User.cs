@@ -78,6 +78,8 @@ public partial class User
 
     public virtual ICollection<Project> ProjectUpdatedBies { get; set; } = new List<Project>();
 
+    public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
     public virtual ICollection<SavedView> SavedViews { get; set; } = new List<SavedView>();
 
     public virtual ICollection<SprintEvent> SprintEvents { get; set; } = new List<SprintEvent>();

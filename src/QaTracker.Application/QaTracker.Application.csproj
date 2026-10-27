@@ -4,4 +4,11 @@
     <ProjectReference Include="..\QaTracker.Domain\QaTracker.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- EF Core abstractions only (DbSet / async LINQ) for IApplicationDbContext – ADR-012. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+  </ItemGroup>
+
 </Project>

@@ -46,6 +46,8 @@ public partial class QaTrackerDbContext : DbContext
 
     public virtual DbSet<ProjectMember> ProjectMembers { get; set; }
 
+    public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
+
     public virtual DbSet<SavedView> SavedViews { get; set; }
 
     public virtual DbSet<SlaPolicy> SlaPolicies { get; set; }
@@ -439,6 +441,21 @@ public partial class QaTrackerDbContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ProjectMembers_User");
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasIndex(e => e.UserId, "IX_RefreshTokens_User");
+
+            entity.HasIndex(e => e.TokenHash, "UX_RefreshTokens_TokenHash").IsUnique();
+
+            entity.Property(e => e.CreatedByIp).HasMaxLength(45);
+            entity.Property(e => e.TokenHash).HasMaxLength(64);
+
+            entity.HasOne(d => d.User).WithMany(p => p.RefreshTokens)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_RefreshTokens_User");
         });
 
         modelBuilder.Entity<SavedView>(entity =>

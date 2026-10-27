@@ -18,6 +18,7 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException($"Connection string '{ConnectionStringName}' is missing (appsettings.json).");
 
         services.AddDbContext<QaTrackerDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<QaTrackerDbContext>());
 
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IClock, SystemClock>();

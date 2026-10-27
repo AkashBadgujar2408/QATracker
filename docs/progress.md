@@ -7,8 +7,8 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | S01 | Solution & workspace scaffold | ✅ Done (27-Oct-2026) |
 | S02 | App shell & shared UI primitives | ✅ Done (27-Oct-2026) |
 | S03 | Domain entities & database (database-first) | ✅ Done (27-Oct-2026) |
-| S04 | Authentication API (UserName login, plain-text passwords) | ⏭ Next |
-| S05 | Authentication UI & users admin | |
+| S04 | Authentication API (UserName login, plain-text passwords) | ✅ Done (27-Oct-2026) |
+| S05 | Authentication UI & users admin | ⏭ Next |
 | S06 | Masters API | |
 | S07 | Masters UI + entity-picker | |
 | S08 | Testing Sprint API | |
@@ -172,3 +172,34 @@ passwords (ADR-009); naming/extra columns (ADR-010); UserName login (ADR-011).
 **Libraries added (licence):** none new. Infrastructure now references the ASP.NET Core shared framework (MIT).
 
 **Next session:** S04 – Authentication API (UserName + password, roles, JWT + refresh cookie, users admin endpoints).
+
+---
+
+## S04 – Authentication API   (27-Oct-2026)
+
+**Done:**
+- `002_RefreshTokens.sql` (hashed, rotating refresh tokens) – applied and re-scaffolded.
+- Application: `Result<T>`/`Error` (validation/401/403/404/409/422), `IApplicationDbContext`, `ICurrentUser`, `ITokenService`,
+  `AuthOptions`, `PasswordRules` (policy, constant-time compare, temporary password generator), `AddApplication()`.
+- Auth use cases: login (UserName, lockout), refresh (rotation + replay detection), logout, me, change-password.
+- Users admin: list (search/role/active), create (temporary password returned once), update (rowversion → 409, role change
+  ends sessions), reset password (unlocks, ends sessions), activate/deactivate (no self / last-admin rules).
+- API: JWT bearer with per-request stamp/active check, policies SignedIn / Authenticated (default + fallback) /
+  TesterOrAdmin / DeveloperOrAdmin / AdminOnly, login rate limiter, ProblemDetails mapping, enums as strings in JSON,
+  OpenAPI bearer scheme for Scalar, Serilog no longer freezes the static logger (several hosts in tests).
+- Tests: `ApiFactory` (assembly fixture, throw-away DB, https client with cookies) + 21 auth/users integration tests.
+- `.gitattributes` (LF in working tree) – scripted edits failed on CRLF files.
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 32/32 · dev API: admin login returns a token, `/api/users` without
+token → 401, OpenAPI document contains the Bearer scheme.
+
+**Deviations from plan:** custom auth instead of ASP.NET Core Identity (ADR-009/013); one file per use case (ADR-012).
+
+**Carry-over / known gaps:**
+- Dev signing key is in user-secrets (`Auth:SigningKey`); production must set `Auth__SigningKey` (S32).
+- Login lockout + rate limit messages are English only.
+
+**Libraries added (licence):** Microsoft.AspNetCore.Authentication.JwtBearer 10.0.14 (MIT) · FluentValidation 12.2.0 +
+FluentValidation.DependencyInjectionExtensions 12.2.0 (Apache-2.0) · Microsoft.EntityFrameworkCore 10.0.14 in Application (MIT).
+
+**Next session:** S05 – Authentication UI & users admin.

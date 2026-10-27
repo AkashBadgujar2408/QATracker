@@ -1,21 +1,14 @@
 using System.Net;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
+using QaTracker.Api.IntegrationTests.Infrastructure;
 
 namespace QaTracker.Api.IntegrationTests;
 
-public sealed class HealthEndpointTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class HealthEndpointTests(ApiFactory api)
 {
     [Fact]
-    public async Task Health_ReturnsOk()
+    public async Task Health_IsAnonymous_AndReturnsOk()
     {
-        // Never seed the developer's database from tests.
-        using var client = factory
-            .WithWebHostBuilder(builder => builder.UseSetting("Database:SeedOnStartup", "false"))
-            .CreateClient();
-
-        var response = await client.GetAsync(new Uri("/health", UriKind.Relative), TestContext.Current.CancellationToken);
+        var response = await api.CreateBrowser().GetAsync(new Uri("/health", UriKind.Relative), TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
