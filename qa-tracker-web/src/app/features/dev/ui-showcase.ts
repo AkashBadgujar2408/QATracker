@@ -21,6 +21,8 @@ import {
 import { Cascade, MastersApi } from '../../shared/data/masters.api';
 import { MasterDialogs } from '../../shared/masters/master-dialogs.service';
 import { EntityPicker, PickerItem } from '../../shared/ui/entity-picker/entity-picker';
+import { IssueAttachments } from '../../shared/attachments/issue-attachments';
+import { PasteDropzone } from '../../shared/ui/paste-dropzone/paste-dropzone';
 import { Breadcrumb } from '../../shared/ui/breadcrumb/breadcrumb';
 import { Logo } from '../../shared/ui/logo/logo';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
@@ -52,6 +54,8 @@ interface Swatch {
     SkeletonLines,
     SkeletonTable,
     EntityPicker,
+    IssueAttachments,
+    PasteDropzone,
   ],
   templateUrl: './ui-showcase.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,6 +76,10 @@ export class UiShowcase {
     'Olivia',
   ];
   protected readonly lastConfirm = signal<string>('–');
+
+  // Attachments: live against an existing issue (upload needs its sprint in Testing).
+  protected readonly attachmentIssueKey = signal('PGERP-1');
+  protected readonly pendingFiles = signal<readonly File[]>([]);
 
   // entity-picker: live Client → Project → Module → Environment cascade (real API, quick-add creates real masters).
   private readonly masters = inject(MastersApi);

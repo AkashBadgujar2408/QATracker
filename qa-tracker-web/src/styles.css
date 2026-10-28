@@ -182,3 +182,11 @@ ng-icon:not(.qa-icon-inline) {
 .qa-tabs .mat-mdc-tab-body-content {
   overflow: hidden;
 }
+
+/* Attachment lightbox (MatDialog panelClass): full-screen, the component paints its own dark backdrop. */
+.qa-lightbox .mat-mdc-dialog-surface {
+  height: 100%;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}

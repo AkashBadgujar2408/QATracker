@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using QaTracker.Application.Abstractions;
 using QaTracker.Application.Common;
+using QaTracker.Application.Features.Attachments;
 using QaTracker.Domain.Rules;
 
 namespace QaTracker.Application.Features.Issues;
@@ -9,9 +11,13 @@ public sealed record DeleteIssueCommand(string Key);
 
 /// <summary>
 /// Hard delete – the only one in the system (plan 5): allowed while the sprint is in Testing. Activities, attachments,
-/// watchers and outbound links cascade; inbound links and "duplicate of" references are removed here first.
+/// watchers and outbound links cascade; inbound links and "duplicate of" references are removed first, attachment files after.
 /// </summary>
-public sealed class DeleteIssueHandler(IApplicationDbContext db, ICurrentUser currentUser)
+public sealed class DeleteIssueHandler(
+    IApplicationDbContext db,
+    IFileStorage storage,
+    ICurrentUser currentUser,
+    ILogger<DeleteIssueHandler> logger)
 {
     public async Task<Result<bool>> HandleAsync(DeleteIssueCommand command, CancellationToken cancellationToken)
     {
@@ -34,8 +40,18 @@ public sealed class DeleteIssueHandler(IApplicationDbContext db, ICurrentUser cu
             duplicate.DuplicateOfIssueId = null;
         }
 
+        var files = await db.Attachments.Where(a => a.IssueId == issue.Id)
+            .Select(a => new { a.StoragePath, a.ThumbnailPath })
+            .ToListAsync(cancellationToken);
+
         db.Issues.Remove(issue);
         await db.SaveChangesAsync(cancellationToken);
+
+        foreach (var path in files.SelectMany(f => new[] { f.StoragePath, f.ThumbnailPath }).OfType<string>())
+        {
+            await AttachmentFiles.TryDeleteAsync(storage, path, logger);
+        }
+
         return true;
     }
 }

@@ -185,6 +185,8 @@ public partial class QaTrackerDbContext : DbContext
         {
             entity.HasIndex(e => new { e.AssigneeId, e.Status }, "IX_Issues_Assignee_Status");
 
+            entity.HasIndex(e => e.DuplicateOfIssueId, "IX_Issues_DuplicateOfIssue").HasFilter("([DuplicateOfIssueId] IS NOT NULL)");
+
             entity.HasIndex(e => new { e.ModuleId, e.ScreenName }, "IX_Issues_Module_ScreenName");
 
             entity.HasIndex(e => new { e.ProjectId, e.Status }, "IX_Issues_Project_Status");
@@ -276,6 +278,8 @@ public partial class QaTrackerDbContext : DbContext
         {
             entity.HasKey(e => new { e.FromIssueId, e.ToIssueId });
 
+            entity.HasIndex(e => e.ToIssueId, "IX_IssueLinks_ToIssue");
+
             entity.Property(e => e.Type).HasMaxLength(20);
 
             entity.HasOne(d => d.FromIssue).WithMany(p => p.IssueLinkFromIssues)
@@ -342,6 +346,8 @@ public partial class QaTrackerDbContext : DbContext
 
         modelBuilder.Entity<Notification>(entity =>
         {
+            entity.HasIndex(e => e.IssueId, "IX_Notifications_Issue").HasFilter("([IssueId] IS NOT NULL)");
+
             entity.HasIndex(e => new { e.UserId, e.IsRead, e.CreatedAt }, "IX_Notifications_User_IsRead_CreatedAt");
 
             entity.Property(e => e.Body).HasMaxLength(1000);
@@ -506,6 +512,8 @@ public partial class QaTrackerDbContext : DbContext
         modelBuilder.Entity<SprintSnapshot>(entity =>
         {
             entity.HasKey(e => new { e.SprintId, e.IssueId });
+
+            entity.HasIndex(e => e.IssueId, "IX_SprintSnapshots_Issue");
 
             entity.Property(e => e.SeverityAtClose).HasMaxLength(20);
             entity.Property(e => e.StatusAtClose).HasMaxLength(20);

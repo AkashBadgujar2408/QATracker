@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # Word lock files
 ~$*
+
+# Attachment files (local storage – back up with the database)
+App_Data/

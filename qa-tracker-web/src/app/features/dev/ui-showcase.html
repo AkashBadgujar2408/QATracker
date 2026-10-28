@@ -193,6 +193,30 @@
     </div>
   </section>
 
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-1 text-lg font-semibold">
+      app-issue-attachments (paste-dropzone + attachment-gallery)
+    </h2>
+    <p class="mt-0 mb-4 max-w-2xl text-sm text-muted">
+      Live: uploads to the issue below at once. Ctrl+V anywhere on this page pastes a screenshot.
+      Click an image for the lightbox (← → Esc).
+    </p>
+    <label class="mb-4 flex items-center gap-2 text-sm text-muted">
+      Issue key
+      <input
+        class="w-36 rounded-control border border-border bg-surface px-2 py-1 text-base text-text uppercase"
+        [value]="attachmentIssueKey()"
+        (change)="attachmentIssueKey.set($any($event.target).value.trim().toUpperCase())"
+      />
+    </label>
+    <app-issue-attachments [issueKey]="attachmentIssueKey()" canEdit capturePaste />
+
+    <h3 class="mt-8 mb-2 text-sm font-semibold text-muted">
+      app-paste-dropzone – keep files until save
+    </h3>
+    <app-paste-dropzone [(files)]="pendingFiles" />
+  </section>
+
   <!-- States -->
   <section class="grid gap-6 lg:grid-cols-2">
     <div class="qa-card">

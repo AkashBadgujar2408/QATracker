@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QaTracker.Application.Abstractions;
+using QaTracker.Infrastructure.Files;
 using QaTracker.Infrastructure.Persistence;
 using QaTracker.Infrastructure.Persistence.Seeding;
 using QaTracker.Infrastructure.Text;
@@ -22,6 +23,14 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<QaTrackerDbContext>());
         services.AddScoped<IIssueNumbering, IssueNumbering>();
         services.AddSingleton<IRichTextSanitizer, RichTextSanitizer>();
+
+        services.AddOptions<StorageOptions>()
+            .Bind(configuration.GetSection(StorageOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        services.AddSingleton<IThumbnailGenerator, SkiaThumbnailGenerator>();
+        services.AddSingleton<IAttachmentUrlSigner, AttachmentUrlSigner>();
 
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IClock, SystemClock>();

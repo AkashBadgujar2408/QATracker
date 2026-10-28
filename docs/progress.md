@@ -369,3 +369,44 @@ create/delete need no version.
 **Libraries added (licence):** HtmlSanitizer 9.2.1039 (MIT; brings AngleSharp + AngleSharp.Css, MIT).
 
 **Next session:** S10 – Attachments.
+
+---
+
+## S10 – Attachments   (28-Oct-2026)
+
+**Done:**
+- API: `IFileStorage` (local folder, `Storage:Root`), `FileInspector` (magic bytes, Office zip check, UTF-8 text, 10 MB,
+  clean names), `IThumbnailGenerator` (SkiaSharp WebP 320 px, 50 MP cap), `IAttachmentUrlSigner` (HMAC signed URLs, 1 h).
+  Endpoints: list / upload (multipart, 1–5 files) per issue, download + thumbnail (bearer or signed URL; 403 for a bad
+  signature, 401 without credentials), remove. Upload/remove write Attachment activities; issue delete removes files.
+- DB: `004_IssueDeleteIndexes.sql` (applied locally, re-scaffolded) – see ADR-020.
+- Angular: `AttachmentsApi`, `fileSize` pipe, shared `app-paste-dropzone` (Ctrl+V incl. page-wide capture, drag-drop,
+  picker, client-side type/size checks, previews, remove, "screenshot-yyyy-MM-dd-HHmmss.png" names),
+  `app-attachment-gallery` + lightbox (← → Esc, download), `app-issue-attachments` (upload at once with progress, API
+  errors per upload, remove with confirmation). Both in /dev/ui.
+- Tests: 12 FileInspector unit tests; 5 attachment integration tests (signed thumbnail via a plain browser client,
+  tampered/other-id signature 403, no credentials 401, deactivated user 403, content/role/sprint checks, file clean-up
+  on remove and issue delete); 9 Angular tests (dropzone, issue attachments, file sizes).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 154/154 (one intermittent failure before 004 – then 7 clean runs before and 1 after adding the indexes) ·
+`ng build` clean · `ng test` 80/80 · `ng lint` clean · in Chrome (/dev/ui, tester): a pasted screenshot uploaded to
+PGERP-1 and showed its server thumbnail; lightbox opens it full size; from the page, the signed thumbnail URL → 200
+image/webp, tampered signature → 403 `attachment_forbidden`, plain URL without token → 401. Files landed in
+`src/QaTracker.Api/App_Data/attachments/2026/10/` (git-ignored).
+
+**Deviations from plan:** signed URLs (so `<img>` works without a bearer header); attachment removal endpoint; TXT also
+accepts `.log`.
+
+**Carry-over / known gaps:**
+- One intermittent failure of `Delete_RemovesTheIssueAndInboundLinks` in a full parallel run before 004 (error output
+  not captured); not reproduced in 8 runs since (7 before 004, 1 after). Most likely the unindexed FK scans fixed by 004 – watch for it.
+- Lightbox fix: Material dialog hosts are `display: contents`, so dialog components style an inner wrapper.
+- Comment attachments and attachments on workflow actions (reopen with screenshot) – S14/S13.
+- **Exports (Akash's request, 28-Oct):** confirmed planned in S25 – per-sprint Excel (ClosedXML) and PDF (QuestPDF)
+  report; issue list Excel export. To add to S25's scope: other testing documents (e.g. single-issue defect report PDF,
+  retest/verification summary) – list to agree before S25.
+- ADR-019 (SMTP, daily 18:00 digest, background jobs, MVC jobs admin) still awaiting confirmation before S19.
+
+**Libraries added (licence):** SkiaSharp 4.154.0 + SkiaSharp.NativeAssets.Linux.NoDependencies 4.154.0 (MIT).
+
+**Next session:** S11 – Testing workspace UI.

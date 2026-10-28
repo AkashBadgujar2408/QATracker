@@ -33,6 +33,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     private readonly TestDatabase _database = new();
 
+    /// <summary>Attachment files of this test run (deleted afterwards).</summary>
+    public string StorageRoot { get; } = Path.Combine(Path.GetTempPath(), "qa-tracker-tests", Guid.NewGuid().ToString("N"));
+
     public async ValueTask InitializeAsync()
     {
         await _database.InitializeAsync();
@@ -52,6 +55,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         await base.DisposeAsync();
         await _database.DisposeAsync();
+        if (Directory.Exists(StorageRoot))
+        {
+            Directory.Delete(StorageRoot, recursive: true);
+        }
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -59,6 +66,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("ConnectionStrings:QaTracker", _database.ConnectionString);
         builder.UseSetting("Auth:SigningKey", TestSigningKey);
         builder.UseSetting("Database:SeedOnStartup", "false");
+        builder.UseSetting("Storage:Root", StorageRoot);
         builder.UseSetting("RateLimiting:LoginPermitLimit", "10000");
     }
 
