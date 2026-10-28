@@ -78,6 +78,7 @@ try
     app.MapMastersEndpoints();
     app.MapSprintsEndpoints();
     app.MapIssuesEndpoints();
+    app.MapWorkflowEndpoints();
     app.MapAttachmentsEndpoints();
 
     await app.RunAsync();

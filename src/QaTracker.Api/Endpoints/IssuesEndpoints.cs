@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Net.Http.Headers;
 using QaTracker.Api.Auth;
 using QaTracker.Api.Common;
 using QaTracker.Application.Features.Issues;
@@ -102,13 +101,9 @@ public static class IssuesEndpoints
 
         issues.MapPut("/{key}", async (string key, UpdateIssueRequest r, [FromHeader(Name = "If-Match")] string? ifMatch, UpdateIssueHandler handler, HttpContext http, CancellationToken ct) =>
             {
-                if (ParseIfMatch(ifMatch) is not { } rowVersion)
+                if (IfMatch.Parse(ifMatch) is not { } rowVersion)
                 {
-                    return TypedResults.Problem(
-                        detail: "Send the issue's version (ETag from GET) in the If-Match header.",
-                        statusCode: StatusCodes.Status428PreconditionRequired,
-                        title: "Version required",
-                        extensions: new Dictionary<string, object?> { ["code"] = "if_match_required" });
+                    return IfMatch.Required();
                 }
 
                 return (await handler.HandleAsync(
@@ -131,15 +126,5 @@ public static class IssuesEndpoints
         return app;
     }
 
-    private static IResult WithETag(HttpContext http, IssueDto issue, IResult result)
-    {
-        http.Response.Headers.ETag = $"\"{issue.RowVersion}\"";
-        return result;
-    }
-
-    /// <summary>"\"AAAAAAAAB9E=\"" or W/"…" → the base64 row version.</summary>
-    private static string? ParseIfMatch(string? header) =>
-        EntityTagHeaderValue.TryParse(header, out var tag) && !tag.Tag.Equals("*", StringComparison.Ordinal)
-            ? tag.Tag.ToString().Trim('"')
-            : null;
+    private static IResult WithETag(HttpContext http, IssueDto issue, IResult result) => IfMatch.WithETag(http, issue.RowVersion, result);
 }

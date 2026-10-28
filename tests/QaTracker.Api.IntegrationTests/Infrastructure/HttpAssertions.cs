@@ -13,6 +13,10 @@ public static class HttpAssertions
         return await response.Content.ReadFromJsonAsync<JsonElement>();
     }
 
+    /// <summary>Asserts the status and the problem's code.</summary>
+    public static async Task ShouldBeProblemAsync(this HttpResponseMessage response, HttpStatusCode status, string code) =>
+        (await response.ShouldBeProblemAsync(status)).Code().ShouldBe(code);
+
     public static string? Code(this JsonElement problem) =>
         problem.TryGetProperty("code", out var code) ? code.GetString() : null;
 

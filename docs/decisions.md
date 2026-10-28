@@ -250,3 +250,25 @@ new alerts/mails and background tasks configurable in the app; one database for 
   Codes: sprint_closed, role_not_allowed, sprint_in_testing, invalid_transition, not_assignee, already_assigned,
   live_verification_required (role_not_allowed → 403, the rest → 422 via RuleCheckExtensions).
 - `IssueDto.allowedActions` = [{action, target, requires[]}] for the current user (GET/POST/PUT).
+
+## ADR-023 – Workflow API (28-Oct-2026, S13)
+- Routes (plan 14): `POST /api/issues/{key}/assign {userId, note}`, `/pick`, `/transition {action, reason, rejectType,
+  duplicateOfKey}` (Start, NeedInfo, Resume, Hold, Unhold, Dispute, Reject, Contest, Verify, Reopen, Close),
+  `/fixed {note, environmentIds[], version}`, `POST /api/issues/bulk-assign {keys[], userId, note}`,
+  `POST /api/deployments/{id}/retest {passed, comment}`. All return the issue (with ETag and allowedActions) except
+  bulk assign ({assigned[], failed[{key, code, reason}]}).
+- Single-issue actions need `If-Match` (428 without, 409 stale) – the same rule as `PUT`. Pick needs none: it is one
+  `UPDATE … WHERE AssigneeId IS NULL AND Status = @from` (ExecuteUpdate) in a transaction with its activities; zero rows →
+  409 `already_picked` "Already picked by X". Retest is guarded by "deployment still pending" plus the issue rowversion.
+- Every endpoint is open to signed-in users; IssueWorkflow decides (403 role, 422 rule). Inputs are validated (400):
+  reason where the action needs one, reject type, duplicate key, fix note and ≥ 1 active environment of the project,
+  failed-retest comment.
+- Activities: Assigned (old/new user id, note in Body; a pick = assigned from nobody to oneself), StatusChanged
+  (old/new status, reason in Body), Comment + Mention of the reporter for Need info (the question), Deployed per
+  environment (note, version in NewValue), RetestPassed/RetestFailed per deployment. Display text ("X assigned to Y",
+  "X picked") is rendered by the timeline (S14) from these ids.
+- Side effects: Hold sets/clears HoldReason; Reject stores type/reason and, for Duplicate, DuplicateOfIssueId plus an
+  IssueLink; Fixed sets FirstFixedAt once and clears VerifiedAt; Verify (or a passed retest with no other pending one)
+  sets VerifiedAt and passes pending deployments; Reopen +1 ReopenCount, fails pending deployments, clears
+  VerifiedAt/ClosedAt; Close sets ClosedAt.
+- No notifications yet (assigned, reopened, need info …) – they come with S18/S19 from these activities.

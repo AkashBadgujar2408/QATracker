@@ -16,8 +16,8 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | S10 | Attachments | ✅ Done (28-Oct-2026) |
 | S11 | Testing workspace UI (M1) | ✅ Done (28-Oct-2026) |
 | S12 | IssueWorkflow domain | ✅ Done (28-Oct-2026) |
-| S13 | Workflow API | ⏭ Next |
-| S14 | Timeline & comments API | |
+| S13 | Workflow API | ✅ Done (28-Oct-2026) |
+| S14 | Timeline & comments API | ⏭ Next |
 | S15 | Issue list & detail UI | |
 | S16 | My work, retest queue & deploy notice API | |
 | S17 | My work, retest queue & deploy notice UI (M2) | |
@@ -473,3 +473,34 @@ combination instead. Refinements listed in ADR-022 (assignee rules, reassign in 
 **Libraries added (licence):** none.
 
 **Next session:** S13 – Workflow API.
+
+---
+
+## S13 – Workflow API   (28-Oct-2026)
+
+**Done:**
+- Application `Features/Workflow`: assign, atomic pick, transition, mark fixed (deployments), retest, bulk assign;
+  `WorkflowSupport` (load, IssueWorkflow check, activities, save with rowversion, reload with allowedActions).
+- API `WorkflowEndpoints`; shared `IfMatch` helper (also used by `PUT /api/issues/{key}`). ADR-023.
+- Tests: 7 integration tests – developer blocked during Testing while the tester pre-assigns, pick race (6 developers,
+  one wins, five get "Already picked by …"), the full loop pick → need info (comment + mention) → resume → fixed (UAT)
+  → failed retest (Reopened, count 1) → start → fixed → passed retest → close → regression reopen (count 2) with the
+  activity trail, "Require LIVE verification" (Verified → Fixed on LIVE → close), dispute → reject as duplicate (link),
+  428/409/403/not-assignee/validation, bulk assign with per-issue failures.
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 189/189 · dev API: the six workflow routes in the OpenAPI document
+(Scalar), PGERP-3 as the test tester → allowedActions [Assign] while in Testing, transition without If-Match → 428.
+
+**Deviations from plan:** If-Match on assign/transition/fixed (plan only says "rowversion"); retest passes the issue to
+Verified only when no other retest of it is pending; a failed retest fails the other pending retests.
+
+**Carry-over / known gaps:**
+- Notifications for workflow events (S18/S19); watchers auto-add (S14).
+- Developer actions on a Fixed issue are Assign and MarkFixed (add a deployment) – the UI should label MarkFixed from
+  Fixed/Verified as "Add deployment" (S15).
+- Malformed JSON → 500 (from S08) still open.
+- Angular API client for workflow actions comes with the issue detail UI (S15).
+
+**Libraries added (licence):** none.
+
+**Next session:** S14 – Timeline & comments API.

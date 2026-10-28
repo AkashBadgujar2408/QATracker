@@ -17,6 +17,7 @@ public static class DependencyInjection
         }
 
         services.AddScoped<AuthSessions>();
+        services.AddScoped<Features.Workflow.WorkflowSupport>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         return services;
     }
