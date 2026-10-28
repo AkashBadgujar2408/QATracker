@@ -286,15 +286,19 @@ cascade returns data with a token, similar names without parent → 400.
   find box, show-inactive toggle, selection in the URL (`?client=&project=&tab=`), client panel (details form, projects
   list, new project, activate/deactivate with confirmation), project panel (name, key – locked once issues exist,
   LIVE verification flag, lazy tabs for modules / environments / members). Loading, empty and error states everywhere.
-- Tests: entity-picker (6), master dialog (3), masters page (3).
+- `plural` pipe ("1 module", "3 modules").
+- Tests: entity-picker (6), master dialog (3), masters page (3), plural pipe (1).
 
-**Verified:** `dotnet build` 0 warnings · `dotnet test` (integration 43/43) · `ng build` clean · `ng test` 70/70 ·
-`ng lint` clean. Browser walkthrough pending (needs a signed-in tester session – see carry-over).
+**Verified:** `dotnet build` 0 warnings · `dotnet test` (integration 43/43) · `ng build` clean · `ng test` 71/71 ·
+`ng lint` clean · in Chrome as a tester: built Pardi Gears › ERP (key PGERP suggested) › Sales Return › UAT 1 entirely
+from the /dev/ui pickers, keyboard only (type, Enter on "Add …", Enter in the dialog); typing "sales returns" flagged
+"Sales Return" as similar and "Use this" selected it; Masters tree, client panel, project panel and Members tab show the result.
 
 **Deviations from plan:** extra `GET /api/lookups/users` endpoint (needed for members; same read rules as other lookups).
 
 **Carry-over / known gaps:**
-- Browser walkthrough of "build the Pardi Gears hierarchy from pickers" to be done with a signed-in tester.
+- Picker list filtering is substring-only; near-duplicates (typos, plurals) are caught by the quick-add dialog instead.
+- Chrome automation: screenshots time out for a while after in-page URL changes (page itself stays responsive).
 - Tree is a set of buttons with aria-expanded/aria-current, not a full ARIA tree (no arrow-key navigation in the tree).
 
 **Libraries added (licence):** none (Angular Material autocomplete/tabs/slide-toggle already present).

@@ -177,3 +177,8 @@ ng-icon:not(.qa-icon-inline) {
   width: var(--ng-icon__size, 20px);
   height: var(--ng-icon__size, 20px);
 }
+
+/* Tab bodies size to their content; ripples on row buttons must not add an inner scrollbar. */
+.qa-tabs .mat-mdc-tab-body-content {
+  overflow: hidden;
+}

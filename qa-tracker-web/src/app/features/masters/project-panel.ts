@@ -138,6 +138,7 @@ export type ProjectTab = (typeof PROJECT_TABS)[number];
 
       <section class="qa-card overflow-hidden">
         <mat-tab-group
+          class="qa-tabs"
           [selectedIndex]="tabIndex()"
           (selectedIndexChange)="tab.set(tabs[$event])"
           animationDuration="0ms"

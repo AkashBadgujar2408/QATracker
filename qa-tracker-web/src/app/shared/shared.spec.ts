@@ -7,6 +7,7 @@ import { safeReturnUrl } from '../features/auth/login-page';
 import { HasRoleDirective } from './directives/has-role.directive';
 import { applyServerErrors, fieldError, passwordPolicyError } from './forms/form-errors';
 import { formatIst } from './pipes/ist-date.pipe';
+import { PluralPipe } from './pipes/plural.pipe';
 
 describe('formatIst', () => {
   it('formats in IST as dd/MMM/yyyy', () => {
@@ -80,5 +81,15 @@ describe('HasRoleDirective', () => {
     TestBed.inject(FakeAuth).current.set(testUser('Admin'));
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('.admin-only')).not.toBeNull();
+  });
+});
+
+describe('PluralPipe', () => {
+  const plural = new PluralPipe();
+
+  it('uses the singular only for one', () => {
+    expect(plural.transform(1, 'module')).toBe('1 module');
+    expect(plural.transform(0, 'module')).toBe('0 modules');
+    expect(plural.transform(3, 'person', 'people')).toBe('3 people');
   });
 });

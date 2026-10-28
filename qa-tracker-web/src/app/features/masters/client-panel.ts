@@ -21,6 +21,7 @@ import { ConfirmService } from '../../core/feedback/confirm.service';
 import { ToastService } from '../../core/feedback/toast.service';
 import { Client, MastersApi } from '../../shared/data/masters.api';
 import { applyServerErrors, fieldError } from '../../shared/forms/form-errors';
+import { PluralPipe } from '../../shared/pipes/plural.pipe';
 import { MasterDialogs } from '../../shared/masters/master-dialogs.service';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SkeletonLines } from '../../shared/ui/skeleton/skeleton';
@@ -38,6 +39,7 @@ import { SkeletonLines } from '../../shared/ui/skeleton/skeleton';
     NgIcon,
     EmptyState,
     SkeletonLines,
+    PluralPipe,
   ],
   viewProviders: [provideIcons({ lucideChevronRight, lucidePlus })],
   template: `
@@ -149,11 +151,10 @@ import { SkeletonLines } from '../../shared/ui/skeleton/skeleton';
                   <span class="min-w-0 flex-1">
                     <span class="block truncate font-medium">{{ project.name }}</span>
                     <span class="block text-xs text-muted tabular-nums"
-                      >{{ project.moduleCount }} modules,
-                      {{ project.environmentCount }} environments,
-                      {{ project.memberCount }} members{{
-                        project.isActive ? '' : ' – inactive'
-                      }}</span
+                      >{{ project.moduleCount | plural: 'module' }},
+                      {{ project.environmentCount | plural: 'environment' }},
+                      {{ project.memberCount | plural: 'member'
+                      }}{{ project.isActive ? '' : ' – inactive' }}</span
                     >
                   </span>
                   <ng-icon name="lucideChevronRight" size="16" class="text-muted" />
