@@ -266,3 +266,37 @@ cascade returns data with a token, similar names without parent → 400.
 **Libraries added (licence):** none.
 
 **Next session:** S07 – Masters UI + entity-picker.
+
+---
+
+## S07 – Masters UI + entity-picker   (28-Oct-2026)
+
+**Done:**
+- `shared/data/masters.api.ts`: typed client for all masters routes + lookups (cascade, similar, project-key, users).
+- API: `GET /api/lookups/users?role=` – active users for member/assignee pickers (testers cannot read the admin-only
+  `/api/users`). 1 integration test.
+- Shared `app-entity-picker` (mat-autocomplete): search, arrow keys/Enter/Esc, "+ Add 'typed text' as new …" option,
+  `[(value)]` or form control (ControlValueAccessor via NgControl, required error), exact typed name selects on blur,
+  unknown text reverts, emits `created`. Added to /dev/ui as a live Client → Project → Module → Environment cascade.
+- Shared `MasterDialog` + `MasterDialogs` service: quick-add for client, project (key auto-suggested until edited,
+  upper-cased), module, environment (type + URL); edit for module/environment. Similar names flagged as you type;
+  an exact duplicate blocks saving and offers "Use it"; similar ones offer "Use this". `MasterDialogs.quickAdd(kind, parent)`
+  builds the picker callback.
+- Masters page (`/masters`, Tester/Admin): tree Clients → Projects → Modules/Environments/Members with counts,
+  find box, show-inactive toggle, selection in the URL (`?client=&project=&tab=`), client panel (details form, projects
+  list, new project, activate/deactivate with confirmation), project panel (name, key – locked once issues exist,
+  LIVE verification flag, lazy tabs for modules / environments / members). Loading, empty and error states everywhere.
+- Tests: entity-picker (6), master dialog (3), masters page (3).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` (integration 43/43) · `ng build` clean · `ng test` 70/70 ·
+`ng lint` clean. Browser walkthrough pending (needs a signed-in tester session – see carry-over).
+
+**Deviations from plan:** extra `GET /api/lookups/users` endpoint (needed for members; same read rules as other lookups).
+
+**Carry-over / known gaps:**
+- Browser walkthrough of "build the Pardi Gears hierarchy from pickers" to be done with a signed-in tester.
+- Tree is a set of buttons with aria-expanded/aria-current, not a full ARIA tree (no arrow-key navigation in the tree).
+
+**Libraries added (licence):** none (Angular Material autocomplete/tabs/slide-toggle already present).
+
+**Next session:** S08 – Testing Sprint API.

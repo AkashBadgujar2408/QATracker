@@ -186,4 +186,16 @@ public sealed class MastersTests(ApiFactory api)
 
         (await response.ShouldBeProblemAsync(HttpStatusCode.BadRequest)).GetProperty("errors").TryGetProperty("userIds", out _).ShouldBeTrue();
     }
+
+    [Fact]
+    public async Task UserLookup_ListsActiveUsers_ForTesters()
+    {
+        var tester = await api.ClientForAsync(UserRole.Tester);
+        var developer = await api.CreateUserAsync(UserRole.Developer);
+
+        var developers = await (await tester.GetAsync("/api/lookups/users?role=Developer", Ct)).ShouldBeOkAsync<List<UserLookup>>();
+
+        developers.ShouldContain(u => u.Id == developer.Id);
+        developers.ShouldAllBe(u => u.Role == UserRole.Developer);
+    }
 }

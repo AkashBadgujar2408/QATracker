@@ -265,3 +265,16 @@ public static class ProjectKeySuggester
             .Select(word => new string(word.Where(char.IsAsciiLetterOrDigit).ToArray()))
             .Where(word => word.Length > 0);
 }
+
+public sealed record UserLookup(int Id, string UserName, string FullName, UserRole Role, string? AvatarColor);
+
+/// <summary>Active users for member and assignee pickers (testers cannot read the admin-only users list).</summary>
+public sealed class UserLookupHandler(IApplicationDbContext db)
+{
+    public async Task<IReadOnlyList<UserLookup>> HandleAsync(UserRole? role, CancellationToken cancellationToken) =>
+        await db.Users.AsNoTracking()
+            .Where(u => u.IsActive && (role == null || u.Role == role))
+            .OrderBy(u => u.FullName)
+            .Select(u => new UserLookup(u.Id, u.UserName, u.FullName, u.Role, u.AvatarColor))
+            .ToListAsync(cancellationToken);
+}

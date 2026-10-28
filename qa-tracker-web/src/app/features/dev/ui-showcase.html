@@ -146,6 +146,53 @@
     </div>
   </section>
 
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-1 text-lg font-semibold">app-entity-picker</h2>
+    <p class="mt-0 mb-4 max-w-2xl text-sm text-muted">
+      Live against the API: type a name that does not exist and choose “Add … as new” to open the
+      quick-add dialog (similar names are flagged). Arrow keys, Enter and Esc work in the list.
+    </p>
+    <div class="grid gap-x-4 sm:grid-cols-2 xl:grid-cols-4">
+      <app-entity-picker
+        label="Client"
+        noun="client"
+        [items]="clientItems()"
+        [quickAdd]="addClient"
+        [value]="pickedClient()"
+        (valueChange)="pickClient($event)"
+        (created)="cascade.reload()"
+      />
+      <app-entity-picker
+        label="Project"
+        noun="project"
+        [items]="projectItems()"
+        [quickAdd]="addProject"
+        [disabled]="!pickedClient()"
+        [value]="pickedProject()"
+        (valueChange)="pickProject($event)"
+        (created)="cascade.reload()"
+      />
+      <app-entity-picker
+        label="Module"
+        noun="module"
+        [items]="moduleItems()"
+        [quickAdd]="addModule"
+        [disabled]="!pickedProject()"
+        [(value)]="pickedModule"
+        (created)="cascade.reload()"
+      />
+      <app-entity-picker
+        label="Environment"
+        noun="environment"
+        [items]="environmentItems()"
+        [quickAdd]="addEnvironment"
+        [disabled]="!pickedProject()"
+        [(value)]="pickedEnvironment"
+        (created)="cascade.reload()"
+      />
+    </div>
+  </section>
+
   <!-- States -->
   <section class="grid gap-6 lg:grid-cols-2">
     <div class="qa-card">

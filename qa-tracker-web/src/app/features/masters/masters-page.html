@@ -1,0 +1,183 @@
+<app-page-header
+  title="Masters"
+  subtitle="Clients, their projects, and each project's modules, environments and members."
+>
+  <button actions matButton="filled" type="button" (click)="addClient()">
+    <ng-icon name="lucidePlus" size="16" class="mr-1" />
+    New client
+  </button>
+</app-page-header>
+
+<div class="grid items-start gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
+  <nav class="qa-card overflow-hidden lg:sticky lg:top-4" aria-label="Clients and projects">
+    <div class="flex flex-col gap-2 border-b border-border p-3">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-full">
+        <mat-label>Find</mat-label>
+        <ng-icon matPrefix name="lucideSearch" size="16" class="mr-1 ml-3 text-muted" />
+        <input
+          matInput
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+          placeholder="Client, project or key"
+        />
+      </mat-form-field>
+      <mat-slide-toggle
+        [checked]="showInactive()"
+        (change)="setShowInactive($event.checked)"
+        class="px-1"
+        >Show inactive</mat-slide-toggle
+      >
+    </div>
+
+    @if (clients.isLoading() && !clients.hasValue()) {
+      <app-skeleton-lines [lines]="6" class="block p-4" />
+    } @else if (clients.error()) {
+      <app-empty-state kind="error" title="Could not load clients" [message]="errorMessage()">
+        <button matButton="outlined" type="button" (click)="clients.reload()">Try again</button>
+      </app-empty-state>
+    } @else if (clients.value()?.length === 0) {
+      <app-empty-state
+        title="No clients yet"
+        message="Start with the company you test for. Projects, modules and environments go under it."
+      >
+        <button matButton="filled" type="button" (click)="addClient()">New client</button>
+      </app-empty-state>
+    } @else if (visibleClients().length === 0) {
+      <app-empty-state
+        kind="no-results"
+        title="Nothing matches"
+        [message]="'No client or loaded project matches “' + search() + '”.'"
+      >
+        <button matButton="outlined" type="button" (click)="addClient()">
+          Add “{{ search() }}” as client
+        </button>
+      </app-empty-state>
+    } @else {
+      <ul class="m-0 max-h-[calc(100vh-16rem)] list-none overflow-y-auto p-2">
+        @for (client of visibleClients(); track client.id) {
+          @let open = expanded().has(client.id);
+          @let clientSelected = selection().clientId === client.id && !selection().projectId;
+          <li>
+            <div class="flex items-center gap-0.5">
+              <button
+                type="button"
+                class="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-control border-0 bg-transparent text-muted hover:bg-surface-muted hover:text-text"
+                [attr.aria-expanded]="open"
+                [attr.aria-label]="(open ? 'Collapse ' : 'Expand ') + client.name"
+                (click)="toggle(client.id)"
+              >
+                <ng-icon
+                  name="lucideChevronRight"
+                  size="16"
+                  class="transition-transform motion-reduce:transition-none"
+                  [class.rotate-90]="open"
+                />
+              </button>
+              <button
+                type="button"
+                class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-control border-0 px-2 py-1.5 text-left text-base"
+                [class]="
+                  clientSelected
+                    ? 'bg-primary/10 font-semibold text-primary'
+                    : 'bg-transparent text-text hover:bg-surface-muted'
+                "
+                [class.opacity-60]="!client.isActive"
+                [attr.aria-current]="clientSelected ? 'page' : null"
+                (click)="selectClient(client)"
+              >
+                <ng-icon name="lucideBuilding2" size="16" class="shrink-0 opacity-70" />
+                <span class="min-w-0 flex-1 truncate">{{ client.name }}</span>
+                <span class="text-xs text-muted tabular-nums">{{ client.projectCount }}</span>
+              </button>
+            </div>
+
+            @if (open) {
+              @let projects = projectsOf(client.id);
+              <ul class="m-0 mb-1 ml-[13px] list-none border-l border-border py-0.5 pl-2">
+                @if (projects === undefined) {
+                  <li class="px-2 py-1.5 text-sm text-muted">Loading…</li>
+                } @else if (projects.length === 0) {
+                  <li class="px-2 py-1.5 text-sm text-muted">No projects</li>
+                }
+                @for (project of projects ?? []; track project.id) {
+                  @let projectSelected = selection().projectId === project.id;
+                  <li>
+                    <button
+                      type="button"
+                      class="flex w-full cursor-pointer items-center gap-2 rounded-control border-0 px-2 py-1.5 text-left text-base"
+                      [class]="
+                        projectSelected
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-transparent text-text hover:bg-surface-muted'
+                      "
+                      [class.opacity-60]="!project.isActive"
+                      [attr.aria-current]="projectSelected ? 'page' : null"
+                      (click)="selectProject(project)"
+                    >
+                      <span class="w-16 shrink-0 text-xs font-bold tracking-wider text-primary">{{
+                        project.key
+                      }}</span>
+                      <span
+                        class="min-w-0 flex-1 truncate"
+                        [class.font-semibold]="projectSelected"
+                        >{{ project.name }}</span
+                      >
+                    </button>
+                    @if (projectSelected) {
+                      <ul class="m-0 ml-[13px] list-none border-l border-border py-0.5 pl-2">
+                        @for (child of projectChildren; track child.tab) {
+                          @let childSelected = selection().tab === child.tab;
+                          <li>
+                            <button
+                              type="button"
+                              class="flex w-full cursor-pointer items-center gap-2 rounded-control border-0 px-2 py-1 text-left text-sm"
+                              [class]="
+                                childSelected
+                                  ? 'bg-surface-muted font-medium text-text'
+                                  : 'bg-transparent text-muted hover:bg-surface-muted hover:text-text'
+                              "
+                              (click)="selectProject(project, child.tab)"
+                            >
+                              <ng-icon [name]="child.icon" size="14" class="shrink-0" />
+                              <span class="flex-1">{{ child.label }}</span>
+                              <span class="text-xs tabular-nums">{{ child.count(project) }}</span>
+                            </button>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </nav>
+
+  <section class="min-w-0" aria-label="Details">
+    @if (selection().projectId; as projectId) {
+      <app-project-panel
+        [projectId]="projectId"
+        [tab]="selection().tab"
+        (tabChange)="setTab($event)"
+        (changed)="refresh($event.clientId)"
+      />
+    } @else if (selection().clientId; as clientId) {
+      <app-client-panel
+        [clientId]="clientId"
+        (changed)="refresh($event.id)"
+        (openProject)="openProject(clientId, $event)"
+      />
+    } @else if (clients.hasValue() && clients.value().length) {
+      <div class="qa-card">
+        <app-empty-state
+          kind="info"
+          title="Pick a client or project"
+          message="Choose one on the left to see and change its details."
+        />
+      </div>
+    }
+  </section>
+</div>

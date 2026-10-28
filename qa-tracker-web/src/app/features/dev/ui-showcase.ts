@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  linkedSignal,
+  signal,
+} from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButton } from '@angular/material/button';
 import { ConfirmService } from '../../core/feedback/confirm.service';
 import { ToastService } from '../../core/feedback/toast.service';
@@ -10,6 +18,9 @@ import {
   SEVERITIES,
   SEVERITY_META,
 } from '../../shared/models/issue-enums';
+import { Cascade, MastersApi } from '../../shared/data/masters.api';
+import { MasterDialogs } from '../../shared/masters/master-dialogs.service';
+import { EntityPicker, PickerItem } from '../../shared/ui/entity-picker/entity-picker';
 import { Breadcrumb } from '../../shared/ui/breadcrumb/breadcrumb';
 import { Logo } from '../../shared/ui/logo/logo';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
@@ -40,6 +51,7 @@ interface Swatch {
     UserAvatar,
     SkeletonLines,
     SkeletonTable,
+    EntityPicker,
   ],
   templateUrl: './ui-showcase.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -60,6 +72,69 @@ export class UiShowcase {
     'Olivia',
   ];
   protected readonly lastConfirm = signal<string>('–');
+
+  // entity-picker: live Client → Project → Module → Environment cascade (real API, quick-add creates real masters).
+  private readonly masters = inject(MastersApi);
+  private readonly masterDialogs = inject(MasterDialogs);
+  protected readonly pickedClient = signal<number | null>(null);
+  protected readonly pickedProject = signal<number | null>(null);
+  protected readonly pickedModule = signal<number | null>(null);
+  protected readonly pickedEnvironment = signal<number | null>(null);
+  protected readonly cascade = rxResource({
+    params: () => ({ clientId: this.pickedClient(), projectId: this.pickedProject() }),
+    stream: ({ params }) => this.masters.cascade(params.clientId, params.projectId),
+  });
+  /** Keeps the previous lists while the next cascade loads (no label flicker). */
+  private readonly lists = linkedSignal<Cascade | undefined, Cascade | undefined>({
+    source: () => (this.cascade.hasValue() ? this.cascade.value() : undefined),
+    computation: (value, previous) => value ?? previous?.value,
+  });
+  protected readonly clientItems = computed<PickerItem[]>(() =>
+    (this.lists()?.clients ?? []).map((c) => ({ id: c.id, label: c.name })),
+  );
+  protected readonly projectItems = computed<PickerItem[]>(() =>
+    this.pickedClient()
+      ? (this.lists()?.projects ?? []).map((p) => ({ id: p.id, label: p.name, hint: p.key }))
+      : [],
+  );
+  protected readonly moduleItems = computed<PickerItem[]>(() =>
+    this.pickedProject()
+      ? (this.lists()?.modules ?? []).map((m) => ({ id: m.id, label: m.name }))
+      : [],
+  );
+  protected readonly environmentItems = computed<PickerItem[]>(() =>
+    this.pickedProject()
+      ? (this.lists()?.environments ?? []).map((e) => ({ id: e.id, label: e.name, hint: e.url }))
+      : [],
+  );
+  private readonly parentClient = () =>
+    this.clientItems().find((c) => c.id === this.pickedClient()) ?? null;
+  private readonly parentProject = () =>
+    this.projectItems().find((p) => p.id === this.pickedProject()) ?? null;
+  protected readonly addClient = this.masterDialogs.quickAdd('Client');
+  protected readonly addProject = this.masterDialogs.quickAdd('Project', () => {
+    const client = this.parentClient();
+    return client && { id: client.id, name: client.label };
+  });
+  protected readonly addModule = this.masterDialogs.quickAdd('Module', () => {
+    const project = this.parentProject();
+    return project && { id: project.id, name: project.label };
+  });
+  protected readonly addEnvironment = this.masterDialogs.quickAdd('Environment', () => {
+    const project = this.parentProject();
+    return project && { id: project.id, name: project.label };
+  });
+
+  protected pickClient(id: number | null): void {
+    this.pickedClient.set(id);
+    this.pickProject(null);
+  }
+
+  protected pickProject(id: number | null): void {
+    this.pickedProject.set(id);
+    this.pickedModule.set(null);
+    this.pickedEnvironment.set(null);
+  }
 
   protected readonly surfaceSwatches: readonly Swatch[] = [
     { label: 'Primary', token: '--qa-primary' },

@@ -63,7 +63,12 @@ export const routes: Routes = [
           placeholder('clients', 'Client health', 'S24'),
         ],
       },
-      placeholder('masters', 'Masters', 'S07', ['Tester', 'Admin']),
+      {
+        path: 'masters',
+        title: 'Masters',
+        data: { breadcrumb: 'Masters', roles: ['Tester', 'Admin'] satisfies Role[] },
+        loadComponent: () => import('./features/masters/masters-page').then((m) => m.MastersPage),
+      },
       {
         path: 'admin',
         data: { breadcrumb: 'Admin', roles: ['Admin'] satisfies Role[] },

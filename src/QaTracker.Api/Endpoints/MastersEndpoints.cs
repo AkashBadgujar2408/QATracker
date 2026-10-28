@@ -142,5 +142,9 @@ public static class MastersEndpoints
         lookups.MapGet("/project-key", async (int clientId, string name, SuggestProjectKeyHandler handler, CancellationToken ct) =>
                 (await handler.HandleAsync(new ProjectKeySuggestionQuery(clientId, name), ct)).ToHttp(suggestion => TypedResults.Ok(suggestion)))
             .WithSummary("A free project key for a new project of this client.");
+
+        lookups.MapGet("/users", async (UserRole? role, UserLookupHandler handler, CancellationToken ct) =>
+                TypedResults.Ok(await handler.HandleAsync(role, ct)))
+            .WithSummary("Active users (optionally of one role) for member and assignee pickers.");
     }
 }
