@@ -1,0 +1,324 @@
+<app-page-header title="Issues" subtitle="Every issue across clients, projects and sprints.">
+  <button actions matButton="outlined" type="button" [matMenuTriggerFor]="viewsMenu">
+    <ng-icon name="lucideBookmark" size="16" class="mr-1" />
+    Views
+  </button>
+</app-page-header>
+
+<mat-menu #viewsMenu="matMenu" xPosition="before">
+  @for (view of views(); track view.name) {
+    <button mat-menu-item type="button" (click)="applyView(view)">
+      <span class="flex items-center gap-3">
+        <span class="min-w-0 flex-1 truncate">{{ view.name }}</span>
+        <span
+          role="button"
+          tabindex="0"
+          class="flex size-7 items-center justify-center rounded-control text-muted hover:bg-surface-muted hover:text-severity-critical"
+          [attr.aria-label]="'Delete view ' + view.name"
+          (click)="removeView(view, $event)"
+          (keydown.enter)="removeView(view, $event)"
+        >
+          <ng-icon name="lucideTrash2" size="14" />
+        </span>
+      </span>
+    </button>
+  } @empty {
+    <p class="m-0 px-4 py-2 text-sm text-muted">No saved views yet.</p>
+  }
+  <button mat-menu-item type="button" (click)="saveView()">Save current view…</button>
+</mat-menu>
+
+<!-- Filter bar -->
+<section class="qa-card mb-4 px-4 pt-4 pb-1" aria-label="Filters">
+  <div
+    class="grid gap-x-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-[repeat(4,minmax(0,1fr))_minmax(0,1.4fr)]"
+  >
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Client</mat-label>
+      <mat-select [value]="filters().clientId" (selectionChange)="chooseClient($event.value)">
+        <mat-option [value]="null">All clients</mat-option>
+        @for (c of cascade.value()?.clients ?? []; track c.id) {
+          <mat-option [value]="c.id">{{ c.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Project</mat-label>
+      <mat-select
+        [value]="filters().projectId"
+        [disabled]="!filters().clientId"
+        (selectionChange)="chooseProject($event.value)"
+      >
+        <mat-option [value]="null">All projects</mat-option>
+        @for (p of cascade.value()?.projects ?? []; track p.id) {
+          <mat-option [value]="p.id">{{ p.name }} ({{ p.key }})</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Sprint</mat-label>
+      <mat-select
+        [value]="filters().sprintId"
+        [disabled]="!filters().projectId"
+        (selectionChange)="update({ sprintId: $event.value })"
+      >
+        <mat-option [value]="null">All sprints</mat-option>
+        @for (s of sprints.value() ?? []; track s.id) {
+          <mat-option [value]="s.id">{{ s.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Module</mat-label>
+      <mat-select
+        [value]="filters().moduleId"
+        [disabled]="!filters().projectId"
+        (selectionChange)="update({ moduleId: $event.value })"
+      >
+        <mat-option [value]="null">All modules</mat-option>
+        @for (m of cascade.value()?.modules ?? []; track m.id) {
+          <mat-option [value]="m.id">{{ m.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Search</mat-label>
+      <ng-icon matPrefix name="lucideSearch" size="16" class="mr-1 ml-3 text-muted" />
+      <input
+        matInput
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+        placeholder="Key, title or screen"
+        autocomplete="off"
+      />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Status</mat-label>
+      <mat-select
+        multiple
+        [value]="filters().status"
+        (selectionChange)="update({ status: $event.value })"
+      >
+        @for (s of statuses; track s) {
+          <mat-option [value]="s">{{ statusMeta[s].label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Severity</mat-label>
+      <mat-select
+        multiple
+        [value]="filters().severity"
+        (selectionChange)="update({ severity: $event.value })"
+      >
+        @for (s of severities; track s) {
+          <mat-option [value]="s">{{ severityMeta[s].label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Priority</mat-label>
+      <mat-select
+        multiple
+        [value]="filters().priority"
+        (selectionChange)="update({ priority: $event.value })"
+      >
+        @for (p of priorities; track p) {
+          <mat-option [value]="p">{{ priorityMeta[p].label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Assignee</mat-label>
+      <mat-select
+        [value]="filters().assignee"
+        (selectionChange)="update({ assignee: $event.value })"
+      >
+        <mat-option [value]="null">Anyone</mat-option>
+        <mat-option value="none">Unassigned</mat-option>
+        @for (u of assignees(); track u.id) {
+          <mat-option [value]="u.id">{{ u.fullName }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <div class="mb-3 flex items-center gap-3">
+      <mat-slide-toggle [checked]="filters().overdue" (change)="update({ overdue: $event.checked })"
+        >Overdue only</mat-slide-toggle
+      >
+      @if (filterCount()) {
+        <button matButton type="button" class="ml-auto" (click)="clearFilters()">
+          <ng-icon name="lucideX" size="14" class="mr-1" />
+          Clear {{ filterCount() | plural: 'filter' }}
+        </button>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Bulk assign -->
+@if (selected().size) {
+  <div
+    class="mb-4 flex flex-wrap items-center gap-3 rounded-card border border-primary/40 bg-primary/5 px-4 py-2"
+    role="region"
+    aria-label="Bulk assign"
+  >
+    <span class="text-base font-medium">{{ selected().size | plural: 'issue' }} selected</span>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="qa-compact w-64">
+      <mat-label>Assign to</mat-label>
+      <mat-select [value]="bulkAssignee()" (selectionChange)="bulkAssignee.set($event.value)">
+        @for (u of assignees(); track u.id) {
+          <mat-option [value]="u.id">{{ u.fullName }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <button
+      matButton="filled"
+      type="button"
+      [disabled]="!bulkAssignee() || assigning()"
+      (click)="bulkAssign()"
+    >
+      {{ assigning() ? 'Assigning…' : 'Assign' }}
+    </button>
+    <button matButton type="button" (click)="clearSelection()">Clear selection</button>
+  </div>
+}
+
+<!-- Table -->
+<section class="qa-card overflow-hidden">
+  @if (result.isLoading() && !result.hasValue()) {
+    <app-skeleton-table [rows]="8" [columns]="7" />
+  } @else if (result.error()) {
+    <app-empty-state kind="error" title="Could not load issues" [message]="errorMessage()">
+      <button matButton="outlined" type="button" (click)="result.reload()">Try again</button>
+    </app-empty-state>
+  } @else if (!rows().length) {
+    @if (filterCount()) {
+      <app-empty-state
+        kind="no-results"
+        title="No matching issues"
+        message="Try removing a filter."
+      >
+        <button matButton="outlined" type="button" (click)="clearFilters()">Clear filters</button>
+      </app-empty-state>
+    } @else {
+      <app-empty-state
+        title="No issues yet"
+        message="Issues logged on the Testing screen show up here."
+      />
+    }
+  } @else {
+    <div class="overflow-x-auto">
+      <table
+        mat-table
+        [dataSource]="rows()"
+        matSort
+        [matSortActive]="sortState().active"
+        [matSortDirection]="sortState().direction"
+        (matSortChange)="onSort($event)"
+        class="qa-issue-table min-w-[960px]"
+        [class.opacity-60]="result.isLoading()"
+      >
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef class="w-12">
+            <mat-checkbox
+              [checked]="allOnPageSelected()"
+              [indeterminate]="selected().size > 0 && !allOnPageSelected()"
+              (change)="toggleAll($event.checked)"
+              aria-label="Select all issues on this page"
+            />
+          </th>
+          <td mat-cell *matCellDef="let row" (click)="$event.stopPropagation()">
+            <mat-checkbox
+              [checked]="selected().has(row.key)"
+              (change)="toggle(row.key, $event.checked)"
+              [aria-label]="'Select ' + row.key"
+            />
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="key">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Key</th>
+          <td mat-cell *matCellDef="let row">
+            <a
+              [routerLink]="['/issues', row.key]"
+              class="font-semibold whitespace-nowrap text-primary tabular-nums no-underline hover:underline"
+              (click)="$event.stopPropagation()"
+              >{{ row.key }}</a
+            >
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Title</th>
+          <td mat-cell *matCellDef="let row" class="max-w-[28rem]">
+            <div class="truncate text-text" [title]="row.title">{{ row.title }}</div>
+            <div class="truncate text-xs text-muted">
+              {{ row.moduleName }}{{ row.screenName ? ' › ' + row.screenName : '' }} ·
+              {{ row.sprintName }}
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="severity">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Severity</th>
+          <td mat-cell *matCellDef="let row"><app-severity-badge [severity]="row.severity" /></td>
+        </ng-container>
+        <ng-container matColumnDef="priority">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Priority</th>
+          <td mat-cell *matCellDef="let row">
+            <app-priority-icon [priority]="row.priority" [showLabel]="true" />
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let row"><app-status-pill [status]="row.status" /></td>
+        </ng-container>
+        <ng-container matColumnDef="assignee">
+          <th mat-header-cell *matHeaderCellDef>Assignee</th>
+          <td mat-cell *matCellDef="let row">
+            @if (row.assigneeName) {
+              <span class="flex items-center gap-2 whitespace-nowrap">
+                <app-user-avatar [name]="row.assigneeName" size="sm" />
+                {{ row.assigneeName }}
+              </span>
+            } @else {
+              <span class="text-muted">Unassigned</span>
+            }
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="dueDate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Due</th>
+          <td
+            mat-cell
+            *matCellDef="let row"
+            class="whitespace-nowrap tabular-nums"
+            [class.text-severity-critical]="isOverdue(row)"
+          >
+            {{ row.dueDate ? (row.dueDate | istDate) : '–' }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Created</th>
+          <td mat-cell *matCellDef="let row" class="whitespace-nowrap text-muted tabular-nums">
+            {{ row.createdAt | istDate }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: columns"
+          class="cursor-pointer"
+          [class.qa-row-selected]="selected().has(row.key)"
+          (click)="open(row)"
+        ></tr>
+      </table>
+    </div>
+    <mat-paginator
+      [length]="total()"
+      [pageIndex]="filters().page - 1"
+      [pageSize]="filters().size"
+      [pageSizeOptions]="pageSizes"
+      (page)="onPage($event)"
+      aria-label="Pages of issues"
+    />
+  }
+</section>

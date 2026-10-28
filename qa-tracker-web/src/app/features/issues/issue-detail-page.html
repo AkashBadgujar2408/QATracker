@@ -1,0 +1,250 @@
+@if (issue.isLoading() && !current()) {
+  <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <section class="qa-card p-6"><app-skeleton-lines [lines]="10" /></section>
+    <section class="qa-card p-6"><app-skeleton-lines [lines]="6" /></section>
+  </div>
+} @else if (notFound()) {
+  <section class="qa-card">
+    <app-empty-state
+      kind="no-results"
+      [title]="key() + ' was not found'"
+      message="The key may be mistyped, or the issue was deleted while its sprint was in testing."
+    >
+      <a matButton="outlined" routerLink="/issues">Back to issues</a>
+    </app-empty-state>
+  </section>
+} @else if (issue.error()) {
+  <section class="qa-card">
+    <app-empty-state kind="error" title="Could not load the issue" [message]="loadError()">
+      <button matButton="outlined" type="button" (click)="issue.reload()">Try again</button>
+    </app-empty-state>
+  </section>
+} @else if (current(); as i) {
+  <!-- Header -->
+  <header class="mb-5">
+    <div class="flex flex-wrap items-center gap-2 text-sm">
+      <span class="font-semibold text-primary tabular-nums">{{ i.key }}</span>
+      <app-status-pill [status]="i.status" />
+      <app-severity-badge [severity]="i.severity" />
+      <app-priority-icon [priority]="i.priority" [showLabel]="true" />
+      @if (i.reopenCount > 0) {
+        <span class="text-xs font-medium text-status-reopened">Reopened {{ i.reopenCount }}×</span>
+      }
+    </div>
+    <h1 class="mt-2 mb-3 text-xl leading-snug font-semibold tracking-tight text-text">
+      {{ i.title }}
+    </h1>
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+      <span class="flex items-center gap-2">
+        @if (i.assigneeName) {
+          <app-user-avatar [name]="i.assigneeName" size="sm" />
+          <span class="text-text">{{ i.assigneeName }}</span>
+        } @else {
+          <span>Unassigned</span>
+        }
+      </span>
+      @if (i.dueDate) {
+        <span class="flex items-center gap-1" [class.text-severity-critical]="overdue()">
+          <ng-icon name="lucideClock" size="14" />
+          Due {{ i.dueDate | istDate }}{{ overdue() ? ' · overdue' : '' }}
+        </span>
+      }
+      <span>{{ i.sprintName }} · {{ sprintLabels[i.sprintStatus] }}</span>
+    </div>
+  </header>
+
+  @if (developerWaiting()) {
+    <div
+      role="status"
+      class="mb-5 flex items-start gap-3 rounded-card border border-sprint-testing/40 bg-sprint-testing/10 px-4 py-3 text-base"
+    >
+      <ng-icon name="lucideInfo" size="18" class="mt-0.5 shrink-0 text-sprint-testing" />
+      <span
+        >Testing in progress. You can read and comment; the actions open once the tester marks
+        testing completed.</span
+      >
+    </div>
+  }
+
+  <!-- Actions (from allowedActions – the API decides) -->
+  @if (actions().length) {
+    <div class="mb-5 flex flex-wrap items-center gap-2" role="group" aria-label="Actions">
+      @for (allowed of actions(); track allowed.action) {
+        <button
+          [matButton]="allowed.action === primary() ? 'filled' : 'outlined'"
+          type="button"
+          [disabled]="busy() !== null"
+          (click)="act(allowed)"
+        >
+          {{ busy() === allowed.action ? 'Saving…' : label(allowed.action) }}
+        </button>
+      }
+    </div>
+  }
+  @if (actionError()) {
+    <p role="alert" class="mt-0 mb-5 text-sm text-severity-critical">
+      {{ actionError() }}
+      <button matButton type="button" (click)="actionError.set(null); reloadAll()">Reload</button>
+    </p>
+  }
+
+  <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div class="flex min-w-0 flex-col gap-5">
+      <!-- Environment strip -->
+      @if (strip().length) {
+        <section class="qa-card px-5 py-4" aria-label="Deployments">
+          <h2 class="mt-0 mb-3 text-md font-semibold">Deployments</h2>
+          <ul class="m-0 flex list-none flex-col gap-2 p-0">
+            @for (env of strip(); track env.environmentId) {
+              @let d = env.latest;
+              <li
+                class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-control border border-border px-3 py-2"
+              >
+                <span class="font-semibold text-text">{{ env.name }}</span>
+                @switch (d.retestResult) {
+                  @case ('Passed') {
+                    <span class="flex items-center gap-1 text-sm text-status-verified">
+                      <ng-icon name="lucideCircleCheck" size="15" /> Verified
+                      {{ d.retestedAt | istDate }}
+                    </span>
+                  }
+                  @case ('Failed') {
+                    <span class="flex items-center gap-1 text-sm text-status-reopened">
+                      <ng-icon name="lucideCircleX" size="15" /> Retest failed
+                      {{ d.retestedAt | istDate }}
+                    </span>
+                  }
+                  @default {
+                    <span class="flex items-center gap-1 text-sm text-status-on-hold">
+                      <ng-icon name="lucideClock" size="15" /> Awaiting retest
+                    </span>
+                  }
+                }
+                <span class="text-xs text-muted"
+                  >deployed {{ d.deployedAt | istDate: 'datetime' }} by {{ d.deployedByName
+                  }}{{ d.version ? ' · ' + d.version : '' }}</span
+                >
+                <span class="flex-1"></span>
+                <a
+                  class="flex items-center gap-1 text-sm text-primary"
+                  [href]="env.url"
+                  target="_blank"
+                  rel="noopener"
+                  >Open <ng-icon name="lucideExternalLink" size="13"
+                /></a>
+                @if (d.retestResult === 'Pending' && canRetest()) {
+                  <button
+                    matButton="filled"
+                    type="button"
+                    [disabled]="busy() !== null"
+                    (click)="retestPassed(d)"
+                  >
+                    Pass
+                  </button>
+                  <button
+                    matButton="outlined"
+                    type="button"
+                    [disabled]="busy() !== null"
+                    (click)="retestFailed(d)"
+                  >
+                    Fail
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <!-- Description -->
+      <section class="qa-card px-5 py-4" aria-label="Description">
+        @if (i.steps) {
+          <h2 class="mt-0 mb-1 text-sm font-semibold text-muted">Steps to reproduce</h2>
+          <div class="qa-rich mb-4" [innerHTML]="i.steps"></div>
+        }
+        @if (i.expectedResult) {
+          <h2 class="mt-0 mb-1 text-sm font-semibold text-muted">Expected result</h2>
+          <div class="qa-rich mb-4" [innerHTML]="i.expectedResult"></div>
+        }
+        <h2 class="mt-0 mb-1 text-sm font-semibold text-muted">Actual result</h2>
+        <div class="qa-rich" [innerHTML]="i.actualResult"></div>
+        @if (i.impact) {
+          <h2 class="mt-4 mb-1 text-sm font-semibold text-muted">Impact</h2>
+          <div class="qa-rich" [innerHTML]="i.impact"></div>
+        }
+      </section>
+
+      <section class="qa-card px-5 py-4" aria-label="Attachments">
+        <h2 class="mt-0 mb-3 text-md font-semibold">Attachments</h2>
+        <app-issue-attachments [issueKey]="i.key" [canEdit]="i.permissions.canEdit" />
+      </section>
+
+      <section class="qa-card px-5 py-4">
+        <app-issue-timeline [issueKey]="i.key" [users]="users.value() ?? []" />
+      </section>
+    </div>
+
+    <!-- Side panel -->
+    <aside class="flex flex-col gap-5 lg:sticky lg:top-0">
+      <section class="qa-card px-5 py-4" aria-label="Details">
+        <dl class="qa-details m-0">
+          <dt>Project</dt>
+          <dd>{{ i.projectName }} ({{ i.projectKey }})</dd>
+          <dt>Module</dt>
+          <dd>{{ i.moduleName }}</dd>
+          <dt>Screen</dt>
+          <dd>{{ i.screenName ?? '–' }}</dd>
+          <dt>Type</dt>
+          <dd>{{ i.type }}</dd>
+          <dt>Found on</dt>
+          <dd>{{ i.foundOnEnvironmentName ?? '–' }}</dd>
+          @if (i.pageUrl) {
+            <dt>Page</dt>
+            <dd>
+              <a class="break-all text-primary" [href]="i.pageUrl" target="_blank" rel="noopener">{{
+                i.pageUrl
+              }}</a>
+            </dd>
+          }
+          <dt>Reported</dt>
+          <dd>{{ i.reporterName }}, {{ i.createdAt | istDate: 'datetime' }}</dd>
+          @if (i.updatedAt) {
+            <dt>Updated</dt>
+            <dd>{{ i.updatedAt | istDate: 'datetime' }}</dd>
+          }
+        </dl>
+      </section>
+
+      <section class="qa-card px-5 py-4" aria-label="Related issues">
+        <h2 class="mt-0 mb-1 text-md font-semibold">Related open issues</h2>
+        <p class="mt-0 mb-3 text-xs text-muted">Same module – fix them together.</p>
+        @if (related.isLoading() && !related.hasValue()) {
+          <app-skeleton-lines [lines]="3" />
+        } @else if (!(related.value() ?? []).length) {
+          <p class="m-0 text-sm text-muted">No other open issues in {{ i.moduleName }}.</p>
+        } @else {
+          <ul class="m-0 flex list-none flex-col gap-2 p-0">
+            @for (r of related.value(); track r.id) {
+              <li>
+                <a
+                  [routerLink]="['/issues', r.key]"
+                  class="block rounded-control px-2 py-1.5 no-underline hover:bg-surface-muted"
+                >
+                  <span class="flex items-center gap-2 text-sm">
+                    <span class="font-semibold text-primary tabular-nums">{{ r.key }}</span>
+                    <app-status-pill [status]="r.status" />
+                  </span>
+                  <span class="mt-0.5 line-clamp-2 block text-sm text-text">{{ r.title }}</span>
+                  <span class="block text-xs text-muted"
+                    >{{ r.sameScreen ? 'Same screen' : (r.screenName ?? 'No screen') }} ·
+                    {{ r.assigneeName ?? 'Unassigned' }}</span
+                  >
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </aside>
+  </div>
+}

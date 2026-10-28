@@ -118,6 +118,34 @@
     box-shadow: var(--qa-shadow-card);
   }
 
+  /* Sanitised rich text from the API (steps, expected, actual, impact). */
+  .qa-rich {
+    color: var(--qa-text);
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+  .qa-rich :is(p, ul, ol, pre, blockquote) {
+    margin: 0 0 0.4rem;
+  }
+  .qa-rich :is(ul, ol) {
+    padding-left: 1.3rem;
+  }
+  .qa-rich ul {
+    list-style: disc;
+  }
+  .qa-rich ol {
+    list-style: decimal;
+  }
+  .qa-rich code {
+    font-size: 0.9em;
+    padding: 0 0.25rem;
+    border-radius: 4px;
+    background: var(--qa-surface-muted);
+  }
+  .qa-rich a {
+    color: var(--qa-primary);
+  }
+
   /* Fields focused by keyboard stay clear of a sticky save bar below them. */
   .qa-above-sticky-footer * {
     scroll-margin-bottom: 5.5rem;

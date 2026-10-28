@@ -18,8 +18,8 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | S12 | IssueWorkflow domain | ✅ Done (28-Oct-2026) |
 | S13 | Workflow API | ✅ Done (28-Oct-2026) |
 | S14 | Timeline & comments API | ✅ Done (28-Oct-2026) |
-| S15 | Issue list & detail UI | ⏭ Next |
-| S16 | My work, retest queue & deploy notice API | |
+| S15 | Issue list & detail UI | ✅ Done (28-Oct-2026) |
+| S16 | My work, retest queue & deploy notice API | ⏭ Next |
 | S17 | My work, retest queue & deploy notice UI (M2) | |
 | S18 | SignalR & in-app notifications | |
 | S19 | Email notifications | |
@@ -531,3 +531,44 @@ instead of page numbers so new entries do not shift pages.
 **Libraries added (licence):** none.
 
 **Next session:** S15 – Issue list & detail UI.
+
+---
+
+## S15 – Issue list & detail UI   (28-Oct-2026)
+
+**Done:**
+- `/issues`: filter bar (client, project, sprint, module, search, status, severity, priority, assignee incl.
+  unassigned, overdue), mat-table with server sort/paging, row → detail, saved views (local), bulk assign. Filters in the
+  URL (`issue-filters.ts`).
+- `/issues/:key`: header (status, severity, priority, reopen count, assignee, due/overdue, sprint), developer
+  "Testing in progress" banner, actions from allowedActions + `ActionDialog`, environment strip with Pass / Fail,
+  description (sanitised HTML), attachments, related open issues, details panel, breadcrumb Issues ▸ Client ▸ Project ▸
+  Sprint ▸ Key.
+- Shared `app-issue-timeline` + `app-comment-composer` (in /dev/ui), `TimelineApi`; `IssuesApi` workflow methods,
+  list filters with repeated params, related issues. Global `.qa-rich` styles for sanitised rich text.
+- API: `IssueDto.deployments`; failed retest note written once. ADR-025.
+- Tests: 10 Angular tests (filters URL round trip and API query, action labels, environment strip, mention query,
+  mention highlighting, relative time, detail page actions = allowedActions + one-click pick, developer banner during
+  Testing, Pass / Fail replacing Verify / Reopen); workflow integration test checks `deployments`.
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 211/211 · `ng build` clean · `ng test` 99/99 · `ng lint` clean ·
+in Chrome on a separate test project (UI Check / UICHK, sprint "Sprint 1 - UI check" completed for this): developer
+`ui.developer` picked UICHK-1, marked it fixed on UAT 1 (1.8.0), commented with an @mention picked from the
+suggestions; tester `ui.tester` failed the retest with a pasted screenshot (Reopened 1×), the developer fixed again
+(1.8.1, via the API), the tester passed the retest (Verified) and closed it – every step in the timeline with names;
+bulk-assigned UICHK-2 to the developer from the list.
+
+**Deviations from plan:** list is mat-table without a column chooser (S31 polish); saved views local only (as planned
+"local first"); screenshots on reopen go into a comment.
+
+**Carry-over / known gaps:**
+- Local dev DB has test data: accounts `ui.tester` and `ui.developer` (deactivate when not needed), client "UI Check
+  Client" / project UICHK with UICHK-1 (closed) and UICHK-2 (assigned), PGERP-3 from S11. Akash's "Sprint 1 – UAT" on
+  PGERP was not changed.
+- Real-time timeline updates (SignalR) – S18; notifications – S18/S19.
+- Malformed (non-UTF-8) JSON → 500 still open (hit again while seeding test data with an en dash from the shell).
+- Chrome automation: screenshots still time out right after in-page navigation (page responsive) – as in S07.
+
+**Libraries added (licence):** none.
+
+**Next session:** S16 – My work, retest queue & deploy notice API.

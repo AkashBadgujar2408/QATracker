@@ -55,6 +55,9 @@ public sealed record IssueDto(
     /// <summary>Workflow actions the current user may take now (IssueWorkflow) – the UI never repeats the rules.</summary>
     public IReadOnlyList<AllowedActionDto> AllowedActions { get; init; } = [];
 
+    /// <summary>Deployments of the fix, oldest first – the environment strip and the retest buttons (plan 7.4).</summary>
+    public IReadOnlyList<DeploymentDto> Deployments { get; init; } = [];
+
     public static readonly Expression<Func<Issue, IssueDto>> Projection = i => new IssueDto(
         i.Id,
         i.IssueKey,
@@ -92,6 +95,22 @@ public sealed record IssueDto(
         i.UpdatedAt,
         Convert.ToBase64String(i.RowVersion));
 }
+
+/// <summary>A fix deployed on an environment and its retest.</summary>
+public sealed record DeploymentDto(
+    int Id,
+    int EnvironmentId,
+    string EnvironmentName,
+    EnvironmentType EnvironmentType,
+    string EnvironmentUrl,
+    string DeployedByName,
+    DateTimeOffset DeployedAt,
+    string? Note,
+    string? Version,
+    RetestResult RetestResult,
+    string? RetestedByName,
+    DateTimeOffset? RetestedAt,
+    string? RetestComment);
 
 /// <summary>An allowed workflow action: where it leads and what the user must provide (assignee, reason, rejectType, environments).</summary>
 public sealed record AllowedActionDto(IssueAction Action, IssueStatus Target, IReadOnlyList<string> Requires)

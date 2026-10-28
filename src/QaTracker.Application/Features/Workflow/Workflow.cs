@@ -566,7 +566,7 @@ public sealed class RetestHandler(IValidator<RetestCommand> validator, IApplicat
             issue.ReopenCount++;
         }
 
-        workflow.StatusChanged(issue, from, command.Passed ? null : command.Comment);
+        workflow.StatusChanged(issue, from, null); // the retest event carries the comment
         return await workflow.SaveAndReloadAsync(issue, rowVersion: null, cancellationToken);
     }
 }

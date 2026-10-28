@@ -158,8 +158,17 @@ internal static class IssueAccess
         var context = new WorkflowContext(
             issue.Status, issue.SprintStatus, issue.AssigneeId, user.Role, user.UserId, flags.RequireLiveVerification, flags.HasPassedLiveRetest);
 
+        var deployments = await db.Deployments.AsNoTracking()
+            .Where(d => d.IssueId == issue.Id)
+            .OrderBy(d => d.Id)
+            .Select(d => new DeploymentDto(
+                d.Id, d.EnvironmentId, d.Environment.Name, d.Environment.Type, d.Environment.Url, d.DeployedBy.FullName, d.DeployedAt,
+                d.Note, d.Version, d.RetestResult, d.RetestedBy != null ? d.RetestedBy.FullName : null, d.RetestedAt, d.RetestComment))
+            .ToListAsync(cancellationToken);
+
         return issue with
         {
+            Deployments = deployments,
             Permissions = For(user, issue.SprintStatus),
             AllowedActions = IssueWorkflow.AllowedActions(context).Select(AllowedActionDto.From).ToList(),
         };

@@ -52,7 +52,24 @@ export const routes: Routes = [
         loadComponent: () => import('./features/testing/testing-page').then((m) => m.TestingPage),
       },
       placeholder('my-work', 'My work', 'S17', ['Developer', 'Admin']),
-      placeholder('issues', 'Issues', 'S15'),
+      {
+        path: 'issues',
+        data: { breadcrumb: 'Issues' },
+        children: [
+          {
+            path: '',
+            title: 'Issues',
+            loadComponent: () =>
+              import('./features/issues/issue-list-page').then((m) => m.IssueListPage),
+          },
+          {
+            path: ':key',
+            title: 'Issue',
+            loadComponent: () =>
+              import('./features/issues/issue-detail-page').then((m) => m.IssueDetailPage),
+          },
+        ],
+      },
       placeholder('board', 'Board', 'S20'),
       placeholder('retest-queue', 'Retest queue', 'S17', ['Tester', 'Admin']),
       placeholder('sprints', 'Sprints', 'S08 / S29'),

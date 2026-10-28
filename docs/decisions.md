@@ -291,3 +291,24 @@ new alerts/mails and background tasks configurable in the app; one database for 
 - Pick race: when someone else already holds the issue a failed pick always answers 409 "Already picked by X", also if
   their pick has already moved it to In Progress.
 - `AttachmentWriter` (file checks + storage + rows) is shared by issue uploads and comments; `FormFiles` reads multipart.
+
+## ADR-025 – Issue list and detail UI (28-Oct-2026, S15)
+- **List** `/issues`: filters live in the URL (`client, project, sprint, module, status, severity, priority` (comma lists),
+  `assignee` (id or `none`), `overdue=1`, `q`, `sort`, `page`, `size`) so views can be bookmarked and shared. Saved views
+  are kept per user in localStorage (filters + sort, no paging). Sorting and paging are server-side (≤ 100 per page).
+  Bulk assign: select rows → assignee → `POST /api/issues/bulk-assign`; issues that could not be assigned stay selected
+  and the first reason is shown.
+- **Detail** `/issues/:key`: action buttons come only from `allowedActions` (labels: Reassign when assigned, "Add
+  deployment" for MarkFixed from Fixed/Verified). Pick, Start, Resume, Take off hold, Verify run at once; Close asks to
+  confirm; the rest open one `ActionDialog` (assignee, reason, reject type + duplicate key, environment checkboxes +
+  version, screenshots). The forward step is the filled button; MarkFixed only from In Progress.
+- Environment strip = latest deployment per environment. While a retest is pending the tester gets Pass / Fail on the
+  deployment and the header's Verify / Reopen are hidden. Fail asks what still fails (+ paste).
+- Screenshots for reopen / failed retest are posted as a comment right after the action (issue attachments are fixed
+  once testing is completed; ADR-020). The Attachments block lists every file of the issue, comment files included.
+- `IssueDto.deployments` added (environment, deployed by/at, note, version, retest result/by/at/comment).
+- Developers see a "Testing in progress" banner and no actions while the sprint is in Testing; they can comment.
+- **Timeline** (`shared/timeline`): `app-issue-timeline` (All · Comments · History, "Show older", inline edit of own
+  comments within 10 minutes, mentions highlighted, relative time with the exact IST time on hover) and
+  `app-comment-composer` (plain text, @ suggestions with ↑ ↓ Enter/Tab Esc, Ctrl+V / drop / clip files, Ctrl+Enter).
+- A failed retest no longer repeats its comment on the Reopened status event (the RetestFailed event carries it).

@@ -166,6 +166,8 @@ public sealed class WorkflowTests(ApiFactory api)
         issue = await ActAsync(s.Developer, issue, IssueAction.Resume);
         issue = await FixAsync(s.Developer, issue, s.Uat.Id);
         issue.Status.ShouldBe(IssueStatus.Fixed);
+        var strip = issue.Deployments.ShouldHaveSingleItem();
+        (strip.EnvironmentName, strip.RetestResult, strip.Version).ShouldBe(("UAT 1", RetestResult.Pending, "1.4.2"));
         // Until the retest the developer can only reassign or add another deployment (e.g. LIVE).
         issue.AllowedActions.Select(a => a.Action).ShouldBe([IssueAction.Assign, IssueAction.MarkFixed]);
 

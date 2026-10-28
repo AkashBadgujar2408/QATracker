@@ -1,3 +1,4 @@
+import { IssueTimeline } from '../../shared/timeline/issue-timeline';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RichTextEditor } from '../../shared/ui/rich-text-editor/rich-text-editor';
 import {
@@ -59,6 +60,7 @@ interface Swatch {
     IssueAttachments,
     PasteDropzone,
     RichTextEditor,
+    IssueTimeline,
     ReactiveFormsModule,
   ],
   templateUrl: './ui-showcase.html',
@@ -70,6 +72,9 @@ export class UiShowcase {
   private readonly confirm = inject(ConfirmService);
 
   /** app-rich-text-editor demo: the value is sanitised HTML (null when empty). */
+  /** app-issue-timeline demo: live data of an existing issue (pick one with comments). */
+  protected readonly timelineKey = signal('PGERP-1');
+
   protected readonly richText = new FormControl<string | null>(
     '<p>Open <b>Sales Return Entry</b> and:</p><ol><li>Pick tomorrow as the return date</li><li>Press <code>Save</code></li></ol>',
   );
