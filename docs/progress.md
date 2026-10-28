@@ -304,3 +304,33 @@ from the /dev/ui pickers, keyboard only (type, Enter on "Add …", Enter in the 
 **Libraries added (licence):** none (Angular Material autocomplete/tabs/slide-toggle already present).
 
 **Next session:** S08 – Testing Sprint API.
+
+---
+
+## S08 – Testing Sprint API   (28-Oct-2026)
+
+**Done:**
+- Domain: `RuleCheck`, `SprintRules` (start, complete testing, reopen testing, close, issue changes, finished statuses),
+  `WorkingCalendar` (SLA due dates in IST, Sundays/holidays skipped), `SprintNames` (suggestion with rounds).
+- Application `Features/Sprints`: list per project, get (with history), suggested name, completion summary, start,
+  complete testing (due dates, activities, notifications, event), admin reopen testing (note required); `PhaseLookupHandler`.
+- API `SprintsEndpoints` + `GET /api/lookups/phases`; ADR-017.
+- Tests: 47 domain tests for the sprint rules matrix (every role × status), calendar and names; 6 integration tests
+  (second Testing sprint 422, developer 403 but can read, completion side effects, stale rowversion 409, reopen rules,
+  phase/environment validation). `ApiFactory` now seeds reference data (phases, SLA) into the throw-away DB.
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 127/127 · dev API as the tester: phases lookup, suggested name
+"Sprint 1 – UAT", started it on PGERP (201), a second start → 422 "'Sprint 1 – UAT' is still in testing…".
+
+**Deviations from plan:** extra suggested-name and completion-summary routes; close and carry-forward stay with S29
+(`SprintRules.CanClose` is ready).
+
+**Carry-over / known gaps:**
+- Malformed JSON bodies (e.g. a request not sent as UTF-8) return 500 instead of 400 – the exception handler should map
+  `BadHttpRequestException` to its status code.
+- Hand-edited due dates are recalculated if an admin reopens testing and it is completed again (ADR-017, S13).
+- Local dev DB now has "Sprint 1 – UAT" in Testing on PGERP.
+
+**Libraries added (licence):** none.
+
+**Next session:** S09 – Issue API – create, edit, list.

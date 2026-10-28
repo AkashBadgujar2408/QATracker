@@ -5,10 +5,14 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using QaTracker.Api.Endpoints;
+using QaTracker.Application.Abstractions;
 using QaTracker.Domain.Entities;
 using QaTracker.Domain.Enums;
 using QaTracker.Infrastructure.Persistence;
+using QaTracker.Infrastructure.Persistence.Seeding;
 
 [assembly: AssemblyFixture(typeof(QaTracker.Api.IntegrationTests.Infrastructure.ApiFactory))]
 
@@ -29,7 +33,20 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     private readonly TestDatabase _database = new();
 
-    public async ValueTask InitializeAsync() => await _database.InitializeAsync();
+    public async ValueTask InitializeAsync()
+    {
+        await _database.InitializeAsync();
+
+        // Reference data (sprint phases, SLA defaults) as on a real start-up; no admin account.
+        await using var db = _database.CreateDbContext();
+        await new DatabaseSeeder(db, new UtcClock(), Options.Create(new SeedOptions()), NullLogger<DatabaseSeeder>.Instance)
+            .SeedAsync(CancellationToken.None);
+    }
+
+    private sealed class UtcClock : IClock
+    {
+        public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
+    }
 
     public override async ValueTask DisposeAsync()
     {

@@ -76,6 +76,7 @@ try
     app.MapAuthEndpoints();
     app.MapUsersEndpoints();
     app.MapMastersEndpoints();
+    app.MapSprintsEndpoints();
 
     await app.RunAsync();
 }

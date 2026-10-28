@@ -145,3 +145,20 @@ Requested by Akash during S05 review:
 - Due date = TestingCompletedAt + SLA(severity); the tester may edit it.
 - Pending confirmation: when severity changes after testing completed, recalculate the due date unless the tester set it
   by hand (default assumption for S08/S13).
+
+## ADR-017 – Testing sprint API details (28-Oct-2026, S08)
+- Rules live in `Domain/Rules/SprintRules` and return a `RuleCheck` (allowed / code / reason); the Application maps a
+  denied check to 403 when the role is wrong (`role_not_allowed`) and 422 otherwise (`RuleCheckExtensions.ToError`).
+- Routes (plan 14, refined): `GET/POST /api/projects/{id}/sprints`, `GET /api/projects/{id}/sprints/suggested-name?phaseId=`,
+  `GET /api/sprints/{id}` (with the sprint history), `GET /api/sprints/{id}/completion-summary` (the confirmation summary of
+  plan 6.1), `POST /api/sprints/{id}/complete-testing {rowVersion, note?}`, `POST /api/sprints/{id}/reopen-testing
+  {rowVersion, note}` (admin), `GET /api/lookups/phases`.
+- Name suggestion: the number of the newest "Sprint N …" sprint (1 if none) + phase, then "Round 2, 3 …" when taken.
+- Due dates (`WorkingCalendar`, ADR-016): days counted in IST; every 8 SLA hours moves to the next working day (Sundays and
+  `Holidays` skipped) at the same time of day; leftover hours are clock hours; a due time on a non-working day moves to the
+  next working day. Stored in UTC. Closed/Rejected issues get none.
+- Completing testing writes, in one transaction: sprint status/TestingCompletedAt/By, a `SprintEvents` row, a `SprintEvent`
+  activity per issue (old/new due date), and an in-app `Notifications` row (type TestingCompleted) for active project members
+  and assignees except the actor. E-mail delivery is left to the notifications sessions.
+- Reopen testing clears TestingCompletedAt/By and keeps issue due dates; completing again recalculates them (overwrites
+  dates a tester edited by hand – revisit with S13).

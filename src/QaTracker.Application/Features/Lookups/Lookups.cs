@@ -278,3 +278,16 @@ public sealed class UserLookupHandler(IApplicationDbContext db)
             .Select(u => new UserLookup(u.Id, u.UserName, u.FullName, u.Role, u.AvatarColor))
             .ToListAsync(cancellationToken);
 }
+
+public sealed record PhaseLookup(int Id, string Name);
+
+/// <summary>Active sprint phases in their configured order (start-sprint dialog).</summary>
+public sealed class PhaseLookupHandler(IApplicationDbContext db)
+{
+    public async Task<IReadOnlyList<PhaseLookup>> HandleAsync(CancellationToken cancellationToken) =>
+        await db.SprintPhases.AsNoTracking()
+            .Where(p => p.IsActive)
+            .OrderBy(p => p.SortOrder).ThenBy(p => p.Name)
+            .Select(p => new PhaseLookup(p.Id, p.Name))
+            .ToListAsync(cancellationToken);
+}
