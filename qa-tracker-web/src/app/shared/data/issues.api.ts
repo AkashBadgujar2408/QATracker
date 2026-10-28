@@ -43,6 +43,31 @@ export interface Issue {
   readonly updatedAt: string | null;
   readonly rowVersion: string;
   readonly permissions: { readonly canEdit: boolean; readonly canDelete: boolean };
+  /** Workflow actions the current user may take now (IssueWorkflow on the API – never repeat the rules here). */
+  readonly allowedActions: readonly AllowedAction[];
+}
+
+export type IssueAction =
+  | 'Assign'
+  | 'Pick'
+  | 'Start'
+  | 'NeedInfo'
+  | 'Resume'
+  | 'Hold'
+  | 'Unhold'
+  | 'Dispute'
+  | 'Reject'
+  | 'Contest'
+  | 'MarkFixed'
+  | 'Verify'
+  | 'Reopen'
+  | 'Close';
+
+export interface AllowedAction {
+  readonly action: IssueAction;
+  readonly target: IssueStatus;
+  /** What the user must provide: 'assignee' | 'reason' | 'rejectType' | 'environments'. */
+  readonly requires: readonly ('assignee' | 'reason' | 'rejectType' | 'environments')[];
 }
 
 export interface IssueListItem {

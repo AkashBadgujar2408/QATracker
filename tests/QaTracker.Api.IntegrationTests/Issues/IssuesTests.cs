@@ -277,4 +277,26 @@ public sealed class IssuesTests(ApiFactory api)
         var search = await (await s.Tester.GetAsync($"/api/projects/{s.Project.Id}/screens?q=order", Ct)).ShouldBeOkAsync<List<string>>();
         search.ShouldBe(["Sales Order"]);
     }
+
+    [Fact]
+    public async Task Get_ReturnsAllowedActions_FromIssueWorkflow()
+    {
+        var s = await SeedAsync();
+        var developerUser = await api.CreateUserAsync(UserRole.Developer);
+        var developer = (await api.LoginAsync(developerUser)).Client;
+        var issue = await CreateAsync(s.Tester, NewIssue(s));
+
+        // In testing: the tester may only (pre-)assign; developers may do nothing yet.
+        var assign = issue.AllowedActions.ShouldHaveSingleItem();
+        assign.Action.ShouldBe(Domain.Rules.IssueAction.Assign);
+        assign.Target.ShouldBe(IssueStatus.Assigned);
+        assign.Requires.ShouldBe(["assignee"]);
+        (await (await developer.GetAsync($"/api/issues/{issue.Key}", Ct)).ShouldBeOkAsync<IssueDto>()).AllowedActions.ShouldBeEmpty();
+
+        await CompleteTestingAsync(s);
+
+        var forDeveloper = await (await developer.GetAsync($"/api/issues/{issue.Key}", Ct)).ShouldBeOkAsync<IssueDto>();
+        forDeveloper.AllowedActions.Select(a => a.Action).ShouldBe([Domain.Rules.IssueAction.Assign, Domain.Rules.IssueAction.Pick]);
+        forDeveloper.AllowedActions.Single(a => a.Action == Domain.Rules.IssueAction.Pick).Target.ShouldBe(IssueStatus.InProgress);
+    }
 }

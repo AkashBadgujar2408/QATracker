@@ -13,7 +13,7 @@ public sealed class GetIssueHandler(IApplicationDbContext db, ICurrentUser curre
         var issue = await db.Issues.AsNoTracking().Where(i => i.IssueKey == normalized).Select(IssueDto.Projection).SingleOrDefaultAsync(cancellationToken);
         return issue is null
             ? Error.NotFound("Issue")
-            : issue with { Permissions = IssueAccess.For(currentUser, issue.SprintStatus) };
+            : await IssueAccess.WithAccessAsync(db, currentUser, issue, cancellationToken);
     }
 }
 

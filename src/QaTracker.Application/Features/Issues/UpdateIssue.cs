@@ -133,7 +133,7 @@ public sealed class UpdateIssueHandler(
         }
 
         var updated = await db.Issues.AsNoTracking().Where(i => i.Id == issue.Id).Select(IssueDto.Projection).SingleAsync(cancellationToken);
-        return updated with { Permissions = IssueAccess.For(currentUser, updated.SprintStatus) };
+        return await IssueAccess.WithAccessAsync(db, currentUser, updated, cancellationToken);
     }
 
     /// <summary>Applies changed values and collects one FieldChanged activity per change.</summary>

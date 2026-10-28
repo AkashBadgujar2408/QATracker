@@ -1,10 +1,12 @@
 using System.Linq.Expressions;
+using System.Text.Json;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using QaTracker.Application.Abstractions;
 using QaTracker.Application.Common;
 using QaTracker.Domain.Entities;
 using QaTracker.Domain.Enums;
+using QaTracker.Domain.Rules;
 using Severity = QaTracker.Domain.Enums.Severity;
 
 namespace QaTracker.Application.Features.Issues;
@@ -50,6 +52,9 @@ public sealed record IssueDto(
     /// <summary>What the current user may do with the issue's details (workflow actions come with IssueWorkflow).</summary>
     public IssuePermissions Permissions { get; init; } = IssuePermissions.None;
 
+    /// <summary>Workflow actions the current user may take now (IssueWorkflow) – the UI never repeats the rules.</summary>
+    public IReadOnlyList<AllowedActionDto> AllowedActions { get; init; } = [];
+
     public static readonly Expression<Func<Issue, IssueDto>> Projection = i => new IssueDto(
         i.Id,
         i.IssueKey,
@@ -86,6 +91,18 @@ public sealed record IssueDto(
         i.CreatedAt,
         i.UpdatedAt,
         Convert.ToBase64String(i.RowVersion));
+}
+
+/// <summary>An allowed workflow action: where it leads and what the user must provide (assignee, reason, rejectType, environments).</summary>
+public sealed record AllowedActionDto(IssueAction Action, IssueStatus Target, IReadOnlyList<string> Requires)
+{
+    public static AllowedActionDto From(WorkflowTransition transition) => new(
+        transition.Action,
+        transition.Target,
+        Enum.GetValues<ActionInput>()
+            .Where(input => input != ActionInput.None && transition.Inputs.HasFlag(input))
+            .Select(input => JsonNamingPolicy.CamelCase.ConvertName(input.ToString()))
+            .ToList());
 }
 
 public sealed record IssuePermissions(bool CanEdit, bool CanDelete)

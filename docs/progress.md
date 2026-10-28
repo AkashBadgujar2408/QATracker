@@ -15,8 +15,8 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | S09 | Issue API – create, edit, list | ✅ Done (28-Oct-2026) |
 | S10 | Attachments | ✅ Done (28-Oct-2026) |
 | S11 | Testing workspace UI (M1) | ✅ Done (28-Oct-2026) |
-| S12 | IssueWorkflow domain | ⏭ Next |
-| S13 | Workflow API | |
+| S12 | IssueWorkflow domain | ✅ Done (28-Oct-2026) |
+| S13 | Workflow API | ⏭ Next |
 | S14 | Timeline & comments API | |
 | S15 | Issue list & detail UI | |
 | S16 | My work, retest queue & deploy notice API | |
@@ -448,3 +448,28 @@ completion summary dialog opened and cancelled (local "Sprint 1 – UAT" left in
 **Libraries added (licence):** none.
 
 **Next session:** S12 – IssueWorkflow domain.
+
+---
+
+## S12 – IssueWorkflow domain   (28-Oct-2026)
+
+**Done:**
+- `IssueWorkflow` (Domain/Rules): `IssueAction`, `ActionInput`, `WorkflowContext`, `WorkflowTransition`; `Check`,
+  `Transition`, `AllowedActions`, `TargetOf`, `InputsOf`. ADR-022.
+- `IssueDto.allowedActions` (action, target status, required inputs) on GET/POST/PUT issue, computed with the project's
+  "Require LIVE verification" and passed LIVE retests; Angular `Issue.allowedActions` type for S15.
+- Tests: 27 domain tests – one exhaustive matrix of 4 158 cases (14 actions × 11 statuses × 3 sprint states × 3 roles ×
+  3 assignee situations) checked against plan 7.2 written out independently, AllowedActions = Check, targets and inputs
+  per action, denial codes/messages, LIVE-verification rule; 1 integration test (allowedActions before/after Testing
+  Completed for tester and developer).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 182/182 (domain 87).
+
+**Deviations from plan:** no coverage tool is set up (would be a new library); the matrix enumerates every input
+combination instead. Refinements listed in ADR-022 (assignee rules, reassign in any open status).
+
+**Carry-over / known gaps:** none.
+
+**Libraries added (licence):** none.
+
+**Next session:** S13 – Workflow API.

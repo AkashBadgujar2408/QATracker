@@ -236,3 +236,17 @@ new alerts/mails and background tasks configurable in the app; one database for 
 - Stats chips are computed in the browser from the sprint's issues (≤ 200, one page): total, today (IST), by severity,
   "Day N" = distinct IST dates with issues, plus today while in Testing.
 - Enter in an entity-picker never submits the surrounding form; with exactly one match it picks it.
+
+## ADR-022 – IssueWorkflow (28-Oct-2026, S12)
+- `Domain/Rules/IssueWorkflow` holds every transition of plan 7.2 as one table: action → who, from-statuses, target,
+  required inputs, assignee rule. `Check` returns a `RuleCheck`; `AllowedActions` lists the allowed transitions.
+- Actions: Assign, Pick, Start, NeedInfo, Resume, Hold, Unhold, Dispute, Reject, Contest (tester disagrees → Assigned),
+  MarkFixed (InProgress/Fixed/Verified → Fixed: also "add a LIVE deployment"), Verify, Reopen (Fixed/Closed), Close.
+- Refinements of the plan table: admins may do everything; developer actions on an assigned issue (need info, hold,
+  dispute, fixed, resume, unhold) need the developer to be the assignee – Pick is for unassigned issues, Start for the
+  assignee; Assign (reassign) is possible in every status except Closed/Rejected; a closed sprint allows no action.
+- During Testing only the tester's/admin's Assign (pre-assignment) is allowed; developers get `sprint_in_testing`.
+- Check order (first failure wins): sprint closed → role → sprint in testing → status → assignee → LIVE verification.
+  Codes: sprint_closed, role_not_allowed, sprint_in_testing, invalid_transition, not_assignee, already_assigned,
+  live_verification_required (role_not_allowed → 403, the rest → 422 via RuleCheckExtensions).
+- `IssueDto.allowedActions` = [{action, target, requires[]}] for the current user (GET/POST/PUT).

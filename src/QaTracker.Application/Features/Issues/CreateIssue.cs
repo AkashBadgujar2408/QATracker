@@ -126,7 +126,7 @@ public sealed class CreateIssueHandler(
         }, cancellationToken);
 
         var created = await db.Issues.AsNoTracking().Where(i => i.Id == issue.Id).Select(IssueDto.Projection).SingleAsync(cancellationToken);
-        return created with { Permissions = IssueAccess.For(currentUser, created.SprintStatus) };
+        return await IssueAccess.WithAccessAsync(db, currentUser, created, cancellationToken);
     }
 }
 
@@ -136,5 +136,27 @@ internal static class IssueAccess
     {
         var canChange = SprintRules.CanChangeIssues(user.Role, sprintStatus).Allowed;
         return new IssuePermissions(canChange, canChange);
+    }
+
+    /// <summary>The issue with the current user's permissions and workflow actions (plan 7.2 allowedActions).</summary>
+    public static async Task<IssueDto> WithAccessAsync(IApplicationDbContext db, ICurrentUser user, IssueDto issue, CancellationToken cancellationToken)
+    {
+        var flags = await db.Issues.AsNoTracking()
+            .Where(i => i.Id == issue.Id)
+            .Select(i => new
+            {
+                i.Project.RequireLiveVerification,
+                HasPassedLiveRetest = i.Deployments.Any(d => d.Environment.Type == EnvironmentType.LIVE && d.RetestResult == RetestResult.Passed),
+            })
+            .SingleAsync(cancellationToken);
+
+        var context = new WorkflowContext(
+            issue.Status, issue.SprintStatus, issue.AssigneeId, user.Role, user.UserId, flags.RequireLiveVerification, flags.HasPassedLiveRetest);
+
+        return issue with
+        {
+            Permissions = For(user, issue.SprintStatus),
+            AllowedActions = IssueWorkflow.AllowedActions(context).Select(AllowedActionDto.From).ToList(),
+        };
     }
 }
