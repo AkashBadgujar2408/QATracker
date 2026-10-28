@@ -572,3 +572,31 @@ bulk-assigned UICHK-2 to the developer from the list.
 **Libraries added (licence):** none.
 
 **Next session:** S16 – My work, retest queue & deploy notice API.
+
+---
+
+## S16 – My work, retest queue & deploy notice API   (28-Oct-2026)
+
+**Done:**
+- Application `Features/WorkQueues`: `MyWorkHandler` (five tabs with counts), `RetestQueueHandler` (grouped by
+  environment, `canRetest` from IssueWorkflow), deploy notices (candidates, recent list, create – all or nothing).
+- `WorkflowSupport.Deployed` / `Fixed` extracted from Mark fixed and reused by deploy notices.
+- Domain: `IssueWorkflow.FromStatuses(action)`.
+- API `WorkQueuesEndpoints`: `GET /api/me/work`, `GET /api/retest-queue`, `GET /api/deploy-notices/candidates`,
+  `GET /api/deploy-notices`, `POST /api/deploy-notices`. ADR-026.
+- Tests: 4 integration tests (tabs only after testing completed + need info answered / reopened / overdue / tester has
+  nothing to pick; queue groups and order, canRetest per role, pass clears, mine filter; deploy notice on LIVE for a
+  Fixed and a Verified issue with one timeline entry each and queue entries; all-or-nothing rejection with reasons,
+  same-environment pending, tester, validation) and 1 domain test.
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 216/216.
+
+**Deviations from plan:** deploy notice only for Fixed/Verified issues (In Progress issues are marked fixed one by one
+with their own note); the tester notification per notice is stored as the DeployNotices row and sent from S18.
+
+**Carry-over / known gaps:** notifications (S18); invalid enum value in a JSON body still answers 500 (same as the
+malformed-JSON gap from S08 – hit again by a test typo).
+
+**Libraries added (licence):** none.
+
+**Next session:** S17 – My work, retest queue & deploy notice UI.

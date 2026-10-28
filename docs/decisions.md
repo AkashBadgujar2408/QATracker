@@ -312,3 +312,25 @@ new alerts/mails and background tasks configurable in the app; one database for 
   comments within 10 minutes, mentions highlighted, relative time with the exact IST time on hover) and
   `app-comment-composer` (plain text, @ suggestions with ↑ ↓ Enter/Tab Esc, Ctrl+V / drop / clip files, Ctrl+Enter).
 - A failed retest no longer repeats its comment on the Reopened status event (the RetestFailed event carries it).
+
+## ADR-026 – Work queues and deploy notices (28-Oct-2026, S16)
+- Queues show only issues of sprints that **completed testing** (in Testing developers cannot act; a closed sprint is
+  read-only), so a tester's pre-assignment appears in My work once testing completes.
+- `GET /api/me/work?projectId=` → `{assigned, available, needInfoAnswered, reopened, overdue}`, each `{count, items}`
+  (≤ 100 items, most severe first, then due date, then oldest). Assigned = mine and awaiting a fix
+  (`IssueStates.AwaitingFix`); Available = unassigned in a Pick from-status (`IssueWorkflow.FromStatuses`), empty for
+  testers; Need info answered = mine in Need info with a comment by someone else after the latest change to Need info;
+  Reopened = mine and Reopened; Overdue = mine, awaiting a fix, due date passed.
+- `GET /api/retest-queue?projectId=&mine=` → `{count, groups[]}`: pending deployments of Fixed issues grouped by
+  environment (name, type, URL, project), groups oldest waiting first, items in deployment order (≤ 500). `canRetest`
+  per item comes from IssueWorkflow (Verify) for the caller; `mine=true` = issues the caller reported. Pass / Fail use the
+  existing `POST /api/deployments/{id}/retest`.
+- Deploy notice: `GET /api/deploy-notices/candidates?projectId=` (caller's own Fixed or Verified issues with the latest
+  deployment per environment), `GET /api/deploy-notices?projectId=&size=` (recent, newest first, all users) and
+  `POST /api/deploy-notices {environmentId, issueKeys[], note, version}` → 201 with the notice. Note is required
+  (like the fix note). **All or nothing**: every issue must exist, belong to the environment's project, be assigned to
+  the caller (admins too), be Fixed/Verified, pass IssueWorkflow MarkFixed and not already wait for a retest on that
+  environment – otherwise 422 `not_deployable` listing each problem ("KEY: reason").
+- Each issue gets a Deployment linked to the DeployNotices row and one Deployed activity (the same timeline entry as
+  Mark fixed); Verified issues go back to Fixed (VerifiedAt cleared). `WorkflowSupport.Deployed/Fixed` are shared with
+  Mark fixed. The single notification to the tester per notice comes with S18 from the DeployNotices row.

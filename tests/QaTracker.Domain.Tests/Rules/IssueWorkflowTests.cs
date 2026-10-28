@@ -238,4 +238,11 @@ public sealed class IssueWorkflowTests
             IssueAction.Assign, IssueAction.Verify, IssueAction.Reopen,
         ]);
     }
+
+    [Fact]
+    public void FromStatuses_AreTheTableRows_UsedByTheWorkQueues()
+    {
+        IssueWorkflow.FromStatuses(IssueAction.Pick).ShouldBe([New, Assigned, Reopened]);
+        IssueWorkflow.FromStatuses(IssueAction.MarkFixed).ShouldBe([InProgress, Fixed, Verified]);
+    }
 }

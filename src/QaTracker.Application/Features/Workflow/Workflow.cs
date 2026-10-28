@@ -201,6 +201,44 @@ public sealed class WorkflowSupport(IApplicationDbContext db, ICurrentUser curre
         });
     }
 
+    /// <summary>A fix deployed on an environment: a Deployment (retest pending) and a Deployed activity.</summary>
+    public void Deployed(Issue issue, int environmentId, string? note, string? version, DeployNotice? notice = null)
+    {
+        var deployment = new Deployment
+        {
+            IssueId = issue.Id,
+            EnvironmentId = environmentId,
+            DeployNotice = notice,
+            DeployedById = currentUser.UserId,
+            DeployedAt = Now,
+            Note = Clean(note),
+            Version = Clean(version),
+            RetestResult = RetestResult.Pending,
+        };
+        db.Deployments.Add(deployment);
+        db.IssueActivities.Add(new IssueActivity
+        {
+            IssueId = issue.Id,
+            UserId = currentUser.UserId,
+            Kind = ActivityKind.Deployed,
+            Body = deployment.Note,
+            NewValue = deployment.Version,
+            EnvironmentId = environmentId,
+            Deployment = deployment,
+            CreatedAt = Now,
+        });
+    }
+
+    /// <summary>MarkFixed's status side: → Fixed, FirstFixedAt once, VerifiedAt cleared (a new retest is pending).</summary>
+    public void Fixed(Issue issue)
+    {
+        var from = issue.Status;
+        issue.Status = IssueWorkflow.TargetOf(from, IssueAction.MarkFixed);
+        issue.FirstFixedAt ??= Now;
+        issue.VerifiedAt = null;
+        StatusChanged(issue, from, null);
+    }
+
     /// <summary>Pending deployments of the issue (retests still to do).</summary>
     public Task<List<Deployment>> PendingDeploymentsAsync(int issueId, CancellationToken cancellationToken) =>
         db.Deployments.Where(d => d.IssueId == issueId && d.RetestResult == RetestResult.Pending).ToListAsync(cancellationToken);
@@ -473,40 +511,12 @@ public sealed class MarkFixedHandler(IValidator<MarkFixedCommand> validator, IAp
             return Error.Validation("environmentIds", "Choose active environments of this project.");
         }
 
-        var note = WorkflowSupport.Clean(command.Note);
-        var version = WorkflowSupport.Clean(command.Version);
         foreach (var environmentId in environmentIds)
         {
-            var deployment = new Deployment
-            {
-                IssueId = issue.Id,
-                EnvironmentId = environmentId,
-                DeployedById = workflow.UserId,
-                DeployedAt = workflow.Now,
-                Note = note,
-                Version = version,
-                RetestResult = RetestResult.Pending,
-            };
-            db.Deployments.Add(deployment);
-            db.IssueActivities.Add(new IssueActivity
-            {
-                IssueId = issue.Id,
-                UserId = workflow.UserId,
-                Kind = ActivityKind.Deployed,
-                Body = note,
-                NewValue = version,
-                EnvironmentId = environmentId,
-                Deployment = deployment,
-                CreatedAt = workflow.Now,
-            });
+            workflow.Deployed(issue, environmentId, command.Note, command.Version);
         }
 
-        var from = issue.Status;
-        issue.Status = IssueWorkflow.TargetOf(from, IssueAction.MarkFixed);
-        issue.FirstFixedAt ??= workflow.Now;
-        issue.VerifiedAt = null;
-        workflow.StatusChanged(issue, from, null);
-
+        workflow.Fixed(issue);
         return await workflow.SaveAndReloadAsync(issue, command.RowVersion, cancellationToken);
     }
 }

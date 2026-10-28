@@ -80,6 +80,7 @@ try
     app.MapIssuesEndpoints();
     app.MapWorkflowEndpoints();
     app.MapTimelineEndpoints();
+    app.MapWorkQueuesEndpoints();
     app.MapAttachmentsEndpoints();
 
     await app.RunAsync();

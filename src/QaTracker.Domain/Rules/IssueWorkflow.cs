@@ -191,6 +191,9 @@ public static class IssueWorkflow
     /// <summary>What the action needs from the user.</summary>
     public static ActionInput InputsOf(IssueAction action) => Rules[action].Inputs;
 
+    /// <summary>Statuses the action can start from (work queues: issues open to pick, fixes to announce).</summary>
+    public static IReadOnlyList<IssueStatus> FromStatuses(IssueAction action) => Rules[action].From;
+
     private static IssueStatus TargetOf(IssueStatus from, IssueAction action, Rule rule) =>
         rule.Target ?? (action == IssueAction.Assign && from == IssueStatus.New ? IssueStatus.Assigned : from);
 
