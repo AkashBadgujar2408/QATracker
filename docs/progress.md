@@ -600,3 +600,35 @@ malformed-JSON gap from S08 – hit again by a test typo).
 **Libraries added (licence):** none.
 
 **Next session:** S17 – My work, retest queue & deploy notice UI.
+
+---
+
+## S17 – My work, retest queue & deploy notice UI   (28-Oct-2026)
+
+**Done:**
+- `features/work`: `MyWorkPage`, `RetestQueuePage`, `DeployNoticePage`, shared `WorkItemRow`; `shared/data/work.api.ts`
+  (`WorkApi`, ageing helpers). Routes replace the S17 placeholders; new nav item "Deploy notice" (Developer, Admin).
+  ADR-027.
+- Tests: 6 Angular tests (ageing buckets, tab from URL + overdue, candidate grouping/blocking, My work tab counts +
+  Pick, retest queue Open link + Pass request, empty queue with mine filter).
+
+**Verified:** `ng build` clean · `ng test` 105/105 · `ng lint` clean · `dotnet test` 216/216 (S16). **Milestone M2** in
+Chrome on the UI Check project (UICHK, "Sprint 2 - UI check"): tester logged 4 issues and completed testing (API);
+developer `ui.developer` picked UICHK-3 from My work › Available; fixes for UICHK-3/4/5 on UAT 1 (API); tester
+`ui.tester` passed UICHK-3 and failed UICHK-4 ("what still fails") in the retest queue – reopened back to the
+developer; developer sent a deploy notice for UICHK-3 (Verified → Fixed) and UICHK-5 on LIVE – the tester's queue
+shows UAT 1: UICHK-5 and LIVE: UICHK-3, UICHK-5, the timeline "deployed the fix on LIVE (version 2.1.0)".
+Fixed while checking: due date wrapping, a stray scrollbar on the tab strip, "Saving…" on Pass while the Fail dialog
+was open, the "LIVE · LIVE" environment label.
+
+**Deviations from plan:** none in scope. Marking fixed still happens on the issue detail page (S15).
+
+**Carry-over / known gaps:**
+- Local dev DB: test accounts `ui.tester` / `ui.developer` got a new local password this session (deactivate when not
+  needed); UICHK has a LIVE environment, sprint "Sprint 2 - UI check" and UICHK-3…6.
+- Deploy-notice notification to the tester and live queue updates – S18.
+- Invalid enum value in a JSON body → 500 (S08 gap) still open.
+
+**Libraries added (licence):** none.
+
+**Next session:** S18 – SignalR & in-app notifications.

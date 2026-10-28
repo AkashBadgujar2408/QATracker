@@ -15,6 +15,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Home', icon: 'lucideHouse', link: '/home' },
   { label: 'Testing', icon: 'lucideFlaskConical', link: '/testing', roles: ['Tester', 'Admin'] },
   { label: 'My work', icon: 'lucideBriefcase', link: '/my-work', roles: ['Developer', 'Admin'] },
+  {
+    label: 'Deploy notice',
+    icon: 'lucideRocket',
+    link: '/deploy-notice',
+    roles: ['Developer', 'Admin'],
+  },
   { label: 'Issues', icon: 'lucideList', link: '/issues' },
   { label: 'Board', icon: 'lucideSquareKanban', link: '/board' },
   {

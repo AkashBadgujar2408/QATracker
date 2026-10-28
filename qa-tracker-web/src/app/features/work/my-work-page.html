@@ -1,0 +1,95 @@
+<app-page-header
+  title="My work"
+  subtitle="Issues from sprints where testing is completed. Pre-assigned issues show up here once testing ends."
+>
+  <a actions matButton="outlined" routerLink="/deploy-notice">Deploy notice</a>
+</app-page-header>
+
+<div
+  role="tablist"
+  aria-label="My work"
+  class="mb-4 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border"
+>
+  @for (t of tabs; track t.id) {
+    @let selected = t.id === tab();
+    @let n = count(t);
+    <button
+      type="button"
+      role="tab"
+      [id]="'work-tab-' + t.id"
+      [attr.aria-selected]="selected"
+      aria-controls="work-panel"
+      [tabIndex]="selected ? 0 : -1"
+      class="-mb-px flex shrink-0 cursor-pointer items-center gap-2 border-0 border-b-2 border-solid bg-transparent px-3 py-2.5 text-base whitespace-nowrap focus-visible:outline-2 focus-visible:outline-primary"
+      [class.border-primary]="selected"
+      [class.text-text]="selected"
+      [class.font-semibold]="selected"
+      [class.border-transparent]="!selected"
+      [class.text-muted]="!selected"
+      (click)="select(t.id)"
+      (keydown)="onTabKey($event)"
+    >
+      {{ t.label }}
+      @if (n !== null) {
+        <span
+          class="min-w-6 rounded-full px-1.5 text-center text-xs leading-5 font-semibold tabular-nums"
+          [class.bg-surface-muted]="n === 0 || t.id !== 'overdue'"
+          [class.text-muted]="n === 0"
+          [class.bg-severity-critical]="n > 0 && t.id === 'overdue'"
+          [class.text-primary-contrast]="n > 0 && t.id === 'overdue'"
+          >{{ n }}</span
+        >
+      }
+    </button>
+  }
+</div>
+
+<section
+  id="work-panel"
+  role="tabpanel"
+  class="qa-card overflow-hidden"
+  [attr.aria-labelledby]="'work-tab-' + tab()"
+>
+  @if (work.isLoading() && !work.hasValue()) {
+    <div class="p-5"><app-skeleton-lines [lines]="8" /></div>
+  } @else if (work.error()) {
+    <app-empty-state
+      kind="error"
+      title="Could not load your work"
+      message="Check the connection and try again."
+    >
+      <button matButton="outlined" type="button" (click)="work.reload()">Try again</button>
+    </app-empty-state>
+  } @else if (queue(); as q) {
+    @for (item of q.items; track item.id) {
+      <app-work-item-row [item]="item">
+        @if (tab() === 'available') {
+          <button
+            actions
+            matButton="filled"
+            type="button"
+            class="w-24"
+            [disabled]="picking() !== null"
+            (click)="pick(item)"
+          >
+            {{ picking() === item.key ? 'Picking…' : 'Pick' }}
+          </button>
+        }
+      </app-work-item-row>
+    } @empty {
+      <app-empty-state [title]="'Nothing in ' + current().label" [message]="current().empty">
+        @if (tab() !== 'available' && (count(tabs[1]) ?? 0) > 0) {
+          <button matButton="outlined" type="button" (click)="select('available')">
+            See issues to pick
+          </button>
+        }
+      </app-empty-state>
+    }
+    @if (q.count > q.items.length) {
+      <p class="m-0 border-t border-border px-5 py-3 text-sm text-muted">
+        Showing the {{ q.items.length }} most urgent of {{ q.count }}.
+        <a routerLink="/issues" class="text-primary">Open the issue list</a> to filter the rest.
+      </p>
+    }
+  }
+</section>

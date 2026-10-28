@@ -334,3 +334,16 @@ new alerts/mails and background tasks configurable in the app; one database for 
 - Each issue gets a Deployment linked to the DeployNotices row and one Deployed activity (the same timeline entry as
   Mark fixed); Verified issues go back to Fixed (VerifiedAt cleared). `WorkflowSupport.Deployed/Fixed` are shared with
   Mark fixed. The single notification to the tester per notice comes with S18 from the DeployNotices row.
+
+## ADR-027 – Work queue screens (28-Oct-2026, S17)
+- **My work** `/my-work` (Developer, Admin): five tabs as an ARIA tablist (← → keys) with counts from `/api/me/work`,
+  tab in the URL (`?tab=available|need-info|reopened|overdue`), rows = severity, key + title, module › screen, sprint,
+  status, due (red when overdue); Available to pick has a one-click Pick (409 "Already picked by X" → toast + reload).
+- **Retest queue** `/retest-queue` (Tester, Admin): one card per environment headed by an address bar (name, type,
+  project, URL, "Open <environment>" in a new tab, oldest wait); items show fix note, version, who fixed it, the issue's
+  page URL and the wait coloured by the plan's ageing buckets (< 1 day, 1–2, 3–5, > 5 days). Pass runs at once; Fail
+  loads the issue and opens the S15 `ActionDialog` (what still fails + pasted screenshot). `?mine=1` = issues I reported.
+- **Deploy notice** `/deploy-notice` (Developer, Admin, also linked from My work): candidates per project with a
+  checkbox and an environment chip per latest deployment; selecting an issue fixes the project, choosing an environment
+  drops/blocks issues already waiting there; composer (environment, required note, version) on the right, sticky;
+  last 5 notices below it.

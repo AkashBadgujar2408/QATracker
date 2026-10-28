@@ -81,8 +81,9 @@ export function isBlankHtml(html: string | null | undefined): boolean {
       [id]="labelId"
       class="mb-1 block text-sm font-medium"
       [class]="invalid() ? 'text-severity-critical' : 'text-muted'"
-      >{{ label() }}{{ required() ? ' *' : '' }}</div
     >
+      {{ label() }}{{ required() ? ' *' : '' }}
+    </div>
     <div
       class="qa-rte overflow-hidden rounded-control border bg-surface"
       [class]="invalid() ? 'border-severity-critical' : 'border-border-strong'"

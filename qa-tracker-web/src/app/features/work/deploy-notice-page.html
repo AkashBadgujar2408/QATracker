@@ -1,0 +1,163 @@
+<app-page-header
+  title="Deploy notice"
+  subtitle="Tell the tester which of your fixes are now on an environment. Each issue gets a retest in their queue."
+/>
+
+<div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_26rem]">
+  <!-- Candidates -->
+  <div class="flex min-w-0 flex-col gap-5">
+    @if (candidates.isLoading() && !candidates.hasValue()) {
+      <section class="qa-card p-5"><app-skeleton-lines [lines]="6" /></section>
+    } @else if (candidates.error()) {
+      <section class="qa-card">
+        <app-empty-state
+          kind="error"
+          title="Could not load your fixed issues"
+          message="Check the connection and try again."
+        >
+          <button matButton="outlined" type="button" (click)="candidates.reload()">
+            Try again
+          </button>
+        </app-empty-state>
+      </section>
+    } @else {
+      @for (group of groups(); track group.projectId) {
+        <section class="qa-card overflow-hidden" [attr.aria-label]="group.label">
+          <header
+            class="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface-muted px-5 py-3"
+          >
+            <h2 class="m-0 text-md font-semibold text-text">{{ group.label }}</h2>
+            <button matButton type="button" (click)="selectAll(group)">Select all</button>
+          </header>
+          @for (c of group.candidates; track c.issue.id) {
+            @let reason = blocked(c);
+            <app-work-item-row [item]="c.issue" [class.opacity-60]="reason">
+              <mat-checkbox
+                leading
+                [checked]="selected().has(c.issue.key)"
+                [disabled]="!!reason"
+                [attr.title]="reason"
+                [aria-label]="'Include ' + c.issue.key"
+                (change)="toggle(c.issue.key, $event.checked)"
+              />
+              <ul
+                actions
+                class="m-0 flex basis-full list-none flex-wrap justify-end gap-2 p-0 sm:basis-auto"
+              >
+                @for (d of c.deployments; track d.environmentId) {
+                  <li
+                    class="flex items-center gap-1 rounded-full border border-border px-2 text-xs leading-6"
+                    [title]="d.environmentName + ' · deployed ' + (d.deployedAt | istDate)"
+                  >
+                    @switch (d.retestResult) {
+                      @case ('Passed') {
+                        <ng-icon name="lucideCircleCheck" size="13" class="text-status-verified" />
+                      }
+                      @case ('Failed') {
+                        <ng-icon name="lucideCircleX" size="13" class="text-status-reopened" />
+                      }
+                      @default {
+                        <ng-icon name="lucideClock" size="13" class="text-status-on-hold" />
+                      }
+                    }
+                    {{ d.environmentName }}
+                  </li>
+                }
+              </ul>
+            </app-work-item-row>
+            @if (reason && environment()) {
+              <p class="m-0 -mt-2 px-5 pb-3 pl-16 text-sm text-muted">{{ reason }}</p>
+            }
+          }
+        </section>
+      } @empty {
+        <section class="qa-card">
+          <app-empty-state
+            title="No fixed issues to announce"
+            message="Issues you marked fixed show up here, so you can tell the tester when they reach another environment, such as LIVE."
+          >
+            <a matButton="outlined" routerLink="/my-work">Go to My work</a>
+          </app-empty-state>
+        </section>
+      }
+    }
+  </div>
+
+  <!-- Composer -->
+  <aside class="flex flex-col gap-5 lg:sticky lg:top-4">
+    <section class="qa-card p-5" aria-label="Notice">
+      <h2 class="mt-0 mb-4 text-md font-semibold">
+        @if (selected().size) {
+          {{ selected().size }} {{ selected().size === 1 ? 'issue' : 'issues' }} selected
+        } @else {
+          Select issues on the left
+        }
+      </h2>
+      <div class="flex flex-col gap-3">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Deployed on</mat-label>
+          <mat-select
+            [value]="environmentId()"
+            [disabled]="projectId() === null"
+            (selectionChange)="environmentId.set($event.value)"
+          >
+            <mat-select-trigger>{{ environment()?.name }}</mat-select-trigger>
+            @for (env of environments.value() ?? []; track env.id) {
+              <mat-option [value]="env.id">
+                {{ env.name }} <span class="text-xs text-muted">· {{ env.url }}</span>
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Note for the tester</mat-label>
+          <textarea
+            matInput
+            rows="4"
+            maxlength="2000"
+            [(ngModel)]="note"
+            placeholder="Released to LIVE with build 1.9 – clear the cache before retesting."
+            (keydown.control.enter)="send()"
+          ></textarea>
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Version or build (optional)</mat-label>
+          <input matInput [(ngModel)]="version" maxlength="100" autocomplete="off" />
+        </mat-form-field>
+        @if (error()) {
+          <p role="alert" class="m-0 text-sm text-severity-critical">{{ error() }}</p>
+        }
+        <button matButton="filled" type="button" [disabled]="busy()" (click)="send()">
+          {{ busy() ? 'Sending…' : 'Send deploy notice' }}
+        </button>
+      </div>
+    </section>
+
+    @if (recent.value()?.length) {
+      <section class="qa-card p-5" aria-label="Recent notices">
+        <h2 class="mt-0 mb-3 text-md font-semibold">Recent notices</h2>
+        <ul class="m-0 flex list-none flex-col gap-4 p-0">
+          @for (n of recent.value(); track n.id) {
+            <li class="text-sm">
+              <p class="m-0 text-text">
+                <span class="font-semibold">{{ n.environmentName }}</span>
+                · {{ n.projectKey }} · {{ n.createdByName }}
+              </p>
+              <p class="m-0 text-muted">{{ n.createdAt | istDate: 'datetime' }}</p>
+              @if (n.note) {
+                <p class="mt-1 mb-0 line-clamp-2 text-muted" [title]="n.note">{{ n.note }}</p>
+              }
+              <p class="mt-1 mb-0 flex flex-wrap gap-x-2">
+                @for (i of n.issues; track i.deploymentId) {
+                  <a [routerLink]="['/issues', i.issueKey]" class="text-primary tabular-nums">{{
+                    i.issueKey
+                  }}</a>
+                }
+              </p>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </aside>
+</div>

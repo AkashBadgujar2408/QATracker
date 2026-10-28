@@ -1,0 +1,196 @@
+<app-page-header
+  title="Retest queue"
+  subtitle="Fixes waiting for a retest, grouped by environment. Open the environment once, then pass or fail each fix."
+>
+  <mat-slide-toggle actions [checked]="mine()" (change)="setMine($event.checked)">
+    Only issues I reported
+  </mat-slide-toggle>
+</app-page-header>
+
+@if (queue.isLoading() && !queue.hasValue()) {
+  <div class="flex flex-col gap-5">
+    <section class="qa-card p-5"><app-skeleton-lines [lines]="5" /></section>
+    <section class="qa-card p-5"><app-skeleton-lines [lines]="3" /></section>
+  </div>
+} @else if (queue.error()) {
+  <section class="qa-card">
+    <app-empty-state
+      kind="error"
+      title="Could not load the retest queue"
+      message="Check the connection and try again."
+    >
+      <button matButton="outlined" type="button" (click)="queue.reload()">Try again</button>
+    </app-empty-state>
+  </section>
+} @else {
+  @if (count() > 0) {
+    <p class="mt-0 mb-4 text-base text-muted">
+      <strong class="text-text tabular-nums">{{ count() }}</strong>
+      {{ count() === 1 ? 'fix waits' : 'fixes wait' }} on
+      <strong class="text-text tabular-nums">{{ groups().length }}</strong>
+      {{ groups().length === 1 ? 'environment' : 'environments' }}.
+    </p>
+  }
+
+  <div class="flex flex-col gap-5">
+    @for (group of groups(); track group.environmentId) {
+      @let oldest = wait(group.oldestDeployedAt);
+      <section
+        class="qa-card overflow-hidden"
+        [attr.aria-label]="group.environmentName + ' retests'"
+      >
+        <!-- Environment bar: where to retest -->
+        <header class="border-b border-border bg-surface-muted px-5 py-4">
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+            <div class="min-w-0">
+              <h2 class="m-0 flex items-center gap-2 text-lg font-semibold text-text">
+                {{ group.environmentName }}
+                <span
+                  class="rounded-full border border-solid px-2 text-xs leading-5 font-semibold"
+                  [class.border-severity-critical]="group.environmentType === 'LIVE'"
+                  [class.text-severity-critical]="group.environmentType === 'LIVE'"
+                  [class.border-border-strong]="group.environmentType !== 'LIVE'"
+                  [class.text-muted]="group.environmentType !== 'LIVE'"
+                  >{{ group.environmentType }}</span
+                >
+              </h2>
+              <p class="mt-0.5 mb-0 text-sm text-muted">
+                {{ group.clientName }} › {{ group.projectName }} ({{ group.projectKey }})
+              </p>
+            </div>
+            <div
+              class="flex min-w-0 flex-1 basis-72 items-center gap-2 rounded-control border border-border bg-surface px-3 py-1.5"
+            >
+              <ng-icon name="lucideLink" size="15" class="shrink-0 text-muted" />
+              <span
+                class="min-w-0 flex-1 truncate text-sm text-text"
+                [title]="group.environmentUrl"
+                >{{ group.environmentUrl }}</span
+              >
+              <a
+                matButton="filled"
+                [href]="group.environmentUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="shrink-0"
+              >
+                <ng-icon name="lucideExternalLink" size="16" class="mr-1" />
+                Open {{ group.environmentName }}
+              </a>
+            </div>
+          </div>
+          <p class="mt-3 mb-0 text-sm text-muted">
+            {{ group.items.length }} {{ group.items.length === 1 ? 'fix' : 'fixes' }} to retest ·
+            oldest waiting
+            <span [class]="oldest.css">{{
+              oldest.label === 'Today' ? 'since today' : oldest.label
+            }}</span>
+          </p>
+        </header>
+
+        <ul class="m-0 list-none p-0">
+          @for (item of group.items; track item.deploymentId) {
+            @let waited = wait(item.deployedAt);
+            <li
+              class="flex flex-wrap items-start gap-x-4 gap-y-3 px-5 py-4 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
+            >
+              <div class="min-w-0 flex-1 basis-80">
+                <div class="flex min-w-0 items-baseline gap-2">
+                  <a
+                    class="shrink-0 font-semibold text-primary tabular-nums no-underline hover:underline"
+                    [routerLink]="['/issues', item.issueKey]"
+                    >{{ item.issueKey }}</a
+                  >
+                  <a
+                    class="min-w-0 truncate text-text no-underline hover:underline"
+                    [routerLink]="['/issues', item.issueKey]"
+                    [title]="item.title"
+                    >{{ item.title }}</a
+                  >
+                </div>
+                <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+                  <app-severity-badge [severity]="item.severity" />
+                  <span
+                    >{{ item.moduleName }}{{ item.screenName ? ' › ' + item.screenName : '' }}</span
+                  >
+                  @if (item.pageUrl) {
+                    <a
+                      [href]="item.pageUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="flex items-center gap-1 text-primary"
+                      ><ng-icon name="lucideExternalLink" size="13" />Page</a
+                    >
+                  }
+                  @if (item.reopenCount > 0) {
+                    <span class="font-medium text-status-reopened"
+                      >Reopened {{ item.reopenCount }}×</span
+                    >
+                  }
+                </div>
+                <p class="mt-2 mb-0 text-sm text-muted">
+                  Fixed by <span class="text-text">{{ item.deployedByName }}</span>
+                  {{ item.deployedAt | istDate: 'datetime' }}
+                  @if (item.version) {
+                    · version <span class="text-text">{{ item.version }}</span>
+                  }
+                  · reported by {{ item.reporterName }}
+                </p>
+                @if (item.note) {
+                  <p
+                    class="mt-2 mb-0 border-0 border-l-2 border-solid border-border-strong pl-3 text-sm whitespace-pre-line text-text"
+                  >
+                    {{ item.note }}
+                  </p>
+                }
+              </div>
+              <div class="flex shrink-0 items-center gap-3">
+                <span
+                  class="w-20 text-right text-sm tabular-nums"
+                  [class]="waited.css"
+                  title="Waiting for a retest"
+                  >{{ waited.label }}</span
+                >
+                @if (item.canRetest) {
+                  <button
+                    matButton="outlined"
+                    type="button"
+                    class="qa-pass"
+                    [disabled]="busy() !== null"
+                    (click)="pass(group, item)"
+                  >
+                    <ng-icon name="lucideCheck" size="16" class="mr-1" />
+                    {{ passing() === item.deploymentId ? 'Saving…' : 'Pass' }}
+                  </button>
+                  <button
+                    matButton="outlined"
+                    type="button"
+                    class="qa-fail"
+                    [disabled]="busy() !== null"
+                    (click)="fail(item)"
+                  >
+                    <ng-icon name="lucideX" size="16" class="mr-1" />
+                    Fail
+                  </button>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    } @empty {
+      <section class="qa-card">
+        <app-empty-state
+          [title]="mine() ? 'No retests for your issues' : 'Nothing to retest'"
+          message="Fixes show up here as soon as a developer marks them fixed on an environment."
+        >
+          @if (mine()) {
+            <button matButton="outlined" type="button" (click)="setMine(false)">
+              Show everyone's
+            </button>
+          }
+        </app-empty-state>
+      </section>
+    }
+  </div>
+}

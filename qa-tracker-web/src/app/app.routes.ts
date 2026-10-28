@@ -51,7 +51,19 @@ export const routes: Routes = [
         data: { breadcrumb: 'Testing', roles: ['Tester', 'Admin'] satisfies Role[] },
         loadComponent: () => import('./features/testing/testing-page').then((m) => m.TestingPage),
       },
-      placeholder('my-work', 'My work', 'S17', ['Developer', 'Admin']),
+      {
+        path: 'my-work',
+        title: 'My work',
+        data: { breadcrumb: 'My work', roles: ['Developer', 'Admin'] satisfies Role[] },
+        loadComponent: () => import('./features/work/my-work-page').then((m) => m.MyWorkPage),
+      },
+      {
+        path: 'deploy-notice',
+        title: 'Deploy notice',
+        data: { breadcrumb: 'Deploy notice', roles: ['Developer', 'Admin'] satisfies Role[] },
+        loadComponent: () =>
+          import('./features/work/deploy-notice-page').then((m) => m.DeployNoticePage),
+      },
       {
         path: 'issues',
         data: { breadcrumb: 'Issues' },
@@ -71,7 +83,13 @@ export const routes: Routes = [
         ],
       },
       placeholder('board', 'Board', 'S20'),
-      placeholder('retest-queue', 'Retest queue', 'S17', ['Tester', 'Admin']),
+      {
+        path: 'retest-queue',
+        title: 'Retest queue',
+        data: { breadcrumb: 'Retest queue', roles: ['Tester', 'Admin'] satisfies Role[] },
+        loadComponent: () =>
+          import('./features/work/retest-queue-page').then((m) => m.RetestQueuePage),
+      },
       placeholder('sprints', 'Sprints', 'S08 / S29'),
       {
         path: 'dashboards',
