@@ -10,12 +10,12 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | S04 | Authentication API (UserName login, plain-text passwords) | ✅ Done (27-Oct-2026) |
 | S05 | Authentication UI & users admin | ✅ Done (27-Oct-2026) |
 | S06 | Masters API | ✅ Done (27-Oct-2026) |
-| S07 | Masters UI + entity-picker | ⏭ Next |
-| S08 | Testing Sprint API | |
-| S09 | Issue API – create, edit, list | |
-| S10 | Attachments | |
-| S11 | Testing workspace UI (M1) | |
-| S12 | IssueWorkflow domain | |
+| S07 | Masters UI + entity-picker | ✅ Done (27-Oct-2026) |
+| S08 | Testing Sprint API | ✅ Done (28-Oct-2026) |
+| S09 | Issue API – create, edit, list | ✅ Done (28-Oct-2026) |
+| S10 | Attachments | ✅ Done (28-Oct-2026) |
+| S11 | Testing workspace UI (M1) | ✅ Done (28-Oct-2026) |
+| S12 | IssueWorkflow domain | ⏭ Next |
 | S13 | Workflow API | |
 | S14 | Timeline & comments API | |
 | S15 | Issue list & detail UI | |
@@ -410,3 +410,41 @@ accepts `.log`.
 **Libraries added (licence):** SkiaSharp 4.154.0 + SkiaSharp.NativeAssets.Linux.NoDependencies 4.154.0 (MIT).
 
 **Next session:** S11 – Testing workspace UI.
+
+---
+
+## S11 – Testing workspace UI   (28-Oct-2026)
+
+**Done:**
+- `/testing` (Tester, Admin): context bar with Client ▸ Project pickers (quick-add) and Sprint select ("+ Start new
+  sprint" when none is in Testing), stat chips (Day N, total, today, by severity), "Mark testing completed" with the
+  completion summary dialog; breadcrumb Testing ▸ Client ▸ Project ▸ Sprint; selection remembered per user; deep link
+  `?client=&project=&sprint=`.
+- Quick issue form: module/environment pickers with quick-add, screen suggestions, type, severity/priority toggles,
+  title, rich-text steps/expected/actual/impact, assignee (developers/admins of the project), page URL, attachments
+  (Ctrl+V anywhere, uploaded right after create; in edit mode at once). Ctrl+Enter = Save & add another (keeps module,
+  screen, type, environment), N = new issue, 409 → "Load latest version".
+- Right panel: this sprint's issues newest first, group by module, edit / clone / delete (with confirmation).
+- Read-only once testing is completed (banner + "Start new sprint").
+- Shared: `app-rich-text-editor` (in /dev/ui), `SprintsApi`, `IssuesApi`, `ISSUE_TYPES`; `EntityPicker.focus()`, Enter no
+  longer submits forms from a picker. ADR-021.
+- Tests: 9 new (stats, blank HTML, page states incl. read-only after completion, form keeps context after save, no
+  request for an incomplete issue).
+
+**Verified:** `ng build` clean · `ng test` 89/89 · `ng lint` clean · `dotnet build`/`dotnet test` (unchanged backend) ·
+in Chrome as a local test tester: N → module/screen/severity/priority/title/steps/actual by keyboard, pasted screenshot,
+Ctrl+Enter → PGERP-3 created with its attachment (201), module/screen/type kept; group by module; edit PGERP-2; deep link;
+completion summary dialog opened and cancelled (local "Sprint 1 – UAT" left in Testing).
+
+**Deviations from plan:** 60/40 split instead of 40/60 and the complete button in the context bar (Akash, ADR-021).
+
+**Carry-over / known gaps:**
+- Day counter / stats come from the first 200 issues of the sprint (enough for now; server-side counts with S21).
+- Developers see a sprint's issues read-only in the Issue list (S15); the Testing route stays tester/admin only.
+- Local dev DB: test account `ui.tester` (role Tester, name "John Tester") added for browser checks; deactivate it when not
+  needed. PGERP-3 was created during the check.
+- `execCommand` is deprecated but supported by all browsers; replace if it ever goes away.
+
+**Libraries added (licence):** none.
+
+**Next session:** S12 – IssueWorkflow domain.

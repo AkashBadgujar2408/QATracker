@@ -84,6 +84,7 @@ function normalize(text: string): string {
         spellcheck="false"
         (input)="onInput(input.value)"
         (blur)="onBlur()"
+        (keydown.enter)="onEnter($event)"
       />
       <ng-icon matSuffix name="lucideChevronDown" size="16" class="mr-3 text-muted" />
       @if (hint()) {
@@ -240,6 +241,10 @@ export class EntityPicker implements ControlValueAccessor {
     });
   }
 
+  focus(): void {
+    this.inputRef().nativeElement.focus();
+  }
+
   protected errorText(): string {
     const control = this.ngControl?.control;
     return control ? fieldError(control, this.label()) : `${this.label()} is required.`;
@@ -256,6 +261,20 @@ export class EntityPicker implements ControlValueAccessor {
       void this.add(this.typedText.trim());
     } else {
       this.choose(id);
+    }
+  }
+
+  /** Enter picks an option (mat-autocomplete) or settles the typed text – it never submits the surrounding form. */
+  protected onEnter(event: Event): void {
+    event.preventDefault();
+    if (this.trigger().panelOpen) {
+      return;
+    }
+    const matches = this.filtered();
+    if (this.typing() && this.query() && matches.length === 1) {
+      this.choose(matches[0].id);
+    } else {
+      this.reconcile();
     }
   }
 

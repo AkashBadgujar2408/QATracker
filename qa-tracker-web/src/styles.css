@@ -117,6 +117,11 @@
     border-radius: var(--qa-radius-card);
     box-shadow: var(--qa-shadow-card);
   }
+
+  /* Fields focused by keyboard stay clear of a sticky save bar below them. */
+  .qa-above-sticky-footer * {
+    scroll-margin-bottom: 5.5rem;
+  }
 }
 
 /* Material tables: quiet header, comfortable rows, hover highlight. */

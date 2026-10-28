@@ -54,3 +54,14 @@ export const PRIORITY_META: Readonly<Record<Priority, EnumMeta>> = {
   Medium: { label: 'Medium', colorToken: '--qa-severity-medium' },
   Low: { label: 'Low', colorToken: '--qa-severity-low' },
 };
+
+export const ISSUE_TYPES = [
+  'Bug',
+  'Validation',
+  'UI',
+  'Security',
+  'Performance',
+  'Enhancement',
+  'Clarification',
+] as const;
+export type IssueType = (typeof ISSUE_TYPES)[number];

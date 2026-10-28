@@ -1,0 +1,242 @@
+<form [formGroup]="form" (ngSubmit)="save(editing() === null)" novalidate class="flex flex-col">
+  <div class="flex items-center gap-2 border-b border-border px-5 py-3">
+    @if (editing(); as issue) {
+      <ng-icon name="lucidePencil" size="16" class="text-primary" />
+      <h2 class="m-0 min-w-0 flex-1 truncate text-md font-semibold">
+        Edit <span class="text-primary tabular-nums">{{ issue.key }}</span>
+      </h2>
+    } @else if (cloneOf(); as source) {
+      <ng-icon name="lucideCopy" size="16" class="text-primary" />
+      <h2 class="m-0 min-w-0 flex-1 truncate text-md font-semibold">
+        New issue from <span class="text-primary tabular-nums">{{ source.key }}</span>
+      </h2>
+    } @else {
+      <h2 class="m-0 min-w-0 flex-1 text-md font-semibold">New issue</h2>
+      @if (!readOnly()) {
+        <span class="hidden text-xs text-muted xl:inline">
+          <kbd class="qa-kbd">N</kbd> new · <kbd class="qa-kbd">Ctrl</kbd>+<kbd class="qa-kbd"
+            >V</kbd
+          >
+          screenshot · <kbd class="qa-kbd">Ctrl</kbd>+<kbd class="qa-kbd">Enter</kbd> save
+        </span>
+      }
+    }
+    @if (editing() || cloneOf()) {
+      <button matButton type="button" (click)="cancel()">
+        <ng-icon name="lucideX" size="16" class="mr-1" />
+        Cancel
+      </button>
+    }
+  </div>
+
+  <div class="qa-above-sticky-footer flex flex-col gap-1 px-5 pt-4">
+    <div class="grid gap-x-3 sm:grid-cols-2">
+      <app-entity-picker
+        label="Module"
+        noun="module"
+        formControlName="moduleId"
+        required
+        [items]="moduleItems()"
+        [quickAdd]="readOnly() ? null : addModule"
+        (created)="mastersChanged.emit()"
+      />
+      <mat-form-field appearance="outline">
+        <mat-label>Screen</mat-label>
+        <input
+          matInput
+          formControlName="screenName"
+          maxlength="150"
+          autocomplete="off"
+          [matAutocomplete]="screens"
+        />
+        <mat-autocomplete
+          #screens="matAutocomplete"
+          (optionSelected)="chooseScreen($event.option.value)"
+        >
+          @for (screen of screenSuggestions(); track screen) {
+            <mat-option [value]="screen">{{ screen }}</mat-option>
+          }
+        </mat-autocomplete>
+        <mat-error>{{ fieldError(form.controls.screenName, 'Screen') }}</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="grid gap-x-3 sm:grid-cols-2">
+      <mat-form-field appearance="outline">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="type">
+          @for (type of types; track type) {
+            <mat-option [value]="type">{{ typeLabels[type] }}</mat-option>
+          }
+        </mat-select>
+        <mat-error>{{ fieldError(form.controls.type, 'Type') }}</mat-error>
+      </mat-form-field>
+      <app-entity-picker
+        label="Found on"
+        noun="environment"
+        formControlName="foundOnEnvironmentId"
+        placeholder="Environment"
+        [items]="environmentItems()"
+        [quickAdd]="readOnly() ? null : addEnvironment"
+        (created)="mastersChanged.emit()"
+      />
+    </div>
+
+    <div class="flex flex-wrap gap-x-6 gap-y-3 pb-5">
+      <div>
+        <div
+          id="qa-severity-label"
+          class="mb-1 text-sm font-medium"
+          [class]="
+            form.controls.severity.invalid && form.controls.severity.touched
+              ? 'text-severity-critical'
+              : 'text-muted'
+          "
+        >
+          Severity *
+        </div>
+        <mat-button-toggle-group
+          formControlName="severity"
+          aria-labelledby="qa-severity-label"
+          hideSingleSelectionIndicator
+          class="qa-toggles"
+        >
+          @for (severity of severities; track severity) {
+            <mat-button-toggle [value]="severity">
+              <span class="flex items-center gap-1.5">
+                <span
+                  class="size-2 rounded-full"
+                  [style.background]="'var(' + severityMeta[severity].colorToken + ')'"
+                ></span>
+                {{ severity === 'NotAssessed' ? 'N/A' : severityMeta[severity].label }}
+              </span>
+            </mat-button-toggle>
+          }
+        </mat-button-toggle-group>
+      </div>
+      <div>
+        <div
+          id="qa-priority-label"
+          class="mb-1 text-sm font-medium"
+          [class]="
+            form.controls.priority.invalid && form.controls.priority.touched
+              ? 'text-severity-critical'
+              : 'text-muted'
+          "
+        >
+          Priority *
+        </div>
+        <mat-button-toggle-group
+          formControlName="priority"
+          aria-labelledby="qa-priority-label"
+          hideSingleSelectionIndicator
+          class="qa-toggles"
+        >
+          @for (priority of priorities; track priority) {
+            <mat-button-toggle [value]="priority">{{
+              priorityMeta[priority].label
+            }}</mat-button-toggle>
+          }
+        </mat-button-toggle-group>
+      </div>
+    </div>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Title</mat-label>
+      <input
+        #titleInput
+        matInput
+        formControlName="title"
+        maxlength="200"
+        autocomplete="off"
+        required
+      />
+      <mat-error>{{ fieldError(form.controls.title, 'Title') }}</mat-error>
+    </mat-form-field>
+
+    <div class="flex flex-col gap-4 pb-5">
+      <app-rich-text-editor label="Steps to reproduce" formControlName="steps" [rows]="5" />
+      <app-rich-text-editor label="Expected result" formControlName="expectedResult" [rows]="3" />
+      <app-rich-text-editor
+        label="Actual result"
+        formControlName="actualResult"
+        required
+        [rows]="3"
+      />
+      <app-rich-text-editor label="Impact" formControlName="impact" [rows]="2" />
+    </div>
+
+    <div class="grid gap-x-3 sm:grid-cols-2">
+      <mat-form-field appearance="outline">
+        <mat-label>Assign to</mat-label>
+        <mat-select formControlName="assigneeId">
+          <mat-option [value]="null">Nobody yet</mat-option>
+          @for (member of assignees(); track member.userId) {
+            <mat-option [value]="member.userId">{{ member.fullName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Page URL</mat-label>
+        <input
+          matInput
+          type="url"
+          formControlName="pageUrl"
+          autocomplete="off"
+          placeholder="https://"
+        />
+        <mat-error>{{
+          form.controls.pageUrl.hasError('pattern')
+            ? 'Enter a full http(s) address.'
+            : fieldError(form.controls.pageUrl, 'Page URL')
+        }}</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="pb-4">
+      <div class="mb-1 text-sm font-medium text-muted">Attachments</div>
+      @if (editing(); as issue) {
+        <app-issue-attachments [issueKey]="issue.key" [canEdit]="!readOnly()" capturePaste />
+      } @else {
+        <app-paste-dropzone [(files)]="pendingFiles" [disabled]="readOnly()" capturePaste />
+      }
+    </div>
+  </div>
+
+  <div
+    class="qa-form-footer sticky z-10 flex flex-wrap items-center gap-2 border-t border-border bg-surface px-5 py-3"
+  >
+    @if (error()) {
+      <p role="alert" class="m-0 w-full text-sm text-severity-critical">
+        {{ error() }}
+        @if (conflict()) {
+          <button matButton type="button" (click)="reloadLatest()">Load latest version</button>
+        }
+      </p>
+    }
+    <span class="flex-1"></span>
+    @if (editing()) {
+      <button matButton type="button" (click)="cancel()">Cancel</button>
+      <button matButton="filled" type="submit" [disabled]="saving() || readOnly()">
+        {{ saving() ? 'Saving…' : 'Save changes' }}
+      </button>
+    } @else {
+      <button
+        matButton="outlined"
+        type="button"
+        [disabled]="saving() || readOnly()"
+        (click)="save(false)"
+      >
+        Save
+      </button>
+      <button
+        matButton="filled"
+        type="submit"
+        title="Ctrl+Enter – keeps module, screen and type"
+        [disabled]="saving() || readOnly()"
+      >
+        {{ saving() ? 'Saving…' : 'Save & add another' }}
+      </button>
+    }
+  </div>
+</form>

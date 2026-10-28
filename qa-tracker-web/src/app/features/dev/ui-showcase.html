@@ -253,4 +253,17 @@
     <h3 class="mt-0 mb-2 text-sm font-semibold text-muted">app-skeleton-table</h3>
     <app-skeleton-table [rows]="4" [columns]="5" />
   </section>
+
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-4 text-lg font-semibold">app-rich-text-editor</h2>
+    <app-rich-text-editor
+      label="Steps to reproduce"
+      hint="Bold, italic, underline, lists and code. Ctrl+B / I / U work too; drag the corner to make it taller."
+      [formControl]="richText"
+      [rows]="4"
+    />
+    <p class="mt-3 mb-0 text-xs text-muted">
+      Value: <code>{{ richText.value }}</code>
+    </p>
+  </section>
 </div>

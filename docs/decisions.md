@@ -219,3 +219,20 @@ new alerts/mails and background tasks configurable in the app; one database for 
   writes an Attachment activity; removal writes one too. Deleting an issue deletes its files after the database delete.
 - `004_IssueDeleteIndexes.sql`: indexes on the foreign keys an issue delete checks (IssueLinks.ToIssueId,
   Notifications.IssueId, Issues.DuplicateOfIssueId, SprintSnapshots.IssueId) – without them deletes scanned those tables.
+
+## ADR-021 – Testing workspace layout and behaviour (28-Oct-2026, S11)
+- **One place to log issues** (confirmed with Akash): the tester picks or starts the sprint inline on the Testing screen and
+  logs issues straight into it – there is no separate sprint screen for adding issues. The Sprints page (S29) links here
+  with `/testing?client=&project=&sprint=` ("Log issues"); a link wins over the remembered selection.
+- **Form ≈ 60 %, list ≈ 40 %** (plan 8.1 said 40/60) – Akash found the form too narrow for steps/expected/actual text.
+  Rich-text editors are taller (steps 5 lines) and can be dragged taller.
+- "Mark testing completed" sits in the context bar next to the sprint's stats (not the page header). Once testing is
+  completed the form, edit/clone/delete are read-only with a banner and "Start new sprint" (phase/environment carried over).
+- Save bar is sticky and pinned flush to the bottom of the screen (offset cancels the page's bottom padding).
+- Selection (client/project/sprint) and "group by module" are remembered per user in localStorage (browser only).
+- Rich text: own small `app-rich-text-editor` (contenteditable + execCommand: bold, italic, underline, lists, code), no
+  library. Pasted text is inserted as plain text; pasted images go to the page-wide paste-dropzone. Values written into
+  the editor go through Angular's sanitizer; the API sanitises again (ADR-018).
+- Stats chips are computed in the browser from the sprint's issues (≤ 200, one page): total, today (IST), by severity,
+  "Day N" = distinct IST dates with issues, plus today while in Testing.
+- Enter in an entity-picker never submits the surrounding form; with exactly one match it picks it.

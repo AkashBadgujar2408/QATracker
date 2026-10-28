@@ -45,7 +45,12 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'home' },
       placeholder('home', 'Home', 'S22'),
-      placeholder('testing', 'Testing', 'S11', ['Tester', 'Admin']),
+      {
+        path: 'testing',
+        title: 'Testing',
+        data: { breadcrumb: 'Testing', roles: ['Tester', 'Admin'] satisfies Role[] },
+        loadComponent: () => import('./features/testing/testing-page').then((m) => m.TestingPage),
+      },
       placeholder('my-work', 'My work', 'S17', ['Developer', 'Admin']),
       placeholder('issues', 'Issues', 'S15'),
       placeholder('board', 'Board', 'S20'),

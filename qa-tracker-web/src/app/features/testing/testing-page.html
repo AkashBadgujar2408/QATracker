@@ -1,0 +1,196 @@
+<app-page-header title="Testing" subtitle="Log issues straight into the sprint you are testing." />
+
+<section class="qa-card mb-5 px-5 pt-4 pb-1" aria-label="Testing context">
+  <div class="grid gap-x-3 md:grid-cols-[1fr_1fr_1.2fr]">
+    <app-entity-picker
+      label="Client"
+      noun="client"
+      [items]="clientItems()"
+      [loading]="cascade.isLoading() && !cascade.hasValue()"
+      [quickAdd]="addClient"
+      [value]="selection().clientId"
+      (valueChange)="chooseClient($event)"
+      (created)="cascade.reload()"
+    />
+    <app-entity-picker
+      label="Project"
+      noun="project"
+      [items]="projectItems()"
+      [disabled]="!selection().clientId"
+      [quickAdd]="addProject"
+      [value]="selection().projectId"
+      [hint]="selection().clientId ? '' : 'Choose a client first'"
+      (valueChange)="chooseProject($event)"
+      (created)="cascade.reload()"
+    />
+    <mat-form-field appearance="outline">
+      <mat-label>Sprint</mat-label>
+      <mat-select
+        [value]="sprint()?.id ?? null"
+        [disabled]="!selection().projectId || !sprints.hasValue()"
+        (selectionChange)="chooseSprint($event.value)"
+        placeholder="No sprint yet"
+      >
+        <mat-select-trigger>{{ sprint()?.name }}</mat-select-trigger>
+        @for (s of sprints.value() ?? []; track s.id) {
+          <mat-option [value]="s.id">
+            <span class="flex items-center gap-2">
+              <span
+                class="size-2 shrink-0 rounded-full"
+                [class]="
+                  s.status === 'Testing'
+                    ? 'bg-sprint-testing'
+                    : s.status === 'TestingCompleted'
+                      ? 'bg-sprint-testing-completed'
+                      : 'bg-sprint-closed'
+                "
+              ></span>
+              <span class="min-w-0 flex-1 truncate">{{ s.name }}</span>
+              <span class="text-xs text-muted">{{ statusLabels[s.status] }}</span>
+            </span>
+          </mat-option>
+        }
+        @if (!hasTestingSprint()) {
+          <mat-option [value]="startNew">
+            <span class="flex items-center gap-2 text-primary">
+              <ng-icon name="lucidePlus" size="16" />
+              Start new sprint
+            </span>
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (sprint(); as s) {
+    <div class="-mt-2 flex flex-wrap items-center gap-2 pb-4" aria-label="Sprint stats">
+      <span class="qa-day" [class.qa-day-live]="s.status === 'Testing'">
+        <ng-icon name="lucideFlaskConical" size="15" />
+        Day {{ stats().day }}
+      </span>
+      <span class="qa-chip"
+        ><strong class="tabular-nums">{{ stats().total }}</strong> total</span
+      >
+      @if (s.status === 'Testing') {
+        <span class="qa-chip"
+          ><strong class="tabular-nums">{{ stats().today }}</strong> today</span
+        >
+      }
+      @for (row of stats().bySeverity; track row.severity) {
+        <span class="qa-chip">
+          <span
+            class="size-2 rounded-[2px]"
+            [style.background]="'var(' + severityMeta[row.severity].colorToken + ')'"
+          ></span>
+          <strong class="tabular-nums">{{ row.count }}</strong>
+          {{ severityMeta[row.severity].label }}
+        </span>
+      }
+      <span class="ml-auto text-sm text-muted">
+        {{ statusLabels[s.status] }} · started {{ s.startedAt | istDate }} by {{ s.startedByName }}
+        @if (s.defaultEnvironmentName) {
+          · {{ s.defaultEnvironmentName }}
+        }
+      </span>
+      @if (s.status === 'Testing') {
+        <button matButton="filled" type="button" (click)="completeTesting()">
+          <ng-icon name="lucideCircleCheck" size="16" class="mr-1" />
+          Mark testing completed
+        </button>
+      } @else if (!hasTestingSprint()) {
+        <button matButton="filled" type="button" (click)="startSprint()">
+          <ng-icon name="lucidePlus" size="16" class="mr-1" />
+          Start new sprint
+        </button>
+      }
+    </div>
+  }
+</section>
+
+@if (!selection().clientId || !selection().projectId) {
+  <section class="qa-card">
+    <app-empty-state
+      title="Choose what you are testing"
+      message="Pick the client and project above. Type a new name to add one on the spot."
+    />
+  </section>
+} @else if (cascade.error() || sprints.error()) {
+  <section class="qa-card">
+    <app-empty-state
+      kind="error"
+      title="Could not load the project"
+      [message]="
+        '' +
+        (cascade.error() ? 'Masters' : 'Sprints') +
+        ' did not load. Check the connection and try again.'
+      "
+    >
+      <button matButton="outlined" type="button" (click)="cascade.reload(); sprints.reload()">
+        Try again
+      </button>
+    </app-empty-state>
+  </section>
+} @else if ((sprints.isLoading() && !sprints.hasValue()) || !cascade.hasValue()) {
+  <div class="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <section class="qa-card p-5"><app-skeleton-lines [lines]="10" /></section>
+    <section class="qa-card p-5"><app-skeleton-lines [lines]="8" /></section>
+  </div>
+} @else if (!sprint()) {
+  <section class="qa-card">
+    <app-empty-state
+      title="No sprint in this project yet"
+      message="Start a testing sprint to log issues. You can keep adding to it over several days."
+    >
+      <button matButton="filled" type="button" (click)="startSprint()">Start new sprint</button>
+    </app-empty-state>
+  </section>
+} @else {
+  @let s = sprint()!;
+  @if (s.status !== 'Testing') {
+    <div
+      class="mb-5 flex flex-wrap items-center gap-3 rounded-card border border-sprint-testing-completed/40 bg-sprint-testing-completed/10 px-4 py-3 text-base"
+      role="status"
+    >
+      <ng-icon name="lucideInfo" size="18" class="shrink-0 text-sprint-testing-completed" />
+      <span class="min-w-0 flex-1">
+        @if (s.status === 'TestingCompleted') {
+          Testing of <strong>{{ s.name }}</strong> was completed
+          {{ s.testingCompletedAt | istDate }}. New defects go into a new sprint.
+        } @else {
+          <strong>{{ s.name }}</strong> is closed and read-only.
+        }
+      </span>
+      @if (!hasTestingSprint()) {
+        <button matButton="outlined" type="button" (click)="startSprint()">Start new sprint</button>
+      }
+    </div>
+  }
+
+  <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <section class="qa-card overflow-clip" aria-label="Issue form">
+      <app-issue-form
+        [sprint]="s"
+        [cascade]="cascade.value()!"
+        [mode]="mode()"
+        [readOnly]="s.status !== 'Testing'"
+        (saved)="onSaved($event)"
+        (closed)="mode.set({ kind: 'create' })"
+        (mastersChanged)="cascade.reload()"
+      />
+    </section>
+    <section class="qa-card overflow-hidden lg:sticky lg:top-0" aria-label="Issues of this sprint">
+      <app-sprint-issues
+        [issues]="issueList()"
+        [loading]="issues.isLoading()"
+        [error]="issuesError()"
+        [readOnly]="s.status !== 'Testing'"
+        [activeKey]="editingKey()"
+        [(grouped)]="grouped"
+        (edit)="edit($event)"
+        (clone)="clone($event)"
+        (remove)="remove($event)"
+        (retry)="issues.reload()"
+      />
+    </section>
+  </div>
+}

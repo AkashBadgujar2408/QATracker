@@ -1,3 +1,5 @@
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { RichTextEditor } from '../../shared/ui/rich-text-editor/rich-text-editor';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -56,6 +58,8 @@ interface Swatch {
     EntityPicker,
     IssueAttachments,
     PasteDropzone,
+    RichTextEditor,
+    ReactiveFormsModule,
   ],
   templateUrl: './ui-showcase.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,6 +68,11 @@ export class UiShowcase {
   protected readonly theme = inject(ThemeService);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
+
+  /** app-rich-text-editor demo: the value is sanitised HTML (null when empty). */
+  protected readonly richText = new FormControl<string | null>(
+    '<p>Open <b>Sales Return Entry</b> and:</p><ol><li>Pick tomorrow as the return date</li><li>Press <code>Save</code></li></ol>',
+  );
 
   protected readonly statuses = ISSUE_STATUSES;
   protected readonly severities = SEVERITIES;
