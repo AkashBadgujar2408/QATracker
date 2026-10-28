@@ -105,6 +105,11 @@ public sealed class CreateIssueHandler(
             CreatedAt = now,
         };
         issue.IssueActivities.Add(new IssueActivity { UserId = currentUser.UserId, Kind = ActivityKind.Created, CreatedAt = now });
+        foreach (var watcher in new[] { currentUser.UserId, fields.AssigneeId }.OfType<int>().Distinct())
+        {
+            issue.IssueWatchers.Add(new IssueWatcher { UserId = watcher, AddedAt = now }); // reporter and assignee watch
+        }
+
         if (fields.AssigneeId is { } assigneeId)
         {
             issue.IssueActivities.Add(new IssueActivity

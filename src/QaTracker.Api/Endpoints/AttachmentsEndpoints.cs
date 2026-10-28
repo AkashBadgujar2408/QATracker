@@ -15,8 +15,6 @@ namespace QaTracker.Api.Endpoints;
 public static class AttachmentsEndpoints
 {
     /// <summary>5 files × 10 MB plus multipart overhead.</summary>
-    private const long MaxRequestBytes = (UploadAttachmentsHandler.MaxFilesPerUpload * FileInspector.MaxBytes) + (1024 * 1024);
-
     public static IEndpointRouteBuilder MapAttachmentsEndpoints(this IEndpointRouteBuilder app)
     {
         var issues = app.MapGroup("/api/issues/{key}/attachments").WithTags("Attachments");
@@ -27,20 +25,10 @@ public static class AttachmentsEndpoints
 
         issues.MapPost("/", async (string key, IFormFileCollection files, UploadAttachmentsHandler handler, CancellationToken ct) =>
             {
-                var incoming = new List<IncomingFile>();
-                foreach (var file in files)
+                var (incoming, tooLarge) = await FormFiles.ReadAsync(files, ct);
+                if (tooLarge is not null)
                 {
-                    if (file.Length > FileInspector.MaxBytes)
-                    {
-                        return new Application.Common.Error("validation", $"{file.FileName} is larger than 10 MB.", Application.Common.ErrorType.Validation)
-                        {
-                            Fields = new Dictionary<string, string[]> { ["files"] = [$"{file.FileName} is larger than 10 MB."] },
-                        }.ToProblem();
-                    }
-
-                    using var buffer = new MemoryStream((int)file.Length);
-                    await file.CopyToAsync(buffer, ct);
-                    incoming.Add(new IncomingFile(file.FileName, buffer.ToArray()));
+                    return tooLarge;
                 }
 
                 return (await handler.HandleAsync(new UploadAttachmentsCommand(key, incoming), ct))
@@ -48,7 +36,7 @@ public static class AttachmentsEndpoints
             })
             .RequireAuthorization(Policies.TesterOrAdmin)
             .DisableAntiforgery()
-            .WithMetadata(new RequestSizeLimitAttribute(MaxRequestBytes))
+            .WithMetadata(new RequestSizeLimitAttribute(FormFiles.MaxRequestBytes))
             .WithSummary("Upload 1–5 files (multipart field \"files\"): images, PDF, XLSX, DOCX, TXT – max 10 MB each.");
 
         var attachments = app.MapGroup("/api/attachments").WithTags("Attachments");

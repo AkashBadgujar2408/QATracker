@@ -272,3 +272,22 @@ new alerts/mails and background tasks configurable in the app; one database for 
   sets VerifiedAt and passes pending deployments; Reopen +1 ReopenCount, fails pending deployments, clears
   VerifiedAt/ClosedAt; Close sets ClosedAt.
 - No notifications yet (assigned, reopened, need info …) – they come with S18/S19 from these activities.
+
+## ADR-024 – Timeline and comments (28-Oct-2026, S14)
+- `GET /api/issues/{key}/activities?before=&size=&filter=All|Comments|History` → `{items (oldest first), hasMore}`.
+  The first call returns the newest page; older pages with `before` = the first item's id (ids follow time). Size ≤ 200.
+- Each entry: kind, user name/avatar colour, `summary` (plain English, e.g. "Akash assigned to Nitin", "Nitin picked the
+  issue", "Akash: retest failed on UAT 1"), raw body/old/new values, environment, `canEdit`, mentions and – for
+  comments – its attachments (signed URLs). Names in summaries come from user ids at read time.
+- Comments: `POST /api/issues/{key}/comments` as multipart (`body`, up to 5 `files`, same checks as attachments) –
+  every role, every sprint state (also Closed and, for developers, while in Testing). Plain text, not HTML; the UI
+  escapes it. Mentions = `@user.name` (ADR-011 user names) of active users, not oneself; stored in `Mentions`.
+  Comment files are Attachments rows linked to the comment (`ActivityId`), no separate Attachment event.
+- `PUT /api/comments/{id} {body}`: author only (403), within 10 minutes of posting (422 `edit_window_passed`), sets
+  EditedAt and re-syncs mentions. System events are never editable (404 as a comment).
+- Watchers are added automatically: reporter and assignee on create, assignee on every (re)assignment and pick,
+  everyone who comments.
+- `GET /api/issues/{key}/related`: open issues (not Closed/Rejected) of the same module, same screen first, max 20.
+- Pick race: when someone else already holds the issue a failed pick always answers 409 "Already picked by X", also if
+  their pick has already moved it to In Progress.
+- `AttachmentWriter` (file checks + storage + rows) is shared by issue uploads and comments; `FormFiles` reads multipart.

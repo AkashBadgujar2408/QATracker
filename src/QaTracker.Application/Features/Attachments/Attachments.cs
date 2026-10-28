@@ -57,30 +57,28 @@ internal static class AttachmentMapping
     }
 }
 
-/// <summary>
-/// Attach files to an issue while its sprint is in Testing (tester/admin). All files are checked first – one bad file
-/// rejects the upload. Images get a thumbnail; each file writes an Attachment activity.
-/// </summary>
-public sealed class UploadAttachmentsHandler(
+/// <summary>Checks incoming files and stores them (file, thumbnail, Attachments row) – used by issue uploads and comments.</summary>
+public sealed class AttachmentWriter(
     IApplicationDbContext db,
     IFileStorage storage,
     IThumbnailGenerator thumbnails,
-    IAttachmentUrlSigner signer,
     ICurrentUser currentUser,
-    IClock clock,
-    ILogger<UploadAttachmentsHandler> logger)
+    ILogger<AttachmentWriter> logger)
 {
     public const int MaxFilesPerUpload = 5;
 
-    public async Task<Result<IReadOnlyList<AttachmentDto>>> HandleAsync(UploadAttachmentsCommand command, CancellationToken cancellationToken)
+    /// <summary>All files are checked first – one bad file rejects the upload.</summary>
+    public static Error? Inspect(IReadOnlyList<IncomingFile> files, int minFiles, out List<(IncomingFile File, FileKind Kind)> inspected)
     {
-        if (command.Files.Count is 0 or > MaxFilesPerUpload)
+        inspected = [];
+        if (files.Count < minFiles || files.Count > MaxFilesPerUpload)
         {
-            return Error.Validation("files", $"Attach between 1 and {MaxFilesPerUpload} files at a time.");
+            return Error.Validation("files", minFiles == 0
+                ? $"Attach at most {MaxFilesPerUpload} files at a time."
+                : $"Attach between 1 and {MaxFilesPerUpload} files at a time.");
         }
 
-        var inspected = new List<(IncomingFile File, FileKind Kind)>();
-        foreach (var file in command.Files)
+        foreach (var file in files)
         {
             var (kind, error) = FileInspector.Inspect(file.FileName, file.Content);
             if (kind is null)
@@ -91,25 +89,25 @@ public sealed class UploadAttachmentsHandler(
             inspected.Add((file, kind));
         }
 
-        var key = IssueRules.NormalizeKey(command.IssueKey);
-        var issue = await db.Issues.AsNoTracking().Where(i => i.IssueKey == key).Select(i => new { i.Id, i.Sprint.Status }).SingleOrDefaultAsync(cancellationToken);
-        if (issue is null)
-        {
-            return Error.NotFound("Issue");
-        }
+        return null;
+    }
 
-        var check = SprintRules.CanChangeIssues(currentUser.Role, issue.Status);
-        if (!check.Allowed)
-        {
-            return check.ToError();
-        }
-
-        var now = clock.UtcNow;
+    /// <summary>
+    /// Writes the files, adds an Attachments row per file (linked to the activity from <paramref name="activityFor"/>,
+    /// called with the clean file name) and saves. Files already written are removed again if saving fails.
+    /// </summary>
+    public async Task<List<Attachment>> SaveAsync(
+        int issueId,
+        IReadOnlyList<(IncomingFile File, FileKind Kind)> files,
+        Func<string, IssueActivity> activityFor,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
         var written = new List<string>();
         var added = new List<Attachment>();
         try
         {
-            foreach (var (file, kind) in inspected)
+            foreach (var (file, kind) in files)
             {
                 var name = FileInspector.CleanFileName(file.FileName, kind);
                 var basePath = $"{now:yyyy}/{now:MM}/{Guid.NewGuid():N}";
@@ -127,7 +125,7 @@ public sealed class UploadAttachmentsHandler(
 
                 var attachment = new Attachment
                 {
-                    IssueId = issue.Id,
+                    IssueId = issueId,
                     FileName = name,
                     ContentType = kind.ContentType,
                     SizeBytes = file.Content.Length,
@@ -135,14 +133,7 @@ public sealed class UploadAttachmentsHandler(
                     ThumbnailPath = thumbnailPath,
                     UploadedById = currentUser.UserId,
                     UploadedAt = now,
-                    Activity = new IssueActivity
-                    {
-                        IssueId = issue.Id,
-                        UserId = currentUser.UserId,
-                        Kind = ActivityKind.Attachment,
-                        Body = name,
-                        CreatedAt = now,
-                    },
+                    Activity = activityFor(name),
                 };
                 db.Attachments.Add(attachment);
                 added.Add(attachment);
@@ -159,6 +150,51 @@ public sealed class UploadAttachmentsHandler(
 
             throw;
         }
+
+        return added;
+    }
+}
+
+/// <summary>
+/// Attach files to an issue while its sprint is in Testing (tester/admin). Images get a thumbnail; each file writes an
+/// Attachment activity. (Files on comments go through the comment – any role, any sprint state.)
+/// </summary>
+public sealed class UploadAttachmentsHandler(
+    IApplicationDbContext db,
+    AttachmentWriter writer,
+    IAttachmentUrlSigner signer,
+    ICurrentUser currentUser,
+    IClock clock)
+{
+    public const int MaxFilesPerUpload = AttachmentWriter.MaxFilesPerUpload;
+
+    public async Task<Result<IReadOnlyList<AttachmentDto>>> HandleAsync(UploadAttachmentsCommand command, CancellationToken cancellationToken)
+    {
+        if (AttachmentWriter.Inspect(command.Files, minFiles: 1, out var inspected) is { } invalid)
+        {
+            return invalid;
+        }
+
+        var key = IssueRules.NormalizeKey(command.IssueKey);
+        var issue = await db.Issues.AsNoTracking().Where(i => i.IssueKey == key).Select(i => new { i.Id, i.Sprint.Status }).SingleOrDefaultAsync(cancellationToken);
+        if (issue is null)
+        {
+            return Error.NotFound("Issue");
+        }
+
+        var check = SprintRules.CanChangeIssues(currentUser.Role, issue.Status);
+        if (!check.Allowed)
+        {
+            return check.ToError();
+        }
+
+        var now = clock.UtcNow;
+        var added = await writer.SaveAsync(
+            issue.Id,
+            inspected,
+            name => new IssueActivity { IssueId = issue.Id, UserId = currentUser.UserId, Kind = ActivityKind.Attachment, Body = name, CreatedAt = now },
+            now,
+            cancellationToken);
 
         var ids = added.Select(a => a.Id).ToList();
         return await AttachmentMapping.ListAsync(db, signer, currentUser.UserId, db.Attachments.Where(a => ids.Contains(a.Id)), cancellationToken);

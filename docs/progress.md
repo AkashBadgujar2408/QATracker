@@ -17,8 +17,8 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | S11 | Testing workspace UI (M1) | ✅ Done (28-Oct-2026) |
 | S12 | IssueWorkflow domain | ✅ Done (28-Oct-2026) |
 | S13 | Workflow API | ✅ Done (28-Oct-2026) |
-| S14 | Timeline & comments API | ⏭ Next |
-| S15 | Issue list & detail UI | |
+| S14 | Timeline & comments API | ✅ Done (28-Oct-2026) |
+| S15 | Issue list & detail UI | ⏭ Next |
 | S16 | My work, retest queue & deploy notice API | |
 | S17 | My work, retest queue & deploy notice UI (M2) | |
 | S18 | SignalR & in-app notifications | |
@@ -504,3 +504,30 @@ Verified only when no other retest of it is pending; a failed retest fails the o
 **Libraries added (licence):** none.
 
 **Next session:** S14 – Timeline & comments API.
+
+---
+
+## S14 – Timeline & comments API   (28-Oct-2026)
+
+**Done:**
+- Application `Features/Timeline`: activities page (filter, backwards paging), comment create (files, mentions,
+  watcher) and edit (10-minute window, mentions re-synced), related issues, `TimelineReader` (names, summaries,
+  mentions, comment files), `TimelineSummary`, `MentionParser`, `Watchers`; `AttachmentWriter` extracted from the
+  upload handler. Watchers auto-added on create / assign / pick / bulk assign / assignee edit.
+- API `TimelineEndpoints`, `FormFiles` helper (also used by attachment upload). ADR-024.
+- Fixed: a pick that loses the race after the winner's pick moved the issue to In Progress answered 422; it now answers
+  409 "Already picked by X" (found by the S13 race test in a full parallel run).
+- Tests: 15 unit tests (mentions, edit window, summaries); 5 integration tests (order with user names, mentions, comment
+  file download, Comments/History filters, paging backwards, developer comments during Testing + watchers, edit rules
+  incl. other author 403 / after 10 minutes 422 / system event 404, related issues same screen first).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 211/211 (twice).
+
+**Deviations from plan:** comments are plain text with @mentions (no rich text); timeline paging uses `before` + `size`
+instead of page numbers so new entries do not shift pages.
+
+**Carry-over / known gaps:** mention / comment notifications (S18, digest S19); real-time timeline (SignalR, S18).
+
+**Libraries added (licence):** none.
+
+**Next session:** S15 – Issue list & detail UI.

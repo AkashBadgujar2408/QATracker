@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using QaTracker.Application.Abstractions;
 using QaTracker.Application.Common;
 using QaTracker.Application.Features.Issues;
+using QaTracker.Application.Features.Timeline;
 using QaTracker.Domain.Entities;
 using QaTracker.Domain.Enums;
 using QaTracker.Domain.Rules;
@@ -267,6 +268,7 @@ public sealed class AssignIssueHandler(IValidator<AssignIssueCommand> validator,
         issue.AssigneeId = command.UserId;
         issue.Status = IssueWorkflow.TargetOf(from, IssueAction.Assign);
         workflow.StatusChanged(issue, from, null);
+        await Watchers.AddAsync(db, issue.Id, [command.UserId], workflow.Now, cancellationToken);
 
         return await workflow.SaveAndReloadAsync(issue, command.RowVersion, cancellationToken);
     }
@@ -289,7 +291,9 @@ public sealed class PickIssueHandler(IApplicationDbContext db, WorkflowSupport w
         var check = await workflow.CheckAsync(issue, IssueAction.Pick, cancellationToken);
         if (!check.Allowed)
         {
-            return check.Code == "already_assigned" ? await AlreadyPickedAsync(issue.Id, cancellationToken) : check.ToError();
+            // Someone else got there first (their pick may already have moved it to In Progress): say who.
+            var takenByOther = issue.AssigneeId is { } holder && holder != workflow.UserId && check.Code is "already_assigned" or "invalid_transition";
+            return takenByOther ? await AlreadyPickedAsync(issue.Id, cancellationToken) : check.ToError();
         }
 
         var from = issue.Status;
@@ -315,6 +319,7 @@ public sealed class PickIssueHandler(IApplicationDbContext db, WorkflowSupport w
         workflow.Assigned(issue, null, me, null);
         issue.Status = target;
         workflow.StatusChanged(issue, from, null);
+        await Watchers.AddAsync(db, issue.Id, [me], now, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
@@ -615,6 +620,7 @@ public sealed class BulkAssignHandler(IValidator<BulkAssignCommand> validator, I
             issue.Status = IssueWorkflow.TargetOf(from, IssueAction.Assign);
             issue.UpdatedAt = workflow.Now;
             workflow.StatusChanged(issue, from, null);
+            await Watchers.AddAsync(db, issue.Id, [command.UserId], workflow.Now, cancellationToken);
             assigned.Add(key);
         }
 

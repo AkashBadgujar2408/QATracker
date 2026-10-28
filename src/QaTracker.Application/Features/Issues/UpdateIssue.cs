@@ -108,6 +108,7 @@ public sealed class UpdateIssueHandler(
                 CreatedAt = now,
             });
             issue.AssigneeId = command.AssigneeId;
+            await Timeline.Watchers.AddAsync(db, issue.Id, [command.AssigneeId], now, cancellationToken);
             issue.Status = issue.Status switch
             {
                 IssueStatus.New when command.AssigneeId is not null => IssueStatus.Assigned,

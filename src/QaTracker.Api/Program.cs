@@ -79,6 +79,7 @@ try
     app.MapSprintsEndpoints();
     app.MapIssuesEndpoints();
     app.MapWorkflowEndpoints();
+    app.MapTimelineEndpoints();
     app.MapAttachmentsEndpoints();
 
     await app.RunAsync();
