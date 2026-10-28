@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using QaTracker.Application.Abstractions;
 using QaTracker.Infrastructure.Persistence;
 using QaTracker.Infrastructure.Persistence.Seeding;
+using QaTracker.Infrastructure.Text;
 using QaTracker.Infrastructure.Time;
 
 namespace QaTracker.Infrastructure;
@@ -19,6 +20,8 @@ public static class DependencyInjection
 
         services.AddDbContext<QaTrackerDbContext>(options => options.UseSqlServer(connectionString));
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<QaTrackerDbContext>());
+        services.AddScoped<IIssueNumbering, IssueNumbering>();
+        services.AddSingleton<IRichTextSanitizer, RichTextSanitizer>();
 
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IClock, SystemClock>();

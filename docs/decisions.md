@@ -162,3 +162,41 @@ Requested by Akash during S05 review:
   and assignees except the actor. E-mail delivery is left to the notifications sessions.
 - Reopen testing clears TestingCompletedAt/By and keeps issue due dates; completing again recalculates them (overwrites
   dates a tester edited by hand – revisit with S13).
+
+## ADR-018 – Issue API details (28-Oct-2026, S09)
+- Numbering: `IIssueNumbering` (Infrastructure) takes `sp_getapplock` per project inside a transaction, then MAX(Number)+1;
+  `UX_Issues_Project_Number` stays the last guard. Deleting the newest issue lets its number be reused (only possible
+  while the sprint is in Testing).
+- Rich text (steps, expected, actual, impact) is sanitised on write with HtmlSanitizer (Ganss.Xss, MIT) behind
+  `IRichTextSanitizer`: p, br, strong/b, em/i, u, s, lists, links (http/https/mailto, rel=noopener), code, pre, blockquote,
+  h3/h4. No images, styles or event handlers. Actual result must keep visible text.
+- Type, severity and priority are nullable in requests and required by validation (no silent enum default – ADR-016).
+- Update = `PUT /api/issues/{key}` with `If-Match: "<rowVersion>"` (ETag from GET/POST/PUT); missing → 428, stale → 409.
+  Each changed field writes a FieldChanged activity (rich text: "edited", no values); assignee changes write Assigned
+  activities with user ids and move New ⇄ Assigned.
+- Assignee must be an active non-tester (developer or admin). Module/environment must be active unless unchanged.
+- Delete removes inbound `IssueLinks` and clears `DuplicateOfIssueId` references first; the rest cascades.
+- List: `GET /api/issues` with plan 14 filters (repeat status/severity/priority for several values, `unassigned`,
+  `overdue` = due date passed and still awaiting a fix), `q` on key/title/screen, `page`/`size` (≤200),
+  `sort` = field or `-field`; severity/priority sort by importance. `GET /api/projects/{id}/screens` suggests screens.
+- `IssueDto.permissions` (canEdit/canDelete) until IssueWorkflow's `allowedActions` arrives in S12/S13.
+
+## ADR-019 – E-mail, scheduled jobs and a jobs admin app (28-Oct-2026) – PROPOSED, to confirm before S19
+**Request (Akash, during S09):** after the planned sessions, add SMTP mail: set-level mails to members (sprint started,
+testing completed, SLA/overdue …) sent as they happen; per-issue events collected into a **daily mail at 18:00 IST**;
+a background job framework (Hangfire or better); an **MVC front end to manage background jobs without delete options**;
+new alerts/mails and background tasks configurable in the app; one database for both (or two, whichever fits better).
+
+**Recommendation (to be confirmed):**
+- Keep the plan's `EmailOutbox` (S19) as the single place mails are queued, in the same transaction as the change.
+- Scheduler: **Hangfire** (Hangfire.Core LGPL-3.0, used unmodified as a NuGet package; SQL Server storage) – recurring jobs
+  with cron + time zone ("0 18 * * *", India Standard Time), retries, history. Alternative: Quartz.NET (Apache-2.0).
+- **One database**: Hangfire tables live in their own `HangFire` schema of the QaTracker database (one backup, one
+  connection string, jobs can read the outbox directly). Our schema scripts ignore that schema; Hangfire creates it.
+- **Jobs admin = separate ASP.NET Core MVC project `QaTracker.Jobs`** (server-rendered, admin sign-in against the same
+  Users table) that hosts the Hangfire server and our own management pages: list recurring jobs, last/next run, history,
+  "run now", pause/resume, edit schedule – **no delete**. The Hangfire dashboard, if exposed at all, runs read-only.
+- **Configurable alerts**: new tables (e.g. `AlertRules`: event, audience, channel = instant/digest, schedule, enabled)
+  edited from Settings (S28) or the jobs admin; jobs read them at run time, so adding/changing an alert needs no deploy.
+- Sessions affected: S19 (outbox, sender, set-level mails), new S19b (daily digest + alert rules), S28 (SMTP settings,
+  alerts UI), new S28b (QaTracker.Jobs MVC admin). Exact split to agree before S19.

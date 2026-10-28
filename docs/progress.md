@@ -334,3 +334,38 @@ from the /dev/ui pickers, keyboard only (type, Enter on "Add …", Enter in the 
 **Libraries added (licence):** none.
 
 **Next session:** S09 – Issue API – create, edit, list.
+
+---
+
+## S09 – Issue API – create, edit, list   (28-Oct-2026)
+
+**Done:**
+- Domain `IssueStates` (awaiting-fix statuses, overdue).
+- Application `Features/Issues`: create (sprint must be in Testing, environment defaults from the sprint, Created +
+  Assigned activities), update (If-Match rowversion, FieldChanged/Assigned activities, New ⇄ Assigned), delete (inbound
+  links and duplicate references first), get by key (case-insensitive, with permissions), list (all plan filters,
+  paging, sorting), screen suggestions. `IIssueNumbering` (sp_getapplock) and `IRichTextSanitizer` (HtmlSanitizer).
+- API `IssuesEndpoints` (+ ETag headers, 428 without If-Match); ADR-018.
+- Tests: 8 integration tests – numbering + activities, 20 parallel creates by two testers get 1…20, required
+  severity / sanitising, If-Match/409/field-change log, gating after Testing Completed (tester 422, developer 403),
+  delete with inbound link, list filters/sort/paging/overdue, screen suggestions.
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 135/135 (domain 60, application 18, integration 57) ·
+dev API as the tester: created PGERP-1 and PGERP-2 in "Sprint 1 – UAT" (environment UAT 1 filled from the sprint,
+`<script>` removed from steps), `GET /api/issues?projectId=1&severity=High` returns PGERP-1, screens suggest
+"Sales Return Entry".
+
+**Deviations from plan:** `permissions` on the issue until `allowedActions` (S12/S13); update uses If-Match as planned,
+create/delete need no version.
+
+**Carry-over / known gaps:**
+- ~~Issue delete handler must remove inbound IssueLinks first~~ – done.
+- Attachment files on disk are not removed on delete yet (no attachments until S10 – handle there).
+- Status sort is alphabetical; lifecycle order can come with the issue list UI (S15).
+- Malformed JSON → 500 (from S08) still open.
+- New requirement recorded as **ADR-019 (proposed)**: SMTP mails, daily 18:00 digest, background jobs (Hangfire),
+  MVC jobs admin without delete, configurable alerts, one database. Needs Akash's confirmation before S19.
+
+**Libraries added (licence):** HtmlSanitizer 9.2.1039 (MIT; brings AngleSharp + AngleSharp.Css, MIT).
+
+**Next session:** S10 – Attachments.
