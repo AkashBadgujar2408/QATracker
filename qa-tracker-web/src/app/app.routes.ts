@@ -98,7 +98,12 @@ export const routes: Routes = [
           },
         ],
       },
-      placeholder('board', 'Board', 'S20'),
+      {
+        path: 'board',
+        title: 'Board',
+        data: { breadcrumb: 'Board' },
+        loadComponent: () => import('./features/board/board-page').then((m) => m.BoardPage),
+      },
       {
         path: 'retest-queue',
         title: 'Retest queue',

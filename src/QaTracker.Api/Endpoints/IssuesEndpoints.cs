@@ -75,6 +75,18 @@ public sealed class IssueListRequest
         Sort);
 }
 
+/// <summary>Query string of GET /api/board.</summary>
+public sealed class BoardRequest
+{
+    public int? ProjectId { get; init; }
+    public int? SprintId { get; init; }
+    public int? AssigneeId { get; init; }
+    public bool? Unassigned { get; init; }
+    public bool? Mine { get; init; }
+    public Severity[]? Severity { get; init; }
+    public string? Q { get; init; }
+}
+
 /// <summary>
 /// Issues (plan 14 ISSUES). Everyone signed in reads; testers and admins create, edit and delete while the sprint is in
 /// Testing (otherwise 422). Updates need the version from GET (ETag) in If-Match; a stale version is 409.
@@ -117,6 +129,12 @@ public static class IssuesEndpoints
                 (await handler.HandleAsync(new DeleteIssueCommand(key), ct)).ToHttp(_ => TypedResults.NoContent()))
             .RequireAuthorization(Policies.TesterOrAdmin)
             .WithSummary("Delete an issue of a sprint that is still in Testing.");
+
+        app.MapGet("/api/board", async ([AsParameters] BoardRequest r, BoardHandler handler, CancellationToken ct) =>
+                (await handler.HandleAsync(new BoardQuery(r.ProjectId ?? 0, r.SprintId, r.AssigneeId, r.Unassigned ?? false, r.Mine ?? false, r.Severity, r.Q), ct))
+                    .ToHttp(board => TypedResults.Ok(board)))
+            .WithTags("Issues")
+            .WithSummary("Kanban board of a project: a column per status with counts and cards; each card lists the moves (allowed actions) open to you.");
 
         app.MapGet("/api/projects/{projectId:int}/screens", async (int projectId, int? moduleId, string? q, ScreenSuggestionsHandler handler, CancellationToken ct) =>
                 (await handler.HandleAsync(new ScreenSuggestionQuery(projectId, moduleId, q), ct)).ToHttp(screens => TypedResults.Ok(screens)))

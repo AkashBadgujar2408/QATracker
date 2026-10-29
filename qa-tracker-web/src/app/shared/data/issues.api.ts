@@ -190,6 +190,9 @@ export interface IssueQuery {
   readonly sort?: string;
 }
 
+/** What a workflow call needs: the key and the version it was read at (an Issue, a board card or a work item). */
+export type IssueRef = Pick<Issue, 'key' | 'rowVersion'>;
+
 /** The API allows at most 200 rows per page. */
 export const MAX_PAGE_SIZE = 200;
 
@@ -249,7 +252,7 @@ export class IssuesApi {
 
   // Workflow (plan 14, ADR-023). Single-issue actions send the issue's version; a stale one answers 409.
 
-  assign(issue: Issue, userId: number, note?: string | null): Observable<Issue> {
+  assign(issue: IssueRef, userId: number, note?: string | null): Observable<Issue> {
     return this.post(issue, 'assign', { userId, note: note || null });
   }
 
@@ -257,12 +260,12 @@ export class IssuesApi {
     return this.http.post<Issue>(`${this.issueUrl(key)}/pick`, {}, inline);
   }
 
-  transition(issue: Issue, action: IssueAction, input: TransitionInput = {}): Observable<Issue> {
+  transition(issue: IssueRef, action: IssueAction, input: TransitionInput = {}): Observable<Issue> {
     return this.post(issue, 'transition', { action, ...input });
   }
 
   markFixed(
-    issue: Issue,
+    issue: IssueRef,
     note: string,
     environmentIds: readonly number[],
     version?: string | null,
@@ -294,7 +297,7 @@ export class IssuesApi {
     return this.http.get<RelatedIssue[]>(`${this.issueUrl(key)}/related`);
   }
 
-  private post(issue: Issue, action: string, body: object): Observable<Issue> {
+  private post(issue: IssueRef, action: string, body: object): Observable<Issue> {
     return this.http.post<Issue>(`${this.issueUrl(issue.key)}/${action}`, body, {
       ...inline,
       headers: { 'If-Match': `"${issue.rowVersion}"` },

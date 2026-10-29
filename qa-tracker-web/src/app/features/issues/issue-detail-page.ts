@@ -96,7 +96,7 @@ const PRIMARY: readonly IssueAction[] = [
 ];
 
 /** Actions that need no input run at once. */
-const DIRECT: ReadonlySet<IssueAction> = new Set([
+export const DIRECT_ACTIONS: ReadonlySet<IssueAction> = new Set([
   'Pick',
   'Start',
   'Resume',
@@ -284,7 +284,7 @@ export class IssueDetailPage {
     if (!issue || this.busy()) {
       return;
     }
-    if (DIRECT.has(allowed.action)) {
+    if (DIRECT_ACTIONS.has(allowed.action)) {
       if (allowed.action === 'Close') {
         const ok = await this.confirm.ask({
           title: `Close ${issue.key}?`,

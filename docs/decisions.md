@@ -414,3 +414,21 @@ new alerts/mails and background tasks configurable in the app; one database for 
   no workers (`Email:Workers=false`) and use a closed SMTP port for the failure path.
 - **Scrollbars** (Akash, S19): thin rounded thumbs without track or arrows everywhere (`--qa-scrollbar-thumb(-hover)`,
   dark variant), a faint light thumb on the ink sidebar (`.qa-sidebar-scroll`); Firefox gets `scrollbar-width: thin`.
+
+## ADR-030 – Kanban board (29-Oct-2026, S20)
+- `GET /api/board?projectId=&sprintId=&assigneeId=|mine=true|unassigned=true&severity=&q=` → `{projectId, columns[]}`:
+  one column per status in workflow order (New, Reopened, Assigned, In Progress, Need Info, On Hold, Disputed, Fixed,
+  Verified, Closed, Rejected), each `{status, count, cards}` with at most 200 cards (most severe, then due date, then
+  oldest). The board is per project (400 without, 404 unknown); without a sprint it shows every sprint that is not
+  closed. A column over the limit is read with its own TOP query so Closed cannot crowd out open work.
+- Each card carries `moves` = the IssueWorkflow allowed actions for the caller whose target is another status
+  (re-assigning in place is not a move) plus its rowVersion. The UI never repeats the rules: a drop is accepted only
+  when a move leads to that column; otherwise it is refused with a toast that names what the card can do instead
+  (closed sprint and "testing in progress" get their own wording).
+- **UI** `/board` (all roles; filters in the URL: client, project, sprint, who = me|none|user id, severity, q,
+  done = show Closed/Rejected; last project remembered per browser). Angular CDK drag-drop (part of @angular/cdk – no new
+  library). While dragging, reachable columns take their status colour and say "Drop to <action>", the others fade.
+  Direct actions (Pick, Start, Resume, Take off hold, Verify; Close after confirm) run at once; the rest load the issue
+  (fresh version and actions) and open the S15 `ActionDialog`; cancel puts the card back. The card menu (⋮) offers the
+  same moves for keyboard and touch. 409 → toast and reload. Live: reloads on IssueChanged of the project.
+- `IssuesApi` workflow calls take `IssueRef` (key + rowVersion), so board cards and issues share them.

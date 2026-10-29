@@ -712,3 +712,34 @@ notifications still need the SLA job (S28); the digest already lists overdue iss
 (dotnet-tools.json); no runtime libraries (SMTP via System.Net.Mail).
 
 **Next session:** S20 – Kanban board.
+
+---
+
+## S20 – Kanban board   (29-Oct-2026)
+
+**Done:**
+- Application `Features/Issues/Board.cs` (`BoardHandler`, columns per status with counts, cards with `moves` from
+  IssueWorkflow); API `GET /api/board`. ADR-030.
+- Angular `/board`: filter bar in the URL (client, project, sprint, assignee incl. me/unassigned, severity, search,
+  Show Closed and Rejected), lanes with status rail and counts, cards (severity edge, key, title, module › screen,
+  priority, due date red when overdue, reopen count, assignee avatar or dashed "unassigned"), drag and drop with
+  reachable-column highlight, refusal message, direct actions / confirm for Close / `ActionDialog` for inputs, card
+  menu with the same moves, pending card state, live reload, "N more in the issue list" link, "Open as list".
+  `DIRECT_ACTIONS` exported from the issue page; `IssueRef` for workflow calls.
+- Tests: 2 integration tests (columns + moves per role and sprint state, filters; 400/404) and 6 Angular tests
+  (URL filters, moves and refusal texts, pending move, page columns + menu move, refused drop).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 228/228 · `ng build` · `ng test` 118/118 · `ng lint`.
+In Chrome as `ui.developer` on UICHK: dropping a Reopened card on New was refused ("UICHK-4 can't go from Reopened to
+New. It can go to In Progress."); dropping it on In Progress started it and a second tab moved it live; dropping on
+Need Info opened "Ask for information" and Cancel put the card back. No horizontal page scroll (board scrolls inside).
+Dark theme not re-checked in the browser (tab group closed during the check) – uses tokens only.
+
+**Deviations from plan:** none. Closed/Rejected columns hidden by default (toggle).
+
+**Carry-over / known gaps:** dark-mode look of the board to eyeball in S22's browser pass. Local test accounts
+`ui.*` got a new local password again (deactivate when not needed). Invalid enum in JSON → 500 still open (S30).
+
+**Libraries added (licence):** none (`@angular/cdk/drag-drop` is part of @angular/cdk, already used).
+
+**Next session:** S21 – Analytics API.

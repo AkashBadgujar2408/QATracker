@@ -1,0 +1,186 @@
+<app-page-header
+  title="Board"
+  subtitle="Drag a card to the next step. Only the moves you can make are accepted."
+>
+  @if (filters().projectId) {
+    <a
+      actions
+      matButton="outlined"
+      [routerLink]="['/issues']"
+      [queryParams]="{
+        client: filters().clientId,
+        project: filters().projectId,
+        sprint: filters().sprintId,
+      }"
+      >Open as list</a
+    >
+  }
+</app-page-header>
+
+<section class="qa-card qa-compact mb-4 px-4 pt-4 pb-1" aria-label="Board filters">
+  <div class="grid gap-x-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Client</mat-label>
+      <mat-select [value]="filters().clientId" (selectionChange)="chooseClient($event.value)">
+        @for (c of cascade.value()?.clients ?? []; track c.id) {
+          <mat-option [value]="c.id">{{ c.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Project</mat-label>
+      <mat-select
+        [value]="filters().projectId"
+        [disabled]="!filters().clientId"
+        (selectionChange)="chooseProject($event.value)"
+      >
+        @for (p of cascade.value()?.projects ?? []; track p.id) {
+          <mat-option [value]="p.id">{{ p.name }} ({{ p.key }})</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Sprint</mat-label>
+      <mat-select
+        placeholder="Open sprints"
+        [value]="filters().sprintId"
+        [disabled]="!filters().projectId"
+        (selectionChange)="update({ sprintId: $event.value })"
+      >
+        <mat-option [value]="null">Open sprints</mat-option>
+        @for (s of sprints.value() ?? []; track s.id) {
+          <mat-option [value]="s.id">{{ s.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Assignee</mat-label>
+      <mat-select
+        placeholder="Everyone"
+        [value]="filters().who"
+        (selectionChange)="update({ who: $event.value })"
+      >
+        <mat-option [value]="null">Everyone</mat-option>
+        <mat-option value="me">Assigned to me</mat-option>
+        <mat-option value="none">Unassigned</mat-option>
+        @for (u of developers(); track u.id) {
+          <mat-option [value]="u.id">{{ u.fullName }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Severity</mat-label>
+      <mat-select
+        placeholder="All"
+        multiple
+        [value]="filters().severity"
+        (selectionChange)="update({ severity: $event.value })"
+      >
+        @for (s of severities; track s) {
+          <mat-option [value]="s">{{ severityMeta[s].label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mb-3">
+      <mat-label>Search</mat-label>
+      <ng-icon matPrefix name="lucideSearch" size="16" class="mr-1 ml-3 text-muted" />
+      <input
+        matInput
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+        placeholder="Key, title or screen"
+        autocomplete="off"
+      />
+    </mat-form-field>
+  </div>
+  @if (filters().projectId) {
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
+      <span aria-live="polite">
+        @if (board.hasValue()) {
+          {{ total() }} {{ total() === 1 ? 'issue' : 'issues' }}
+        }
+      </span>
+      <mat-slide-toggle [checked]="filters().done" (change)="update({ done: $event.checked })">
+        Show Closed and Rejected
+      </mat-slide-toggle>
+    </div>
+  }
+</section>
+
+@if (!filters().projectId) {
+  <app-empty-state
+    title="Choose a project"
+    message="The board shows one project at a time. Pick the client and project above."
+  />
+} @else if (board.error()) {
+  <app-empty-state kind="error" title="The board could not be loaded" [message]="problem()">
+    <button matButton="filled" type="button" (click)="board.reload()">Try again</button>
+  </app-empty-state>
+} @else if (!board.hasValue()) {
+  <div class="qa-board" aria-busy="true" aria-label="Loading the board">
+    @for (n of [1, 2, 3, 4, 5]; track n) {
+      <div class="qa-lane">
+        <div class="qa-skeleton mx-3 mt-4 mb-3 h-4 w-24 rounded"></div>
+        @for (m of [1, 2, 3]; track m) {
+          <div class="qa-skeleton mx-2 mb-2 h-24 rounded-card"></div>
+        }
+      </div>
+    }
+  </div>
+} @else {
+  <div class="qa-board" cdkDropListGroup [class.qa-dragging]="!!dragging()">
+    @for (column of columns(); track column.status) {
+      <section
+        class="qa-lane"
+        [attr.data-drop]="dropState(column)"
+        [style.--lane-color]="columnColor(column.status)"
+        [attr.aria-label]="columnLabel(column.status) + ', ' + column.count + ' issues'"
+      >
+        <header class="qa-lane-head">
+          <h2 class="m-0 text-base font-semibold">{{ columnLabel(column.status) }}</h2>
+          <span class="qa-count tabular-nums">{{ column.count }}</span>
+        </header>
+        <div
+          class="qa-lane-body"
+          cdkDropList
+          cdkDropListSortingDisabled
+          [cdkDropListData]="column.status"
+          (cdkDropListDropped)="dropped($event)"
+        >
+          @if (dropHint(column); as hint) {
+            <p class="qa-drop-hint">Drop to {{ hint.toLowerCase() }}</p>
+          }
+          @for (card of column.cards; track card.id) {
+            <app-board-card
+              cdkDrag
+              [cdkDragData]="card"
+              [cdkDragDisabled]="!!pending()"
+              [card]="card"
+              [class.qa-moving]="pending()?.key === card.key"
+              (cdkDragStarted)="dragging.set(card)"
+              (cdkDragEnded)="dragging.set(null)"
+              (move)="run(card, $event)"
+            />
+          } @empty {
+            @if (!dragging()) {
+              <p class="m-0 px-2 py-6 text-center text-sm text-muted">Nothing here</p>
+            }
+          }
+          @if (column.count > column.cards.length) {
+            <a
+              class="block px-2 py-2 text-center text-sm text-primary"
+              [routerLink]="['/issues']"
+              [queryParams]="{
+                client: filters().clientId,
+                project: filters().projectId,
+                sprint: filters().sprintId,
+                status: column.status,
+              }"
+              >{{ column.count - column.cards.length }} more in the issue list</a
+            >
+          }
+        </div>
+      </section>
+    }
+  </div>
+}
