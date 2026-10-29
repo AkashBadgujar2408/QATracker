@@ -98,7 +98,8 @@ export function trendText(value: number, previous: number, since: string): strin
 })
 export class KpiCard {
   readonly label = input.required<string>();
-  readonly value = input<number | null>(null);
+  /** A count, or a formatted value such as "12.5 h". */
+  readonly value = input<number | string | null>(null);
   /** One line of context under the number (trend, what it counts). */
   readonly note = input<string>();
   /** The value needs attention when above zero (e.g. overdue). */
@@ -107,7 +108,8 @@ export class KpiCard {
   readonly link = input<string | readonly unknown[]>('/issues');
   readonly queryParams = input<Params | null>(null);
 
-  protected readonly attention = computed(
-    () => this.alertWhenAboveZero() && (this.value() ?? 0) > 0,
-  );
+  protected readonly attention = computed(() => {
+    const value = this.value();
+    return this.alertWhenAboveZero() && typeof value === 'number' && value > 0;
+  });
 }

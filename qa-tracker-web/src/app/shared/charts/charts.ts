@@ -40,8 +40,12 @@ const FRAME = `
 
 const HOST = { class: 'block min-w-0' };
 
-function itemTable(items: readonly ChartItem[], valueLabel: string): ChartTable {
-  return { columns: ['', valueLabel], rows: items.map((i) => [i.label, i.value]) };
+function itemTable(
+  items: readonly ChartItem[],
+  valueLabel: string,
+  format: (value: number) => string = String,
+): ChartTable {
+  return { columns: ['', valueLabel], rows: items.map((i) => [i.label, format(i.value)]) };
 }
 
 function seriesTable(
@@ -67,12 +71,30 @@ export class ChartBar extends ChartInputs {
   readonly items = input.required<readonly ChartItem[]>();
   readonly horizontal = input(true, { transform: booleanAttribute });
   readonly valueLabel = input('Issues');
+  /** How values read on the bars, in the tooltip and the table (e.g. `(v) => v + ' h'`). */
+  readonly format = input<(value: number) => string>(String);
+  /** Fixed end of the value axis (100 for percentages). */
+  readonly max = input<number>();
 
   protected readonly options = computed(() =>
-    barOptions(this.theme.tokens(), this.items(), this.horizontal(), this.title()),
+    barOptions(
+      this.theme.tokens(),
+      this.items(),
+      this.horizontal(),
+      this.title(),
+      this.format(),
+      this.max(),
+    ),
   );
-  protected readonly table = computed(() => itemTable(this.items(), this.valueLabel()));
-  protected readonly empty = computed(() => this.items().every((i) => !i.value));
+  protected readonly table = computed(() =>
+    itemTable(this.items(), this.valueLabel(), this.format()),
+  );
+  /** Counts: all zero means nothing to show. Metrics (hours, rates): 0 is a value – only no items is empty. */
+  readonly zeroIsEmpty = input(true, { transform: booleanAttribute });
+
+  protected readonly empty = computed(() =>
+    this.zeroIsEmpty() ? this.items().every((i) => !i.value) : this.items().length === 0,
+  );
 }
 
 /** Stacked (or 100 % stacked) bars. */

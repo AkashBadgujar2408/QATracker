@@ -91,6 +91,8 @@ export function barOptions(
   items: readonly ChartItem[],
   horizontal: boolean,
   label: string,
+  format: (value: number) => string = String,
+  max?: number,
 ): EChartsCoreOption {
   const labels = items.map((i) => i.label);
   const category = {
@@ -102,6 +104,7 @@ export function barOptions(
   };
   const value = {
     type: 'value',
+    max,
     minInterval: 1,
     splitLine: splitLine(t),
     axisLabel: { color: t.muted, formatter: compact },
@@ -113,8 +116,19 @@ export function barOptions(
   }));
   return {
     ...base(t, label),
-    grid: { left: 8, right: 40, top: 8, bottom: 8, containLabel: true },
-    tooltip: { ...(base(t, label)['tooltip'] as object), trigger: 'item' },
+    grid: {
+      left: 8,
+      right: horizontal ? 40 : 8,
+      top: horizontal ? 8 : 24,
+      bottom: 8,
+      containLabel: true,
+    },
+    tooltip: {
+      ...(base(t, label)['tooltip'] as object),
+      trigger: 'item',
+      formatter: (p: { name: string; value: number }) =>
+        `${p.name}: <strong>${format(p.value)}</strong>`,
+    },
     xAxis: horizontal ? value : category,
     yAxis: horizontal ? category : value,
     series: [
@@ -124,7 +138,9 @@ export function barOptions(
         data,
         itemStyle: { borderRadius: horizontal ? [0, RADIUS, RADIUS, 0] : [RADIUS, RADIUS, 0, 0] },
         label: {
-          show: true,
+          // Selective labels: a value on every bar of a long series is noise (the tooltip and table carry it).
+          show: items.length <= 12,
+          formatter: (p: { value: number }) => format(p.value),
           position: horizontal ? 'right' : 'top',
           color: t.text,
           fontSize: 13,

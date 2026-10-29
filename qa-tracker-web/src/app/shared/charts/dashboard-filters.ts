@@ -4,6 +4,8 @@ import {
   Injectable,
   Provider,
   Signal,
+  booleanAttribute,
+  input,
   computed,
   inject,
 } from '@angular/core';
@@ -238,35 +240,37 @@ function fromIsoDay(day: string | null): Date | null {
           }
         </mat-select>
       </mat-form-field>
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Period</mat-label>
-        <mat-select [value]="filters().period" (selectionChange)="choosePeriod($event.value)">
-          @for (p of periods; track p.id) {
-            <mat-option [value]="p.id">{{ p.label }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      @if (filters().period === 'custom') {
-        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="qa-range">
-          <mat-label>From – to</mat-label>
-          <mat-date-range-input [rangePicker]="picker" [max]="today">
-            <input
-              matStartDate
-              placeholder="27/Oct/2026"
-              [value]="fromDate()"
-              (dateChange)="pending.from = $event.value"
-            />
-            <input
-              matEndDate
-              placeholder="29/Oct/2026"
-              [value]="toDate()"
-              (dateChange)="setRange(pending.from, $event.value)"
-            />
-          </mat-date-range-input>
-          <mat-hint>dd/MMM/yyyy</mat-hint>
-          <mat-datepicker-toggle matIconSuffix [for]="picker" />
-          <mat-date-range-picker #picker />
+      @if (showPeriod()) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Period</mat-label>
+          <mat-select [value]="filters().period" (selectionChange)="choosePeriod($event.value)">
+            @for (p of periods; track p.id) {
+              <mat-option [value]="p.id">{{ p.label }}</mat-option>
+            }
+          </mat-select>
         </mat-form-field>
+        @if (filters().period === 'custom') {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="qa-range">
+            <mat-label>From – to</mat-label>
+            <mat-date-range-input [rangePicker]="picker" [max]="today">
+              <input
+                matStartDate
+                placeholder="27/Oct/2026"
+                [value]="fromDate()"
+                (dateChange)="pending.from = $event.value"
+              />
+              <input
+                matEndDate
+                placeholder="29/Oct/2026"
+                [value]="toDate()"
+                (dateChange)="setRange(pending.from, $event.value)"
+              />
+            </mat-date-range-input>
+            <mat-hint>dd/MMM/yyyy</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="picker" />
+            <mat-date-range-picker #picker />
+          </mat-form-field>
+        }
       }
     </div>
   `,
@@ -295,6 +299,8 @@ export class DashboardFilterBar {
   private readonly masters = inject(MastersApi);
   private readonly sprintsApi = inject(SprintsApi);
 
+  /** Off for dashboards of one sprint (the sprint is the period). */
+  readonly showPeriod = input(true, { transform: booleanAttribute });
   protected readonly periods = PERIODS;
   protected readonly today = new Date();
   protected readonly filters = injectDashboardFilters();

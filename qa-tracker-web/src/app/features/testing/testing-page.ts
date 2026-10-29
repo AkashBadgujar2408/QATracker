@@ -11,11 +11,17 @@ import {
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButton } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, ParamMap } from '@angular/router';
+import { ActivatedRoute, ParamMap, RouterLink } from '@angular/router';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatOption, MatSelect, MatSelectTrigger } from '@angular/material/select';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCircleCheck, lucideFlaskConical, lucideInfo, lucidePlus } from '@ng-icons/lucide';
+import {
+  lucideChartPie,
+  lucideCircleCheck,
+  lucideFlaskConical,
+  lucideInfo,
+  lucidePlus,
+} from '@ng-icons/lucide';
 import { firstValueFrom, map } from 'rxjs';
 import { problemMessage } from '../../core/api/api';
 import { ConfirmService } from '../../core/feedback/confirm.service';
@@ -75,6 +81,7 @@ export function sprintStats(
   selector: 'app-testing-page',
   imports: [
     MatButton,
+    RouterLink,
     MatFormField,
     MatLabel,
     MatSelect,
@@ -89,7 +96,9 @@ export function sprintStats(
     IssueForm,
     SprintIssues,
   ],
-  viewProviders: [provideIcons({ lucideCircleCheck, lucideFlaskConical, lucideInfo, lucidePlus })],
+  viewProviders: [
+    provideIcons({ lucideChartPie, lucideCircleCheck, lucideFlaskConical, lucideInfo, lucidePlus }),
+  ],
   templateUrl: './testing-page.html',
   styles: `
     .qa-chip,

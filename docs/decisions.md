@@ -490,3 +490,30 @@ new alerts/mails and background tasks configurable in the app; one database for 
   the issue list with the dashboard scope plus the status group / severity / project; the trend line has no
   click-through (the issue list has no date filter). Reloads on live issue changes (debounced 1.5 s).
 - `formatIst` now uses fixed month names (browsers' newer locale data print "Sept").
+
+## ADR-033 – Sprint and Developer dashboards (29-Oct-2026, S23)
+- **Sprint dashboard** `/dashboards/sprint?client&project&sprint` (filter bar without Period – the sprint is the
+  period). A project without a sprint opens its newest sprint. Linked from the Testing page ("Sprint dashboard"
+  beside the sprint stats); the Sprints page itself is still the S29 placeholder.
+  Widgets: header (phase, status, started, testing days, testing completed, issue count → list, latest due date),
+  Progress (100 % bar of the status groups), Burn-down (open per day + dashed ideal), Issues found per testing day
+  (columns), Issues by type, Module × severity heat map (only severities that occur), Reopened (KPI + list, most
+  reopened first), Sprint comparison (stacked columns by severity, current sprint marked "(this)").
+  Click-through: progress part → sprint + group statuses; heat-map cell → sprint + module + severity; comparison part →
+  that sprint + severity. Verified in Chrome: the heat-map cell "1" listed exactly 1 issue.
+- **Deviations from plan 9.2**: "Issues by type" is a single-hue bar, not a donut (a donut needs a categorical colour
+  per type and its slices are harder to compare); "Sprint comparison" is stacked rather than grouped (totals per
+  sprint stay readable); neither type nor found-per-day has click-through (the issue list has no type or date filter).
+- **Developer dashboard** `/dashboards/developers` (full filter bar). My stats (Developer/Admin only – testers fix
+  nothing): my open, my overdue (alert), fixed this week, my average fix time ("12.5 h"). Workload (stacked: Assigned
+  incl. Reopened, In Progress, Need Info, On Hold; click → assignee + statuses, matched the list in Chrome), SLA
+  compliance gauge ("2 of 2 fixes…"), Fixed per week (a line per developer), Average fix time (working hours) and
+  First-time-right (%, framed as a quality signal) with the issue count in each label.
+- **Categorical colours**: new tokens `--qa-chart-1…6` (light and dark steps of the dataviz reference palette),
+  validated with the palette script on the app surfaces (light #ffffff, dark #0f172a): CVD ΔE ≥ 9, normal ≥ 19; three
+  light hues are below 3:1 contrast, so these charts always have a legend and the table view. Only for identity
+  (people, projects) – never status or severity. More than 5 developers: the rest are summed as "Others (n)" in muted
+  ink, never a generated 7th hue.
+- Chart kit additions: `app-chart-bar` `format` (value text in labels, tooltip and table), `max` (100 for %),
+  `zeroIsEmpty` (false for metrics, where 0 h or 0 % is a real value); value labels only up to 12 bars; columns get
+  room above for their labels; `app-kpi-card` accepts a formatted string; `app-dashboard-filters [showPeriod]`.

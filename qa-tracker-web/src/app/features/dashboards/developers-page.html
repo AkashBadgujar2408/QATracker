@@ -1,0 +1,129 @@
+<app-page-header
+  title="Developer dashboard"
+  subtitle="Who is working on what, how fast fixes land and how often they hold."
+/>
+
+<section class="qa-card mb-4 p-4" aria-label="Filters">
+  <app-dashboard-filters />
+</section>
+
+@if (error(); as message) {
+  <app-empty-state
+    kind="error"
+    title="The developer dashboard could not be loaded"
+    [message]="message"
+  >
+    <button matButton="filled" type="button" (click)="developers.reload()">Try again</button>
+  </app-empty-state>
+} @else {
+  @if (showMyStats()) {
+    <section class="mb-4" aria-labelledby="my-stats">
+      <h2 id="my-stats" class="m-0 mb-2 text-md font-semibold">My stats</h2>
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <app-kpi-card
+          label="My open issues"
+          [value]="data()?.me?.open ?? null"
+          note="Assigned to me, waiting for a fix"
+          [loading]="loading()"
+          [queryParams]="{ ...scope(), assignee: me(), status: openStatuses }"
+        />
+        <app-kpi-card
+          label="My overdue"
+          [value]="data()?.me?.overdue ?? null"
+          note="Past their due date"
+          alertWhenAboveZero
+          [loading]="loading()"
+          [queryParams]="{ ...scope(), assignee: me(), overdue: 1 }"
+        />
+        <app-kpi-card
+          label="Fixed this week"
+          [value]="data()?.me?.fixedThisWeek ?? null"
+          note="First fixes since Monday"
+          [loading]="loading()"
+          link="/my-work"
+        />
+        <app-kpi-card
+          label="My average fix time"
+          [value]="myAverage()"
+          note="Working hours, assigned to fixed"
+          [loading]="loading()"
+          link="/my-work"
+        />
+      </div>
+    </section>
+  }
+
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
+    <app-chart-stacked-bar
+      class="lg:col-span-7"
+      title="Workload"
+      subtitle="Open issues per developer right now. Click a part for those issues."
+      [categories]="workload().categories"
+      [series]="workload().series"
+      [loading]="loading()"
+      [height]="workloadHeight()"
+      emptyMessage="Nobody has open issues assigned."
+      (selected)="openWorkload($event)"
+      (retry)="developers.reload()"
+    />
+    <app-chart-gauge
+      class="lg:col-span-5"
+      title="SLA compliance"
+      [subtitle]="
+        data()
+          ? data()!.sla.onTime +
+            ' of ' +
+            data()!.sla.total +
+            ' fixes landed on or before their due date.'
+          : 'Fixes on or before their due date.'
+      "
+      [rate]="data()?.sla?.rate ?? 0"
+      name="On time"
+      [count]="data()?.sla?.total ?? 0"
+      [loading]="loading()"
+      [height]="workloadHeight()"
+      emptyMessage="No fixes with a due date in this period."
+      (retry)="developers.reload()"
+    />
+
+    <app-chart-line
+      class="lg:col-span-12"
+      title="Fixed per week"
+      subtitle="First fixes per developer and week (IST weeks from Monday)."
+      [categories]="fixed().categories"
+      [series]="fixed().series"
+      [loading]="loading()"
+      [height]="280"
+      emptyMessage="Nothing was fixed in this period."
+      (retry)="developers.reload()"
+    />
+
+    <app-chart-bar
+      class="lg:col-span-6"
+      title="Average fix time"
+      subtitle="Working hours from assignment (or testing completed) to the first fix. Issues in brackets."
+      [items]="fixHours()"
+      [format]="hours"
+      [zeroIsEmpty]="false"
+      valueLabel="Working hours"
+      [loading]="loading()"
+      [height]="metricHeight()"
+      emptyMessage="Nothing was fixed in this period."
+      (retry)="developers.reload()"
+    />
+    <app-chart-bar
+      class="lg:col-span-6"
+      title="First-time-right"
+      subtitle="Share of fixes that were never reopened – a quality signal, not a ranking."
+      [items]="firstTimeRight()"
+      [format]="percent"
+      [zeroIsEmpty]="false"
+      [max]="100"
+      valueLabel="First-time-right"
+      [loading]="loading()"
+      [height]="metricHeight()"
+      emptyMessage="Nothing was fixed in this period."
+      (retry)="developers.reload()"
+    />
+  </div>
+}

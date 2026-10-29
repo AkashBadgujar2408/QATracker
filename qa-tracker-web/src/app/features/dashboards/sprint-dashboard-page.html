@@ -1,0 +1,210 @@
+<app-page-header
+  title="Sprint dashboard"
+  subtitle="How one testing sprint is going: what was found, what is fixed and what is left."
+/>
+
+<section class="qa-card mb-4 p-4" aria-label="Filters">
+  <app-dashboard-filters [showPeriod]="false" />
+</section>
+
+@if (!filters().sprintId) {
+  <app-empty-state
+    title="Choose a sprint"
+    message="Pick the client and project above – the newest sprint opens, and you can switch to any other."
+  />
+} @else if (error(); as message) {
+  <app-empty-state
+    kind="error"
+    title="The sprint dashboard could not be loaded"
+    [message]="message"
+  >
+    <button matButton="filled" type="button" (click)="dashboard.reload()">Try again</button>
+  </app-empty-state>
+} @else {
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
+    <!-- Header (plan 9.2 "Sprint header") -->
+    <section class="qa-card p-4 lg:col-span-5" aria-labelledby="sprint-name">
+      @if (data(); as d) {
+        <div class="flex flex-wrap items-start gap-x-3 gap-y-1">
+          <h2 id="sprint-name" class="m-0 min-w-0 flex-1 text-lg font-semibold">
+            {{ d.sprint.name }}
+          </h2>
+          <span
+            class="qa-sprint-chip"
+            [class]="
+              d.sprint.status === 'Testing'
+                ? 'qa-sprint-chip text-sprint-testing'
+                : d.sprint.status === 'TestingCompleted'
+                  ? 'qa-sprint-chip text-sprint-testing-completed'
+                  : 'qa-sprint-chip text-sprint-closed'
+            "
+            ><span class="qa-dot"></span>{{ sprintStatusLabels[d.sprint.status] }}</span
+          >
+        </div>
+        <p class="m-0 mt-1 text-sm text-muted">
+          {{ d.sprint.projectName }} ({{ d.sprint.projectKey }}), {{ d.sprint.clientName }}
+        </p>
+        <dl class="qa-facts mt-4 mb-0">
+          <div>
+            <dt>Phase</dt>
+            <dd>{{ d.sprint.phaseName }}</dd>
+          </div>
+          <div>
+            <dt>Started</dt>
+            <dd>{{ d.sprint.startedAt | istDate }}</dd>
+          </div>
+          <div>
+            <dt>Testing days</dt>
+            <dd class="tabular-nums">{{ d.sprint.testingDays }}</dd>
+          </div>
+          <div>
+            <dt>Testing completed</dt>
+            <dd>
+              {{
+                d.sprint.testingCompletedAt ? (d.sprint.testingCompletedAt | istDate) : 'Not yet'
+              }}
+            </dd>
+          </div>
+          <div>
+            <dt>Issues</dt>
+            <dd>
+              <a
+                class="font-semibold text-primary tabular-nums no-underline hover:underline"
+                [routerLink]="['/issues']"
+                [queryParams]="{
+                  client: filters().clientId,
+                  project: filters().projectId,
+                  sprint: filters().sprintId,
+                }"
+                >{{ d.sprint.issueCount }}</a
+              >
+            </dd>
+          </div>
+          @if (d.burndown.latestDueDate) {
+            <div>
+              <dt>Latest due date</dt>
+              <dd>{{ d.burndown.latestDueDate | istDate }}</dd>
+            </div>
+          }
+        </dl>
+      } @else {
+        <div class="qa-skeleton h-6 w-48 rounded"></div>
+        <div class="qa-skeleton mt-3 h-4 w-64 rounded"></div>
+        <div class="qa-skeleton mt-6 h-24 rounded"></div>
+      }
+    </section>
+
+    <app-chart-stacked-bar
+      class="lg:col-span-7"
+      title="Progress"
+      subtitle="Share of the sprint's issues in each workflow stage."
+      [categories]="progressCategory()"
+      [series]="progress()"
+      percent
+      [loading]="loading()"
+      [height]="150"
+      emptyMessage="No issues in this sprint yet."
+      (selected)="open('progress', $event)"
+      (retry)="dashboard.reload()"
+    />
+
+    <app-chart-line
+      class="lg:col-span-8"
+      title="Burn-down"
+      [subtitle]="burndownNote()"
+      [categories]="burndown().categories"
+      [series]="burndown().series"
+      [loading]="loading()"
+      [height]="300"
+      emptyMessage="The burn-down starts when the tester marks testing completed."
+      (retry)="dashboard.reload()"
+    />
+
+    <section class="qa-card flex flex-col gap-3 p-4 lg:col-span-4" aria-labelledby="reopened">
+      <div>
+        <h2 id="reopened" class="m-0 text-md font-semibold">Reopened</h2>
+        <p class="m-0 mt-0.5 text-sm text-muted">
+          Issues that failed a retest at least once, most first.
+        </p>
+      </div>
+      <app-kpi-card
+        label="Reopened issues"
+        [value]="data()?.reopened?.count ?? null"
+        [note]="data()?.reopened?.count ? 'Fixes that did not hold' : 'Every fix held so far'"
+        [loading]="loading()"
+        [queryParams]="{
+          client: filters().clientId,
+          project: filters().projectId,
+          sprint: filters().sprintId,
+          status: 'Reopened',
+        }"
+      />
+      @if (data()?.reopened?.items?.length) {
+        <ol class="m-0 max-h-[176px] list-none overflow-y-auto p-0">
+          @for (r of data()!.reopened.items; track r.key) {
+            <li class="flex items-center gap-3 border-b border-border py-2">
+              <span
+                class="w-8 shrink-0 text-right font-semibold text-status-reopened tabular-nums"
+                [title]="'Reopened ' + r.reopenCount + ' times'"
+                >{{ r.reopenCount }}×</span
+              >
+              <a
+                class="min-w-0 flex-1 truncate text-text no-underline hover:underline"
+                [routerLink]="['/issues', r.key]"
+                [title]="r.title"
+                ><span class="font-semibold text-primary">{{ r.key }}</span> {{ r.title }}</a
+              >
+              <app-status-pill class="shrink-0" [status]="r.status" />
+            </li>
+          }
+        </ol>
+      }
+    </section>
+
+    <app-chart-bar
+      class="lg:col-span-6"
+      title="Issues found per testing day"
+      subtitle="Issues reported each day until testing completed."
+      [items]="found()"
+      [horizontal]="false"
+      [loading]="loading()"
+      [height]="260"
+      emptyMessage="No issues were reported during testing."
+      (retry)="dashboard.reload()"
+    />
+    <app-chart-bar
+      class="lg:col-span-6"
+      title="Issues by type"
+      subtitle="Bug, validation, UI, security and the other types."
+      [items]="types()"
+      [loading]="loading()"
+      [height]="260"
+      emptyMessage="No issues in this sprint yet."
+      (retry)="dashboard.reload()"
+    />
+
+    <app-chart-heatmap
+      class="lg:col-span-7"
+      title="Module × severity"
+      subtitle="Where the problems concentrate. Click a cell for its issues."
+      [data]="heatmap()"
+      [loading]="loading()"
+      [height]="lowerHeight()"
+      emptyMessage="No issues in this sprint yet."
+      (selected)="open('heatmap', $event)"
+      (retry)="dashboard.reload()"
+    />
+    <app-chart-stacked-bar
+      class="lg:col-span-5"
+      title="Sprint comparison"
+      subtitle="Issues per sprint of the project by severity, in start order."
+      [categories]="comparison().categories"
+      [series]="comparison().series"
+      [horizontal]="false"
+      [loading]="loading()"
+      [height]="lowerHeight()"
+      (selected)="open('comparison', $event)"
+      (retry)="dashboard.reload()"
+    />
+  </div>
+}

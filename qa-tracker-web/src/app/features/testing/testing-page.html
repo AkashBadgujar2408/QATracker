@@ -86,7 +86,16 @@
           {{ severityMeta[row.severity].label }}
         </span>
       }
-      <span class="ml-auto text-sm text-muted">
+      <a
+        matButton
+        [routerLink]="['/dashboards/sprint']"
+        [queryParams]="{ client: s.clientId, project: s.projectId, sprint: s.id }"
+        class="ml-auto"
+      >
+        <ng-icon name="lucideChartPie" size="16" class="mr-1" />
+        Sprint dashboard
+      </a>
+      <span class="text-sm text-muted">
         {{ statusLabels[s.status] }} · started {{ s.startedAt | istDate }} by {{ s.startedByName }}
         @if (s.defaultEnvironmentName) {
           · {{ s.defaultEnvironmentName }}

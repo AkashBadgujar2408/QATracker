@@ -800,3 +800,33 @@ test accounts got a new local password (deactivate when not needed). Invalid enu
 **Libraries added (licence):** `echarts` 6.1.0 (Apache-2.0), `ngx-echarts` 22.0.0 (MIT).
 
 **Next session:** S23 – Sprint & Developer dashboards.
+
+---
+
+## S23 – Sprint & Developer dashboards   (29-Oct-2026)
+
+**Done:**
+- Sprint dashboard (`features/dashboards/sprint-dashboard-page`) and Developer dashboard (`developers-page`) on
+  `/dashboards/sprint` and `/dashboards/developers` (routes share `chartRoute`); "Sprint dashboard" link on the Testing
+  page. ADR-033.
+- Analytics client types for both endpoints; categorical chart tokens `--qa-chart-1…6`; chart-kit additions (bar
+  `format` / `max` / `zeroIsEmpty`, selective labels, KPI string values, filter bar without Period).
+- Tests: 9 dashboard tests (newest sprint, progress / burn-down / heat map / comparison data, click-through params,
+  workload + Others folding + metric labels, sprint page header, My stats for developers, hidden for testers) and 1
+  chart-kit test (0 as a metric value vs empty counts).
+
+**Verified:** `ng build` (initial 721 kB) · `ng test` 141/141 · `ng lint` · no backend change (`dotnet test` 236 from
+S21). In Chrome as `ui.developer` on UICHK: the sprint dashboard opened the newest sprint; heat-map cell Billing ×
+Critical (1) → issue list with 1 row; workload Assigned part (1) → issue list with 1 row; dark theme checked. Fixed while
+checking: a column label clipped at the top; "Average fix time" showed "Nothing was fixed" for a real 0 h average.
+
+**Deviations from plan:** type chart is a bar and sprint comparison stacked (ADR-033); no click-through for type and
+found-per-day (no such issue-list filters). The Sprints page link waits for S29 (linked from Testing instead).
+
+**Carry-over / known gaps:** an issue-list filter for type and created date would allow the missing click-throughs
+(consider in S31). Local `ui.*` test accounts still have the local password from S20 (deactivate when not needed).
+Invalid enum in JSON → 500 still open (S30).
+
+**Libraries added (licence):** none.
+
+**Next session:** S24 – Quality & Client health dashboards.

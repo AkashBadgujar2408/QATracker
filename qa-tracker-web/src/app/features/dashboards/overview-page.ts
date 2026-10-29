@@ -23,7 +23,7 @@ import { UserAvatar } from '../../shared/ui/user-avatar/user-avatar';
 /** Open = still waiting for a fix (ADR-031); the click-through statuses of the "open" numbers. */
 export const OPEN_STATUSES = 'New,Assigned,InProgress,NeedInfo,OnHold,Disputed,Reopened';
 
-const GROUP_META: Readonly<Record<StatusGroup, { label: string; color: string }>> = {
+export const GROUP_META: Readonly<Record<StatusGroup, { label: string; color: string }>> = {
   Open: { label: 'Open', color: '--qa-status-assigned' },
   Fixed: { label: 'Fixed', color: '--qa-status-fixed' },
   Verified: { label: 'Verified', color: '--qa-status-verified' },

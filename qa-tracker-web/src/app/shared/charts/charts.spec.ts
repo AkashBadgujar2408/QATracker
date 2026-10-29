@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { convertToParamMap } from '@angular/router';
 import { ChartTokens } from './chart-theme';
+import { ChartBar } from './charts';
+import { provideCharts } from './echarts';
 import {
   barOptions,
   compact,
@@ -189,5 +191,32 @@ describe('dashboard filters', () => {
     expect(trendText(9, 6, 'since last week')).toBe('+3 since last week');
     expect(trendText(4, 6, 'since last week')).toBe('−2 since last week');
     expect(trendText(6, 6, 'since last week')).toBe('No change since last week');
+  });
+});
+
+describe('ChartBar empty state', () => {
+  async function render(zeroIsEmpty: boolean): Promise<string> {
+    TestBed.configureTestingModule({ providers: [provideCharts()] });
+    const fixture = TestBed.createComponent(ChartBar);
+    fixture.componentRef.setInput('title', 'Average fix time');
+    fixture.componentRef.setInput('items', [{ key: '5', label: 'Emily', value: 0 }]);
+    fixture.componentRef.setInput('zeroIsEmpty', zeroIsEmpty);
+    fixture.componentRef.setInput('emptyMessage', 'Nothing was fixed.');
+    await fixture.whenStable();
+    return (fixture.nativeElement as HTMLElement).textContent ?? '';
+  }
+
+  beforeAll(() => {
+    globalThis.ResizeObserver ??= class {
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    };
+  });
+
+  it('treats all-zero counts as empty but keeps a metric of 0', async () => {
+    expect(await render(true)).toContain('Nothing was fixed.');
+    TestBed.resetTestingModule();
+    expect(await render(false)).not.toContain('Nothing was fixed.');
   });
 });

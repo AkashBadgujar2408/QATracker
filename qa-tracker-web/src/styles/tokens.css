@@ -77,6 +77,15 @@
   --qa-status-reopened: #ef4444;
   --qa-status-rejected: #94a3b8;
 
+  /* Categorical chart series (people, projects) – validated for colour-blind separation (ADR-033).
+     Never for status or severity: those have their own colours. */
+  --qa-chart-1: #2a78d6;
+  --qa-chart-2: #eb6834;
+  --qa-chart-3: #1baf7a;
+  --qa-chart-4: #6250d6;
+  --qa-chart-5: #e87ba4;
+  --qa-chart-6: #eda100;
+
   /* Sprint state */
   --qa-sprint-testing: #0ea5e9;
   --qa-sprint-testing-completed: #6366f1;
@@ -139,6 +148,12 @@
   --qa-shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
   --qa-shadow-dialog: 0 10px 30px rgb(0 0 0 / 0.5);
   --qa-sidebar-bg: var(--qa-slate-950);
+  --qa-chart-1: #3987e5;
+  --qa-chart-2: #d95926;
+  --qa-chart-3: #199e70;
+  --qa-chart-4: #9085e9;
+  --qa-chart-5: #d55181;
+  --qa-chart-6: #c98500;
 
   color-scheme: dark;
 }

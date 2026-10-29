@@ -5,16 +5,21 @@ import { PlaceholderData } from './features/placeholder/placeholder-page';
 import { Role } from './shared/models/role';
 import { provideCharts } from './shared/charts/echarts';
 
-/** The overview dashboard (plan 9.1) – also the home page. ECharts is provided only on chart routes (lazy chunk). */
-function overviewRoute(path: string, heading: string): Route {
+/** A dashboard page. ECharts is provided only on chart routes (its own lazy chunk). */ function chartRoute(
+  path: string,
+  heading: string,
+  load: Route['loadComponent'],
+): Route {
   return {
     path,
     title: heading,
     data: { breadcrumb: heading },
     providers: [provideCharts()],
-    loadComponent: () => import('./features/dashboards/overview-page').then((m) => m.OverviewPage),
+    loadComponent: load,
   };
 }
+/** The overview dashboard (plan 9.1) – also the home page. */ const overviewPage = () =>
+  import('./features/dashboards/overview-page').then((m) => m.OverviewPage);
 
 const placeholderPage = () =>
   import('./features/placeholder/placeholder-page').then((m) => m.PlaceholderPage);
@@ -56,7 +61,7 @@ export const routes: Routes = [
     canActivateChild: [authGuard, roleGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'home' },
-      overviewRoute('home', 'Home'),
+      chartRoute('home', 'Home', overviewPage),
       {
         path: 'testing',
         title: 'Testing',
@@ -129,9 +134,15 @@ export const routes: Routes = [
         data: { breadcrumb: 'Dashboards' },
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'overview' },
-          overviewRoute('overview', 'Overview'),
-          placeholder('sprint', 'Sprint dashboard', 'S23'),
-          placeholder('developers', 'Developer dashboard', 'S23'),
+          chartRoute('overview', 'Overview', overviewPage),
+          chartRoute('sprint', 'Sprint dashboard', () =>
+            import('./features/dashboards/sprint-dashboard-page').then(
+              (m) => m.SprintDashboardPage,
+            ),
+          ),
+          chartRoute('developers', 'Developer dashboard', () =>
+            import('./features/dashboards/developers-page').then((m) => m.DevelopersPage),
+          ),
           placeholder('quality', 'Quality dashboard', 'S24'),
           placeholder('clients', 'Client health', 'S24'),
         ],
