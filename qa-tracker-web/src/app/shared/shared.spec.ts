@@ -13,6 +13,7 @@ describe('formatIst', () => {
   it('formats in IST as dd/MMM/yyyy', () => {
     // 18:45 UTC = 00:15 next day in IST
     expect(formatIst('2026-10-27T18:45:00Z')).toBe('28/Oct/2026');
+    expect(formatIst('2026-09-30T06:00:00Z')).toBe('30/Sep/2026');
     expect(formatIst('2026-10-27T12:30:00Z', 'datetime')).toBe('27/Oct/2026 18:00');
   });
 });

@@ -768,3 +768,35 @@ Assigned.
 **Libraries added (licence):** none.
 
 **Next session:** S22 – Chart components & Overview dashboard.
+
+---
+
+## S22 – Chart components & Overview dashboard   (29-Oct-2026)
+
+**Done:**
+- `shared/charts`: lazy ECharts setup (`provideCharts`), `ChartTheme` (tokens, repaint on theme change), option
+  builders, `app-chart` frame (states, table view, click), wrappers bar / stacked bar / donut / line / heatmap /
+  treemap / gauge, `app-kpi-card`, `app-dashboard-filters` (URL-synced scope + period, `IstDateAdapter`).
+- `shared/data/analytics.api.ts` (overview types).
+- Overview dashboard (`features/dashboards/overview-page`) as Home and Dashboards › Overview with click-through to
+  the filtered issue list; chart kit added to /dev/ui. ADR-032.
+- Fix: dates print "Sep" (not "Sept") everywhere (`formatIst`).
+- Tests: 11 chart-kit tests (bar/stack/donut/line/heatmap options, compact numbers, URL filters, IST periods, date
+  adapter, trend text) and 3 overview tests (items, click-through params, page loads filters + KPIs + activity);
+  shell tests updated (Home heading is "Overview").
+
+**Verified:** `ng build` (initial 720 kB; ECharts lazy chunk 667 kB raw / 191 kB transfer) · `ng test` 131/131 ·
+`ng lint` · `dotnet test` unchanged (236). In Chrome as `ui.developer`: Home shows all widgets with live numbers; the
+High bar opened `/issues` with open statuses + High and the list had the same 4 issues; dark theme repaints the
+charts; no horizontal page scroll after confining tooltips; /dev/ui shows every chart and state. Board checked in dark
+theme (S20 carry-over).
+
+**Deviations from plan:** the created-vs-closed line has no click-through (no date filter in the issue list).
+
+**Carry-over / known gaps:** S23 sprint & developer dashboards, S24 quality & client health (API ready, kit ready).
+Severity colours High/Medium are close for colour-blind readers – always keep labels/legends (ADR-032). Local `ui.*`
+test accounts got a new local password (deactivate when not needed). Invalid enum in JSON → 500 still open (S30).
+
+**Libraries added (licence):** `echarts` 6.1.0 (Apache-2.0), `ngx-echarts` 22.0.0 (MIT).
+
+**Next session:** S23 – Sprint & Developer dashboards.

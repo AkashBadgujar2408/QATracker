@@ -1,0 +1,158 @@
+<app-page-header
+  title="Overview"
+  subtitle="Where testing and fixing stand today. Click any number or chart to see the issues behind it."
+/>
+
+<section class="qa-card mb-4 p-4" aria-label="Filters">
+  <app-dashboard-filters />
+</section>
+
+@if (error(); as message) {
+  <p role="alert" class="qa-card m-0 mb-4 flex items-center justify-between gap-3 p-4">
+    <span class="text-severity-critical">The dashboard could not be loaded: {{ message }}</span>
+    <button matButton="outlined" type="button" (click)="overview.reload()">Try again</button>
+  </p>
+}
+
+<section class="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5" aria-label="Key numbers">
+  <app-kpi-card
+    label="Open issues"
+    [value]="data()?.kpis?.open ?? null"
+    [note]="openTrend()"
+    [loading]="loading()"
+    [queryParams]="{ ...scope(), status: openStatuses }"
+  />
+  <app-kpi-card
+    label="Awaiting retest"
+    [value]="data()?.kpis?.awaitingRetest ?? null"
+    note="Fixes deployed, not yet retested"
+    [loading]="loading()"
+    link="/retest-queue"
+    [queryParams]="{ project: filters().projectId }"
+  />
+  <app-kpi-card
+    label="Overdue"
+    [value]="data()?.kpis?.overdue ?? null"
+    note="Open past their due date"
+    alertWhenAboveZero
+    [loading]="loading()"
+    [queryParams]="{ ...scope(), overdue: 1 }"
+  />
+  <app-kpi-card
+    label="Critical open"
+    [value]="data()?.kpis?.criticalOpen ?? null"
+    note="Severity Critical, not fixed yet"
+    [loading]="loading()"
+    [queryParams]="{ ...scope(), status: openStatuses, severity: 'Critical' }"
+  />
+  <app-kpi-card
+    label="Closed this week"
+    [value]="data()?.kpis?.closedThisWeek ?? null"
+    note="Since Monday"
+    [loading]="loading()"
+    [queryParams]="{ ...scope(), status: 'Closed', sort: '-updatedAt' }"
+  />
+</section>
+
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
+  <app-chart-donut
+    class="lg:col-span-4"
+    title="Issues by status"
+    subtitle="Every issue in scope by workflow stage."
+    totalLabel="issues"
+    [items]="statusItems()"
+    [loading]="loading()"
+    [error]="error()"
+    [height]="260"
+    (selected)="open('status', $event)"
+    (retry)="overview.reload()"
+  />
+  <app-chart-bar
+    class="lg:col-span-4"
+    title="Open by severity"
+    subtitle="Issues still waiting for a fix."
+    [items]="severityItems()"
+    [loading]="loading()"
+    [error]="error()"
+    [height]="260"
+    emptyMessage="Nothing is open. Everything in scope is fixed, closed or rejected."
+    (selected)="open('severity', $event)"
+    (retry)="overview.reload()"
+  />
+  <app-chart-bar
+    class="lg:col-span-4"
+    title="Open by project"
+    subtitle="The ten projects with the most open issues."
+    [items]="projectItems()"
+    [loading]="loading()"
+    [error]="error()"
+    [height]="260"
+    emptyMessage="No project has open issues."
+    (selected)="open('project', $event)"
+    (retry)="overview.reload()"
+  />
+
+  <app-chart-line
+    class="lg:col-span-7"
+    title="Created vs closed"
+    [subtitle]="
+      'Issues reported and closed per day, ' +
+      (data()?.from | istDate) +
+      ' to ' +
+      (data()?.to | istDate) +
+      '.'
+    "
+    [categories]="days()"
+    [series]="flow()"
+    area
+    [loading]="loading()"
+    [error]="error()"
+    [height]="360"
+    emptyMessage="No issues were reported or closed in this period."
+    (retry)="overview.reload()"
+  />
+
+  <section class="qa-card flex flex-col p-4 lg:col-span-5" aria-labelledby="recent-activity">
+    <h2 id="recent-activity" class="m-0 text-md font-semibold">Recent activity</h2>
+    <p class="m-0 mt-0.5 mb-3 text-sm text-muted">The latest 20 timeline events in scope.</p>
+    @if (loading()) {
+      @for (n of [1, 2, 3, 4]; track n) {
+        <div class="qa-skeleton mb-3 h-10 rounded"></div>
+      }
+    } @else if (!data()?.recentActivity?.length) {
+      <p class="m-0 py-6 text-center text-muted">Nothing happened in this period.</p>
+    } @else {
+      <ol class="m-0 max-h-[372px] list-none overflow-y-auto p-0 pr-1">
+        @for (a of data()!.recentActivity; track a.id) {
+          <li class="flex items-start gap-3 border-b border-border py-2.5">
+            <app-user-avatar
+              [name]="a.userName ?? 'System'"
+              [color]="a.userAvatarColor"
+              size="sm"
+              class="mt-0.5"
+            />
+            <div class="min-w-0 flex-1">
+              <p class="m-0 truncate">
+                <a
+                  class="font-semibold text-primary no-underline hover:underline"
+                  [routerLink]="['/issues', a.issueKey]"
+                  >{{ a.issueKey }}</a
+                >
+                {{ a.summary }}
+              </p>
+              <p class="m-0 truncate text-sm text-muted" [title]="a.issueTitle">
+                {{ a.issueTitle }}
+              </p>
+            </div>
+            <time
+              class="shrink-0 text-sm text-muted"
+              [attr.datetime]="a.createdAt"
+              [title]="a.createdAt | istDate: 'datetime'"
+              >{{ when(a.createdAt) }}</time
+            >
+          </li>
+        }
+      </ol>
+    }
+  </section>
+</div>

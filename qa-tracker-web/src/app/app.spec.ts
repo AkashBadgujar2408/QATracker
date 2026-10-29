@@ -46,12 +46,12 @@ describe('App shell', () => {
 
     expect(host(harness).querySelector('app-sidebar nav[aria-label="Main"]')).toBeTruthy();
     expect(host(harness).querySelector('app-topbar')).toBeTruthy();
-    expect(host(harness).querySelector('h1')?.textContent).toContain('Home');
+    expect(host(harness).querySelector('h1')?.textContent).toContain('Overview'); // Home = the overview dashboard
   });
 
   it('shows navigation by role', async () => {
     setup(testUser('Developer'));
-    const harness = await RouterTestingHarness.create('/home');
+    const harness = await RouterTestingHarness.create('/sprints'); // a page without data requests
     const developer = navLabels(harness);
     expect(developer).toContain('My work');
     expect(developer).not.toContain('Testing');
@@ -68,7 +68,7 @@ describe('App shell', () => {
   it('sends users without the role Home', async () => {
     setup(testUser('Developer'));
     const harness = await RouterTestingHarness.create('/admin/users');
-    expect(host(harness).querySelector('h1')?.textContent).toContain('Home');
+    expect(host(harness).querySelector('h1')?.textContent).toContain('Overview'); // Home = the overview dashboard
   });
 
   it('forces a password change before entering the app', async () => {
@@ -88,7 +88,7 @@ describe('App shell', () => {
 
   it('toggles the dark theme from the top bar', async () => {
     setup(testUser('Tester'));
-    const harness = await RouterTestingHarness.create('/home');
+    const harness = await RouterTestingHarness.create('/sprints'); // a page without data requests
     const toggle = host(harness).querySelector<HTMLButtonElement>(
       'app-topbar button[aria-label^="Switch to"]',
     );

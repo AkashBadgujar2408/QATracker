@@ -3,6 +3,18 @@ import { authGuard, guestGuard, roleGuard, signedInGuard } from './core/auth/aut
 import { Shell } from './core/layout/shell/shell';
 import { PlaceholderData } from './features/placeholder/placeholder-page';
 import { Role } from './shared/models/role';
+import { provideCharts } from './shared/charts/echarts';
+
+/** The overview dashboard (plan 9.1) – also the home page. ECharts is provided only on chart routes (lazy chunk). */
+function overviewRoute(path: string, heading: string): Route {
+  return {
+    path,
+    title: heading,
+    data: { breadcrumb: heading },
+    providers: [provideCharts()],
+    loadComponent: () => import('./features/dashboards/overview-page').then((m) => m.OverviewPage),
+  };
+}
 
 const placeholderPage = () =>
   import('./features/placeholder/placeholder-page').then((m) => m.PlaceholderPage);
@@ -44,7 +56,7 @@ export const routes: Routes = [
     canActivateChild: [authGuard, roleGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'home' },
-      placeholder('home', 'Home', 'S22'),
+      overviewRoute('home', 'Home'),
       {
         path: 'testing',
         title: 'Testing',
@@ -117,7 +129,7 @@ export const routes: Routes = [
         data: { breadcrumb: 'Dashboards' },
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'overview' },
-          placeholder('overview', 'Overview', 'S22'),
+          overviewRoute('overview', 'Overview'),
           placeholder('sprint', 'Sprint dashboard', 'S23'),
           placeholder('developers', 'Developer dashboard', 'S23'),
           placeholder('quality', 'Quality dashboard', 'S24'),
@@ -156,6 +168,7 @@ export const routes: Routes = [
         path: 'dev/ui',
         title: 'UI style guide',
         data: { breadcrumb: 'UI style guide' },
+        providers: [provideCharts()],
         loadComponent: () => import('./features/dev/ui-showcase').then((m) => m.UiShowcase),
       },
       {

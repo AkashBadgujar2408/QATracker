@@ -463,3 +463,30 @@ new alerts/mails and background tasks configurable in the app; one database for 
 - Aggregation is grouped in SQL; per-row work happens in memory only on bounded sets (one sprint's history, fixes and
   retests in scope). Measured on 5 000 seeded issues: overview ≈ 250 ms, sprint ≈ 180 ms, others ≤ 60 ms (test asserts
   < 800 ms per endpoint).
+
+## ADR-032 – Chart kit and Overview dashboard (29-Oct-2026, S22)
+- **Library**: Apache ECharts 6.1 via ngx-echarts 22 (plan 9.6). Only the used charts/components are registered
+  (`shared/charts/echarts-core.ts`) and loaded lazily through `provideCharts()` on chart routes, so ECharts is its own
+  chunk (~190 kB transferred) and never in the initial bundle.
+- **Kit** (`shared/charts`): `app-chart` (card: title, one-line subtitle, loading skeleton, error with "Try again",
+  empty message, table view toggle, canvas, click → `{key, series}`), wrappers `app-chart-bar`, `-stacked-bar`
+  (also 100 %), `-donut`, `-line`, `-heatmap`, `-treemap`, `-gauge`, and `app-kpi-card` (label, value, one line of
+  context, link; `alertWhenAboveZero` adds a red edge and an icon – never colour alone). Options are pure functions
+  (`chart-options.ts`) so they are unit-tested without a canvas.
+- **Theme**: `ChartTheme` reads the CSS tokens (no hard-coded colours) and re-reads them when the `app-dark` class
+  changes, so charts repaint with the theme. Marks follow the dataviz rules: bars ≤ 24 px with a 4 px rounded end,
+  2 px lines, 2 px surface gaps/rings, hairline solid grid, legends for ≥ 2 series, text in text tokens, tooltips
+  confined to the chart (an unconfined hidden tooltip widened the page).
+- **Colour check**: the fixed severity colours fail a categorical CVD check (High vs Medium ΔE ≈ 7 normal / 1.6
+  deutan). They stay (plan 10.2) but are never the only cue: bar charts label every category on the axis, stacked
+  charts carry a legend and the table view. S23/S24 stacked-by-severity charts must keep labels/legend.
+  Created vs closed uses primary + status-closed (validated: ΔE 33 / 28 deutan).
+- **Global filter bar** `app-dashboard-filters`: Client, Project, Sprint, Period (Last 7 / 30 / 90 days, This month,
+  Custom range with a Material date-range picker showing dd/MMM/yyyy via `IstDateAdapter`). Kept in the URL
+  (`client, project, sprint, period, from, to`); presets become IST days for the API (`analyticsQuery`).
+- **Overview** is the home page (`/home`, also `/dashboards/overview`): five KPI cards (Open with trend vs a week ago,
+  Awaiting retest → retest queue, Overdue, Critical open, Closed this week), Issues by status (donut), Open by severity,
+  Open by project, Created vs closed (line, per IST day) and Recent activity (20, scrolls beside the trend). Clicks open
+  the issue list with the dashboard scope plus the status group / severity / project; the trend line has no
+  click-through (the issue list has no date filter). Reloads on live issue changes (debounced 1.5 s).
+- `formatIst` now uses fixed month names (browsers' newer locale data print "Sept").

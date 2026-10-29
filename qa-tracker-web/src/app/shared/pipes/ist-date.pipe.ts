@@ -6,10 +6,13 @@ const parts = (format: IstDateFormat) =>
   new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Asia/Kolkata',
     day: '2-digit',
-    month: 'short',
+    month: '2-digit',
     year: 'numeric',
     ...(format === 'datetime' ? { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' } : {}),
   });
+
+/** Fixed three-letter months – browsers differ ("Sept" in newer locale data). */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const FORMATTERS: Readonly<Record<IstDateFormat, Intl.DateTimeFormat>> = {
   date: parts('date'),
@@ -21,7 +24,7 @@ export function formatIst(value: string | Date, format: IstDateFormat = 'date'):
   const map = Object.fromEntries(
     FORMATTERS[format].formatToParts(new Date(value)).map((p) => [p.type, p.value]),
   );
-  const date = `${map['day']}/${map['month']}/${map['year']}`;
+  const date = `${map['day']}/${MONTHS[Number(map['month']) - 1]}/${map['year']}`;
   return format === 'datetime' ? `${date} ${map['hour']}:${map['minute']}` : date;
 }
 

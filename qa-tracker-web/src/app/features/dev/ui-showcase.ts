@@ -37,6 +37,22 @@ import { SeverityBadge } from '../../shared/ui/severity-badge/severity-badge';
 import { SkeletonLines, SkeletonTable } from '../../shared/ui/skeleton/skeleton';
 import { StatusPill } from '../../shared/ui/status-pill/status-pill';
 import { UserAvatar } from '../../shared/ui/user-avatar/user-avatar';
+import {
+  ChartCategory,
+  ChartItem,
+  ChartSeries,
+  HeatmapData,
+} from '../../shared/charts/chart-options';
+import {
+  ChartBar,
+  ChartDonut,
+  ChartGauge,
+  ChartHeatmap,
+  ChartLine,
+  ChartStackedBar,
+  ChartTreemap,
+} from '../../shared/charts/charts';
+import { KpiCard } from '../../shared/charts/kpi-card';
 
 interface Swatch {
   readonly label: string;
@@ -65,6 +81,14 @@ interface Swatch {
     IssueTimeline,
     NotificationItem,
     ReactiveFormsModule,
+    KpiCard,
+    ChartBar,
+    ChartDonut,
+    ChartGauge,
+    ChartHeatmap,
+    ChartLine,
+    ChartStackedBar,
+    ChartTreemap,
   ],
   styles: `
     .qa-notes > app-notification-item + app-notification-item {
@@ -76,6 +100,67 @@ interface Swatch {
 })
 export class UiShowcase {
   protected readonly theme = inject(ThemeService);
+
+  protected readonly sampleStatus: ChartItem[] = [
+    { key: 'Open', label: 'Open', value: 24, color: '--qa-status-assigned' },
+    { key: 'Fixed', label: 'Fixed', value: 9, color: '--qa-status-fixed' },
+    { key: 'Verified', label: 'Verified', value: 4, color: '--qa-status-verified' },
+    { key: 'Closed', label: 'Closed', value: 31, color: '--qa-status-closed' },
+    { key: 'Rejected', label: 'Rejected', value: 3, color: '--qa-status-rejected' },
+  ];
+  protected readonly sampleSeverity: ChartItem[] = [
+    { key: 'Critical', label: 'Critical', value: 2, color: '--qa-severity-critical' },
+    { key: 'High', label: 'High', value: 7, color: '--qa-severity-high' },
+    { key: 'Medium', label: 'Medium', value: 11, color: '--qa-severity-medium' },
+    { key: 'Low', label: 'Low', value: 4, color: '--qa-severity-low' },
+  ];
+  protected readonly samplePeople: ChartCategory[] = [
+    { key: '1', label: 'Emily' },
+    { key: '2', label: 'John' },
+  ];
+  protected readonly sampleWorkload: ChartSeries[] = [
+    { key: 'Assigned', name: 'Assigned', color: '--qa-status-assigned', values: [4, 2] },
+    { key: 'InProgress', name: 'In Progress', color: '--qa-status-in-progress', values: [2, 3] },
+    { key: 'NeedInfo', name: 'Need Info', color: '--qa-status-need-info', values: [1, 0] },
+  ];
+  protected readonly sampleDays: ChartCategory[] = [
+    '23/Oct',
+    '24/Oct',
+    '25/Oct',
+    '26/Oct',
+    '27/Oct',
+  ].map((d) => ({ key: d, label: d }));
+  protected readonly sampleLines: ChartSeries[] = [
+    { key: 'open', name: 'Open', color: '--qa-primary', values: [20, 18, 15, 11, 8] },
+    {
+      key: 'ideal',
+      name: 'Ideal',
+      color: '--qa-text-muted',
+      values: [20, 15, 10, 5, 0],
+      dashed: true,
+    },
+  ];
+  protected readonly sampleHeatmap: HeatmapData = {
+    rows: [
+      { key: '1', label: 'Sales' },
+      { key: '2', label: 'Billing' },
+    ],
+    columns: [
+      { key: 'Critical', label: 'Critical' },
+      { key: 'High', label: 'High' },
+      { key: 'Medium', label: 'Medium' },
+    ],
+    values: [
+      [1, 4, 2],
+      [0, 2, 6],
+    ],
+    color: '--qa-primary',
+  };
+  protected readonly sampleModules: ChartItem[] = [
+    { key: '1', label: 'Sales', value: 18 },
+    { key: '2', label: 'Billing', value: 11 },
+    { key: '3', label: 'Reports', value: 5 },
+  ];
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
 

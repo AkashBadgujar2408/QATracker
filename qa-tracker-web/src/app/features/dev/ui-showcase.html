@@ -298,4 +298,85 @@
       }
     </div>
   </section>
+
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-2 text-lg font-semibold">Chart kit (shared/charts)</h2>
+    <p class="mt-0 mb-4 text-sm text-muted">
+      ECharts wrappers themed from tokens (repaint with the theme). Every chart has a title, a
+      subtitle, a table view, hover tooltips, loading / empty / error states and emits the clicked
+      key for click-through. Sample numbers only.
+    </p>
+    <div class="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+      <app-kpi-card label="Open issues" [value]="42" note="+3 since last week" />
+      <app-kpi-card
+        label="Overdue"
+        [value]="5"
+        note="Open past their due date"
+        alertWhenAboveZero
+      />
+      <app-kpi-card label="Closed this week" [value]="0" note="Since Monday" />
+      <app-kpi-card label="Loading" [loading]="true" />
+    </div>
+    <div class="grid gap-4 lg:grid-cols-2">
+      <app-chart-donut
+        title="app-chart-donut"
+        subtitle="Status groups."
+        [items]="sampleStatus"
+        [height]="220"
+      />
+      <app-chart-bar
+        title="app-chart-bar"
+        subtitle="Fixed severity colours."
+        [items]="sampleSeverity"
+        [height]="220"
+      />
+      <app-chart-stacked-bar
+        title="app-chart-stacked-bar"
+        subtitle="Workload per developer (percent toggles 100 %)."
+        [categories]="samplePeople"
+        [series]="sampleWorkload"
+        [height]="220"
+      />
+      <app-chart-line
+        title="app-chart-line"
+        subtitle="Two series with a crosshair tooltip; the dashed one is a reference."
+        [categories]="sampleDays"
+        [series]="sampleLines"
+        area
+        [height]="220"
+      />
+      <app-chart-heatmap
+        title="app-chart-heatmap"
+        subtitle="Module × severity."
+        [data]="sampleHeatmap"
+        [height]="240"
+      />
+      <app-chart-treemap
+        title="app-chart-treemap"
+        subtitle="Module hotspots."
+        [items]="sampleModules"
+        [height]="240"
+      />
+      <app-chart-gauge
+        title="app-chart-gauge"
+        subtitle="A rate shown as %."
+        [rate]="0.87"
+        name="On time"
+        [height]="220"
+      />
+      <app-chart-bar title="Empty and error states" [items]="[]" [height]="100" />
+      <app-chart-bar
+        title="Error state"
+        [items]="sampleSeverity"
+        error="The server did not answer."
+        [height]="100"
+      />
+      <app-chart-bar
+        title="Loading state"
+        [items]="sampleSeverity"
+        [loading]="true"
+        [height]="100"
+      />
+    </div>
+  </section>
 </div>
