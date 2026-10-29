@@ -143,8 +143,12 @@ export const routes: Routes = [
           chartRoute('developers', 'Developer dashboard', () =>
             import('./features/dashboards/developers-page').then((m) => m.DevelopersPage),
           ),
-          placeholder('quality', 'Quality dashboard', 'S24'),
-          placeholder('clients', 'Client health', 'S24'),
+          chartRoute('quality', 'Quality dashboard', () =>
+            import('./features/dashboards/quality-page').then((m) => m.QualityPage),
+          ),
+          chartRoute('clients', 'Client health', () =>
+            import('./features/dashboards/clients-page').then((m) => m.ClientsPage),
+          ),
         ],
       },
       {

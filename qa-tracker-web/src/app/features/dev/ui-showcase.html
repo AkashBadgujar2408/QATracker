@@ -81,6 +81,12 @@
         <app-severity-badge [severity]="severity" />
       }
     </div>
+    <h3 class="mt-4 mb-2 text-sm font-semibold text-muted">app-health-badge (client health)</h3>
+    <div class="flex flex-wrap gap-2">
+      @for (health of healths; track health) {
+        <app-health-badge [health]="health" />
+      }
+    </div>
     <h3 class="mt-4 mb-2 text-sm font-semibold text-muted">app-priority-icon</h3>
     <div class="flex flex-wrap items-center gap-6">
       @for (priority of priorities; track priority) {

@@ -159,9 +159,18 @@ export class ChartLine extends ChartInputs {
   readonly categories = input.required<readonly ChartCategory[]>();
   readonly series = input.required<readonly ChartSeries[]>();
   readonly area = input(false, { transform: booleanAttribute });
+  /** Stacked areas – the series are parts of one total. */
+  readonly stacked = input(false, { transform: booleanAttribute });
 
   protected readonly options = computed(() =>
-    lineOptions(this.theme.tokens(), this.categories(), this.series(), this.area(), this.title()),
+    lineOptions(
+      this.theme.tokens(),
+      this.categories(),
+      this.series(),
+      this.area(),
+      this.title(),
+      this.stacked(),
+    ),
   );
   protected readonly table = computed(() => seriesTable(this.categories(), this.series()));
   protected readonly empty = computed(() => this.series().every((s) => s.values.every((v) => !v)));

@@ -95,6 +95,20 @@ describe('chart options', () => {
     expect(at(o, 'series.0.itemStyle.borderWidth')).toBe(2);
   });
 
+  it('stacks line series as filled areas only when asked', () => {
+    const categories = [
+      { key: 'a', label: '19/Oct' },
+      { key: 'b', label: '26/Oct' },
+    ];
+    const series = [{ key: 'High', name: 'High', color: '--qa-severity-high', values: [3, 1] }];
+    const stacked = lineOptions(tokens, categories, series, false, 'Trend', true);
+    const plain = lineOptions(tokens, categories, series, false, 'Trend');
+    expect(at(stacked, 'series.0.stack')).toBe('total');
+    expect(at(stacked, 'series.0.areaStyle.opacity') as number).toBeGreaterThan(0.5);
+    expect(at(plain, 'series.0.stack')).toBeUndefined();
+    expect(at(plain, 'series.0.areaStyle')).toBeUndefined();
+  });
+
   it('draws 2 px lines with a crosshair and dashed reference series without area', () => {
     const o = lineOptions(
       tokens,

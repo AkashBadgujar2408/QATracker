@@ -33,6 +33,7 @@ import { Logo } from '../../shared/ui/logo/logo';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { PriorityIcon } from '../../shared/ui/priority-icon/priority-icon';
+import { HealthBadge } from '../../shared/ui/health-badge/health-badge';
 import { SeverityBadge } from '../../shared/ui/severity-badge/severity-badge';
 import { SkeletonLines, SkeletonTable } from '../../shared/ui/skeleton/skeleton';
 import { StatusPill } from '../../shared/ui/status-pill/status-pill';
@@ -70,6 +71,7 @@ interface Swatch {
     EmptyState,
     StatusPill,
     SeverityBadge,
+    HealthBadge,
     PriorityIcon,
     UserAvatar,
     SkeletonLines,
@@ -198,6 +200,7 @@ export class UiShowcase {
 
   protected readonly statuses = ISSUE_STATUSES;
   protected readonly severities = SEVERITIES;
+  protected readonly healths = ['Green', 'Amber', 'Red'] as const;
   protected readonly priorities = PRIORITIES;
   protected readonly people = [
     'John Carter',

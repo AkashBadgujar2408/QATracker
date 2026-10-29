@@ -517,3 +517,24 @@ new alerts/mails and background tasks configurable in the app; one database for 
 - Chart kit additions: `app-chart-bar` `format` (value text in labels, tooltip and table), `max` (100 for %),
   `zeroIsEmpty` (false for metrics, where 0 h or 0 % is a real value); value labels only up to 12 bars; columns get
   room above for their labels; `app-kpi-card` accepts a formatted string; `app-dashboard-filters [showPeriod]`.
+
+## ADR-034 – Quality and Client health dashboards (29-Oct-2026, S24)
+- **Quality dashboard** `/dashboards/quality` (full filter bar). KPIs: Retest turnaround (median working hours, number
+  of retests in the period), In the retest queue, Waiting over 5 days (alert), Rejected ratio (rejected of all
+  issues) – the first three open the retest queue, the ratio the rejected issues.
+  Widgets: Defect leakage (columns per project stacked by sprint phase, phases in sort order with `--qa-chart-1…6`,
+  more than six summed as "Others"), Rejected by reason (donut, categorical tokens, click → rejected issues), Severity
+  trend (stacked areas per IST week, only severities that occur), Retest turnaround by environment type (bar, hours),
+  Retest queue ageing (columns, "> 5 days" in the critical colour, click → retest queue), Module hotspots (treemap,
+  click → issue list for the module – matched 6 of 6 in Chrome).
+- **Client health** `/dashboards/clients` (full filter bar). Client cards sorted Red, Amber, Green, then by name: open,
+  critical and overdue (each links to the issue list for that client), last sprint (→ sprint dashboard) and the
+  health badge. `app-health-badge` (shared/ui, in /dev/ui) shows an icon and a word – Healthy / At risk / Critical –
+  so colour is never the only cue; red and amber cards also get a coloured left edge.
+  Charts: Open by client & severity (stacked, click → that client's open issues of the severity), Average closure time
+  (working days, issue count in the label), UAT vs LIVE (stacked columns per project; "Other" and "Not set" only when
+  they occur).
+- **Deviations from plan 9.4 / 9.5**: UAT vs LIVE is stacked rather than grouped (as the sprint comparison, ADR-033);
+  leakage, UAT vs LIVE, turnaround and the trend have no click-through (the issue list has no phase, environment or
+  date filter). Retest turnaround shows "–" when nothing was retested and the rejected ratio "–" with no issues.
+- Chart kit: `app-chart-line [stacked]` stacks the series as filled areas (75 % fill).

@@ -830,3 +830,32 @@ Invalid enum in JSON → 500 still open (S30).
 **Libraries added (licence):** none.
 
 **Next session:** S24 – Quality & Client health dashboards.
+
+---
+
+## S24 – Quality & Client health dashboards   (29-Oct-2026)
+
+**Done:**
+- Quality dashboard (`features/dashboards/quality-page`) and Client health (`clients-page`) on `/dashboards/quality`
+  and `/dashboards/clients` (placeholders replaced). ADR-034.
+- Analytics client types and calls for both endpoints; `app-health-badge` (shared/ui, added to /dev/ui); chart kit
+  `app-chart-line [stacked]` for the severity trend.
+- Tests: 8 helper tests (leakage by phase, severity trend, item labels, quality click-through, red-first client order,
+  client × severity + click-through, UAT vs LIVE parts, closure items), 2 page tests (quality KPIs incl. alert and
+  ratio; client cards with health words, last sprint and dd/MMM/yyyy) and 1 chart-kit test (stacked areas).
+
+**Verified:** `ng build` (initial 721 kB) · `ng test` 151/151 (3 of 4 runs; one run under load had 3 failures that did not repeat) · `ng lint` · no backend change (`dotnet test` 236 from
+S21). In Chrome as `ui.developer`: both dashboards load with live numbers; the Billing hotspot (6) opened the issue list
+with 6 issues; client cards (3 open each) match the open-by-severity bars and the issue list; dark theme checked; no
+horizontal page scroll. **Milestone M4 – all five dashboards.**
+
+**Deviations from plan:** UAT vs LIVE stacked, not grouped; no click-through for leakage, UAT vs LIVE, turnaround and
+the trend (no matching issue-list filters) – ADR-034.
+
+**Carry-over / known gaps:** issue-list filters for type, phase, environment and created date would allow the missing
+click-throughs (consider in S31). Local `ui.*` test accounts got a new local password again (deactivate when not
+needed). Invalid enum in JSON → 500 still open (S30).
+
+**Libraries added (licence):** none.
+
+**Next session:** S25 – Sprint report export.

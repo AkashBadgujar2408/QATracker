@@ -1,0 +1,140 @@
+<app-page-header
+  title="Quality dashboard"
+  subtitle="How early problems are found, how fast fixes are retested and where issues concentrate."
+/>
+
+<section class="qa-card mb-4 p-4" aria-label="Filters">
+  <app-dashboard-filters />
+</section>
+
+@if (error(); as message) {
+  <app-empty-state
+    kind="error"
+    title="The quality dashboard could not be loaded"
+    [message]="message"
+  >
+    <button matButton="filled" type="button" (click)="quality.reload()">Try again</button>
+  </app-empty-state>
+} @else {
+  <section class="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4" aria-label="Key numbers">
+    <app-kpi-card
+      label="Retest turnaround"
+      [value]="medianTurnaround()"
+      [note]="
+        data()
+          ? 'Median working hours, ' + data()!.retestTurnaround.count + ' retests in the period'
+          : 'Median working hours, deployed to retested'
+      "
+      [loading]="loading()"
+      link="/retest-queue"
+      [queryParams]="{ project: filters().projectId }"
+    />
+    <app-kpi-card
+      label="In the retest queue"
+      [value]="inQueue()"
+      note="Deployed fixes waiting for a retest"
+      [loading]="loading()"
+      link="/retest-queue"
+      [queryParams]="{ project: filters().projectId }"
+    />
+    <app-kpi-card
+      label="Waiting over 5 days"
+      [value]="waitingLong()"
+      note="Retests waiting longer than 5 days"
+      alertWhenAboveZero
+      [loading]="loading()"
+      link="/retest-queue"
+      [queryParams]="{ project: filters().projectId }"
+    />
+    <app-kpi-card
+      label="Rejected ratio"
+      [value]="rejectedRatio()"
+      [note]="
+        data()
+          ? data()!.rejected.rejected + ' of ' + data()!.rejected.total + ' issues rejected'
+          : 'Rejected of all issues'
+      "
+      [loading]="loading()"
+      [queryParams]="{ ...scope(), status: 'Rejected' }"
+    />
+  </section>
+
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
+    <app-chart-stacked-bar
+      class="lg:col-span-7"
+      title="Defect leakage"
+      subtitle="Issues per project by the phase they were found in. Healthy projects find most early."
+      [categories]="leakage().categories"
+      [series]="leakage().series"
+      [horizontal]="false"
+      [loading]="loading()"
+      [height]="300"
+      emptyMessage="No issues in scope yet."
+      (retry)="quality.reload()"
+    />
+    <app-chart-donut
+      class="lg:col-span-5"
+      title="Rejected by reason"
+      subtitle="Invalid, duplicate, as designed or won't fix. Click for the rejected issues."
+      totalLabel="rejected"
+      [items]="rejected()"
+      [loading]="loading()"
+      [height]="300"
+      emptyMessage="Nothing was rejected."
+      (selected)="open('rejected', $event)"
+      (retry)="quality.reload()"
+    />
+
+    <app-chart-line
+      class="lg:col-span-12"
+      title="Severity trend"
+      subtitle="New issues per week by severity (IST weeks from Monday)."
+      stacked
+      [categories]="trend().categories"
+      [series]="trend().series"
+      [loading]="loading()"
+      [height]="280"
+      emptyMessage="No issues were reported in this period."
+      (retry)="quality.reload()"
+    />
+
+    <app-chart-bar
+      class="lg:col-span-6"
+      title="Retest turnaround"
+      subtitle="Median working hours from deployment to retest, by environment. Retests in brackets."
+      [items]="turnaround()"
+      [format]="hours"
+      [zeroIsEmpty]="false"
+      valueLabel="Working hours"
+      [loading]="loading()"
+      [height]="240"
+      emptyMessage="Nothing was retested in this period."
+      (retry)="quality.reload()"
+    />
+    <app-chart-bar
+      class="lg:col-span-6"
+      title="Retest queue ageing"
+      subtitle="Deployed fixes waiting for a retest, by days waiting. Click to open the queue."
+      [items]="ageing()"
+      [horizontal]="false"
+      valueLabel="Retests"
+      [loading]="loading()"
+      [height]="240"
+      emptyMessage="The retest queue is empty."
+      (selected)="open('ageing', $event)"
+      (retry)="quality.reload()"
+    />
+
+    <app-chart-treemap
+      class="lg:col-span-12"
+      title="Module hotspots"
+      subtitle="Issues per module across all sprints (top 30). Click a module for its issues."
+      [items]="hotspots()"
+      [loading]="loading()"
+      [height]="360"
+      emptyMessage="No issues in scope yet."
+      (selected)="open('hotspot', $event)"
+      (retry)="quality.reload()"
+    />
+  </div>
+}

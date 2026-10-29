@@ -269,13 +269,17 @@ export function donutOptions(
   };
 }
 
-/** Lines over categories (days, weeks) with a crosshair tooltip listing every series; `area` adds a 10 % wash. */
+/**
+ * Lines over categories (days, weeks) with a crosshair tooltip listing every series; `area` adds a 10 % wash.
+ * `stacked` stacks the series as filled areas (parts of a whole, e.g. new issues per week by severity).
+ */
 export function lineOptions(
   t: ChartTokens,
   categories: readonly ChartCategory[],
   series: readonly ChartSeries[],
   area: boolean,
   label: string,
+  stacked = false,
 ): EChartsCoreOption {
   return {
     ...base(t, label),
@@ -321,7 +325,12 @@ export function lineOptions(
         join: 'round',
       },
       itemStyle: { color: t.color(s.color), borderColor: t.surface, borderWidth: 2 },
-      areaStyle: area && !s.dashed ? { color: t.color(s.color), opacity: 0.1 } : undefined,
+      stack: stacked ? 'total' : undefined,
+      areaStyle: stacked
+        ? { color: t.color(s.color), opacity: 0.75 }
+        : area && !s.dashed
+          ? { color: t.color(s.color), opacity: 0.1 }
+          : undefined,
       emphasis: { focus: 'series' },
     })),
   };

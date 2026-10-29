@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../core/api/api';
 import { IssueStatus, IssueType, Severity } from '../models/issue-enums';
+import { RejectType } from './issues.api';
+import { EnvironmentType } from './masters.api';
 import { SprintStatus } from './sprints.api';
 
 /** Dashboard scope + IST date range (yyyy-MM-dd). The API defaults to the last 30 days. */
@@ -186,6 +188,104 @@ export interface Developers {
   };
 }
 
+// Quality dashboard (plan 9.4) – GET /api/analytics/quality
+
+export type AgeingBucket = 'UnderOneDay' | 'OneToTwoDays' | 'ThreeToFiveDays' | 'OverFiveDays';
+
+export interface Quality {
+  readonly from: string;
+  readonly to: string;
+  /** Issues per project by sprint phase (phases in sort order, only those used). */
+  readonly leakage: readonly {
+    readonly projectId: number;
+    readonly projectKey: string;
+    readonly projectName: string;
+    readonly byPhase: readonly {
+      readonly phaseId: number;
+      readonly phase: string;
+      readonly count: number;
+    }[];
+  }[];
+  /** Deployed → retested, median working hours (retests done in the range). */
+  readonly retestTurnaround: {
+    readonly medianHours: number;
+    readonly count: number;
+    readonly byEnvironmentType: readonly {
+      readonly environmentType: EnvironmentType;
+      readonly medianHours: number;
+      readonly count: number;
+    }[];
+  };
+  readonly retestAgeing: readonly {
+    readonly bucket: AgeingBucket;
+    readonly label: string;
+    readonly count: number;
+  }[];
+  readonly moduleHotspots: readonly {
+    readonly moduleId: number;
+    readonly module: string;
+    readonly projectKey: string;
+    readonly count: number;
+    readonly open: number;
+  }[];
+  readonly rejected: {
+    readonly rejected: number;
+    readonly total: number;
+    /** 0–1. */
+    readonly ratio: number;
+    readonly byType: readonly { readonly type: RejectType; readonly count: number }[];
+  };
+  readonly severityTrend: WeeklySeries<Severity>;
+}
+
+// Client health dashboard (plan 9.5) – GET /api/analytics/clients
+
+export type Health = 'Green' | 'Amber' | 'Red';
+
+export interface ClientCard {
+  readonly clientId: number;
+  readonly name: string;
+  readonly open: number;
+  readonly critical: number;
+  readonly overdue: number;
+  readonly lastSprint: {
+    readonly sprintId: number;
+    readonly name: string;
+    readonly projectKey: string;
+    readonly status: SprintStatus;
+    readonly startedAt: string;
+  } | null;
+  readonly health: Health;
+}
+
+export interface Clients {
+  readonly from: string;
+  readonly to: string;
+  readonly clients: readonly ClientCard[];
+  readonly openBySeverity: readonly {
+    readonly clientId: number;
+    readonly name: string;
+    readonly bySeverity: readonly SeverityCount[];
+  }[];
+  /** Issues per project by the type of the environment they were found on. */
+  readonly uatVsLive: readonly {
+    readonly projectId: number;
+    readonly projectKey: string;
+    readonly projectName: string;
+    readonly uat: number;
+    readonly live: number;
+    readonly other: number;
+    readonly notSet: number;
+  }[];
+  /** Created → closed, working days. */
+  readonly averageClosureDays: readonly {
+    readonly clientId: number;
+    readonly name: string;
+    readonly value: number;
+    readonly count: number;
+  }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AnalyticsApi {
   private readonly http = inject(HttpClient);
@@ -199,6 +299,14 @@ export class AnalyticsApi {
     return this.http.get<Developers>(`${this.base}/analytics/developers`, {
       params: params(query),
     });
+  }
+
+  quality(query: AnalyticsQuery): Observable<Quality> {
+    return this.http.get<Quality>(`${this.base}/analytics/quality`, { params: params(query) });
+  }
+
+  clients(query: AnalyticsQuery): Observable<Clients> {
+    return this.http.get<Clients>(`${this.base}/analytics/clients`, { params: params(query) });
   }
 
   overview(query: AnalyticsQuery): Observable<Overview> {
