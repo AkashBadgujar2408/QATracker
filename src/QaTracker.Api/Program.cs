@@ -2,7 +2,9 @@ using System.Text.Json.Serialization;
 using QaTracker.Api.Auth;
 using QaTracker.Api.Common;
 using QaTracker.Api.Endpoints;
+using QaTracker.Api.Realtime;
 using QaTracker.Application;
+using QaTracker.Application.Abstractions;
 using QaTracker.Infrastructure;
 using QaTracker.Infrastructure.Persistence.Seeding;
 using Scalar.AspNetCore;
@@ -33,6 +35,9 @@ try
     builder.Services.AddProblemDetails();
     builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecurityTransformer>());
     builder.Services.AddHealthChecks();
+    builder.Services.AddSignalR().AddJsonProtocol(options =>
+        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+    builder.Services.AddSingleton<IRealtimePublisher, SignalRRealtimePublisher>();
 
     const string AngularDevCorsPolicy = "AngularDev";
     builder.Services.AddCors(options => options.AddPolicy(AngularDevCorsPolicy, policy => policy
@@ -82,6 +87,8 @@ try
     app.MapTimelineEndpoints();
     app.MapWorkQueuesEndpoints();
     app.MapAttachmentsEndpoints();
+    app.MapNotificationsEndpoints();
+    app.MapHub<TrackerHub>(TrackerHub.Path);
 
     await app.RunAsync();
 }

@@ -9,6 +9,7 @@ import { lucideCheck, lucideExternalLink, lucideLink, lucideX } from '@ng-icons/
 import { firstValueFrom, map } from 'rxjs';
 import { problemMessage } from '../../core/api/api';
 import { ToastService } from '../../core/feedback/toast.service';
+import { reloadOnIssueChanges } from '../../core/realtime/realtime.service';
 import { Issue, IssuesApi } from '../../shared/data/issues.api';
 import {
   RetestGroup,
@@ -98,6 +99,10 @@ export class RetestQueuePage {
     params: () => this.mine(),
     stream: ({ params }) => this.workApi.retestQueue(params),
   });
+
+  constructor() {
+    reloadOnIssueChanges(() => this.queue.reload());
+  }
   protected readonly groups = computed(() =>
     this.queue.hasValue() ? this.queue.value().groups : [],
   );

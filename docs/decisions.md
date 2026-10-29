@@ -347,3 +347,37 @@ new alerts/mails and background tasks configurable in the app; one database for 
   checkbox and an environment chip per latest deployment; selecting an issue fixes the project, choosing an environment
   drops/blocks issues already waiting there; composer (environment, required note, version) on the right, sticky;
   last 5 notices below it.
+
+## ADR-028 – Real time and in-app notifications (29-Oct-2026, S18)
+- **One place derives notifications and live updates from every save**: `ChangeFeed` (Application) runs inside
+  `ChangeFeedInterceptor` (EF Core SaveChanges + transaction interceptor, Infrastructure). Before the save it reads the
+  tracked changes – new/edited timeline entries, mentions, issues, sprints, notifications added by handlers – and adds
+  the Notifications rows (same transaction). After the commit it publishes the SignalR events through
+  `IRealtimePublisher`. Handlers do not notify; a rolled-back or failed save publishes nothing. EF's own save
+  transaction is not mistaken for the handler's commit (pick uses its own transaction: events go out on its commit).
+- **Rules (plan 8.3) from timeline entries**: Assigned → assignee (not during Testing: pre-assignees hear it from the
+  Testing completed notification); StatusChanged → Reopened: assignee, NeedInfo / Disputed: reporter; Deployed →
+  reporter "ready to retest" (one per issue; a deploy notice gives one per reporter and batch with the keys, linked to
+  the sprint); Comment → reporter, assignee and watchers; Mention → mentioned user (also when a comment edit adds one).
+  The actor is never notified; inactive users are skipped; per save each user gets at most one notification per issue,
+  the most important (Reopened > NeedInfo > Disputed > Assigned > Fixed > Mentioned > Comment). Title says who did
+  what ("Emily assigned PGERP-4 to you"), body = issue title + up to 200 characters of the comment / reason / note.
+  CriticalUnassigned and Overdue are scheduled checks (S19 digest / S28).
+- **History is kept**: notifications are rows, never deleted by reading. `GET /api/notifications?unread=&before=&size=`
+  (newest first, ≤ 100 per page, `before` = last id, `{items, unreadCount, hasMore}`), `GET
+  /api/notifications/unread-count`, `POST /api/notifications/read {ids | all, read = true}` (own rows only; `read:
+  false` marks unread again).
+- **Hub** `/hubs/tracker` (default sign-in policy; the browser passes the access token as `access_token` on `/hubs`
+  requests). Each connection joins `user:{id}`; issue pages call `WatchIssue(key)` / `UnwatchIssue(key)`. Events:
+  `IssueChanged {issueKey, projectId, sprintId, deleted}` and `SprintChanged {sprintId, projectId, status}` to every
+  signed-in user (all users may read all issues), `ActivityAdded {issueKey, activityId, kind}` to the issue group,
+  `NotificationCreated` (NotificationDto) and `NotificationsRead {unreadCount}` (other tabs) to the user. Events are
+  hints; clients reload from the API.
+- **Angular**: `RealtimeService` (@microsoft/signalr, auto-reconnect, token refreshed before it expires, re-joins issue
+  groups, `reconnected$` makes screens reload), `reloadOnIssueChanges()` helper (debounced) used by the issue list,
+  issue detail, My work, retest queue and deploy notice; the timeline joins its issue group and reloads the newest page
+  on ActivityAdded (not while editing a comment; older pages are kept). `NotificationStore` + top-bar
+  `app-notification-bell` (badge 99+, panel with All / Unread, mark one / all read, opens the issue or the sprint's
+  issues, one bell nudge per live arrival, none with reduced motion) and the `/notifications` page (history by IST
+  day – Today, Yesterday, 27/Oct/2026 – "Show older", mark read / unread). Type icons and rails use status / severity
+  tokens. Tests use `FakeRealtime` (provided by `provideFakeAuth`).

@@ -6,7 +6,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltip } from '@angular/material/tooltip';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
-  lucideBell,
   lucideKeyRound,
   lucideLogOut,
   lucideMoon,
@@ -15,14 +14,24 @@ import {
 } from '@ng-icons/lucide';
 import { UserAvatar } from '../../../shared/ui/user-avatar/user-avatar';
 import { AuthService } from '../../auth/auth.service';
+import { NotificationBell } from '../../notifications/notification-bell';
 import { ThemeService } from '../../theme/theme.service';
 
-/** Top bar: global search (placeholder until S15), theme toggle, notifications (S18) and user menu. */
+/** Top bar: global search (placeholder until S15), theme toggle, notifications bell and user menu. */
 @Component({
   selector: 'app-topbar',
-  imports: [MatIconButton, MatMenuModule, MatDivider, MatTooltip, NgIcon, UserAvatar, RouterLink],
+  imports: [
+    MatIconButton,
+    MatMenuModule,
+    MatDivider,
+    MatTooltip,
+    NgIcon,
+    UserAvatar,
+    RouterLink,
+    NotificationBell,
+  ],
   viewProviders: [
-    provideIcons({ lucideBell, lucideKeyRound, lucideLogOut, lucideMoon, lucideSearch, lucideSun }),
+    provideIcons({ lucideKeyRound, lucideLogOut, lucideMoon, lucideSearch, lucideSun }),
   ],
   templateUrl: './topbar.html',
   host: {

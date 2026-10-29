@@ -19,6 +19,7 @@ import { lucideCircleCheck, lucideCircleX, lucideClock } from '@ng-icons/lucide'
 import { catchError, map, of } from 'rxjs';
 import { problemMessage, problemOf } from '../../core/api/api';
 import { ToastService } from '../../core/feedback/toast.service';
+import { reloadOnIssueChanges } from '../../core/realtime/realtime.service';
 import { MastersApi } from '../../shared/data/masters.api';
 import { DeployCandidate, WorkApi } from '../../shared/data/work.api';
 import { IstDatePipe } from '../../shared/pipes/ist-date.pipe';
@@ -136,6 +137,11 @@ export class DeployNoticePage {
   });
 
   constructor() {
+    // Someone else fixed, retested or reassigned an issue: candidates and waiting retests change.
+    reloadOnIssueChanges(() => {
+      this.candidates.reload();
+      this.recent.reload();
+    });
     // Another project (or none) → the chosen environment no longer applies.
     effect(() => {
       const environments = this.environments.value() ?? [];

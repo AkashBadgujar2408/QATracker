@@ -3,6 +3,8 @@ import { of } from 'rxjs';
 import { CurrentUser } from '../app/core/auth/auth.models';
 import { AuthService } from '../app/core/auth/auth.service';
 import { Role } from '../app/shared/models/role';
+import { RealtimeService } from '../app/core/realtime/realtime.service';
+import { FakeRealtime } from './fake-realtime';
 
 export function testUser(role: Role, overrides: Partial<CurrentUser> = {}): CurrentUser {
   return {
@@ -44,9 +46,13 @@ export class FakeAuth {
 
 export function provideFakeAuth(user: CurrentUser | null): Provider[] {
   const fake = new FakeAuth();
+  const realtime = new FakeRealtime();
   fake.current.set(user);
   return [
     { provide: FakeAuth, useValue: fake },
     { provide: AuthService, useValue: fake },
+    // No hub connection in component tests.
+    { provide: FakeRealtime, useValue: realtime },
+    { provide: RealtimeService, useValue: realtime },
   ];
 }

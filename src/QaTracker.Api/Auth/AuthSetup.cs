@@ -40,7 +40,7 @@ public static class AuthSetup
                     RoleClaimType = QaClaims.Role,
                     ClockSkew = TimeSpan.FromSeconds(30),
                 };
-                jwt.Events = new JwtBearerEvents { OnTokenValidated = RejectStaleTokensAsync };
+                jwt.Events = new JwtBearerEvents { OnTokenValidated = RejectStaleTokensAsync, OnMessageReceived = ReadHubToken };
             });
 
         services.AddAuthorizationBuilder()
@@ -70,6 +70,17 @@ public static class AuthSetup
         });
 
         return services;
+    }
+
+    /// <summary>Browsers cannot set headers on WebSockets: the hub takes the access token from the query string.</summary>
+    private static Task ReadHubToken(MessageReceivedContext context)
+    {
+        if (context.HttpContext.Request.Path.StartsWithSegments("/hubs") && context.Request.Query["access_token"] is { Count: 1 } token)
+        {
+            context.Token = token[0];
+        }
+
+        return Task.CompletedTask;
     }
 
     private static AuthorizationPolicyBuilder PasswordChanged(AuthorizationPolicyBuilder policy) => policy

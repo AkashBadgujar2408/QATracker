@@ -632,3 +632,40 @@ was open, the "LIVE · LIVE" environment label.
 **Libraries added (licence):** none.
 
 **Next session:** S18 – SignalR & in-app notifications.
+
+---
+
+## S18 – SignalR & in-app notifications   (29-Oct-2026)
+
+**Done:**
+- Application `Features/Notifications`: `ChangeFeed` (notification rules of plan 8.3 + realtime events from every
+  save), list / unread count / mark read handlers; `IRealtimePublisher` + event records.
+- Infrastructure `ChangeFeedInterceptor` (save + transaction interceptor, publishes after commit), `NoRealtimePublisher`.
+- API: `TrackerHub` at `/hubs/tracker` (user + issue groups, token from the query string on /hubs),
+  `SignalRRealtimePublisher`, `NotificationsEndpoints` (`GET /api/notifications`, `/unread-count`, `POST /read`).
+  ADR-028.
+- Angular: `RealtimeService` + `reloadOnIssueChanges`, `NotificationStore`, `app-notification-bell` in the top bar,
+  `app-notification-item` (also on /dev/ui), `/notifications` page; live updates on issue list, issue detail, timeline,
+  My work, retest queue, deploy notice; `/hubs` proxied with WebSockets; `relativeTime` moved to the date pipe module.
+- Tests: 5 integration tests (who gets what and only once – testing completed, need info, mention, fixed, reopened;
+  deploy notice one per batch; history paging / read / unread / other users' ids; hub pushes comment, notification
+  with stored id, issue change and read-elsewhere over a real SignalR client; anonymous hub rejected) and 5 Angular
+  tests (link + day grouping, store live arrival + optimistic read, bell badge/panel/open, page paging + live + mirrored
+  read state).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 84 + 88 + 49 · `ng build` · `ng test` 110/110 · `ng lint`.
+In Chrome as `ui.developer` while `ui.tester` commented through the API: the badge went up live, the panel showed the
+mention and comment (read/unread, type icons), opening the mention marked it read and opened UICHK-4, a further
+comment appeared in that timeline without a reload and raised the badge; Notifications page grouped Today / Yesterday;
+dark theme checked. Fixed while checking: badge covering the bell, list alignment.
+
+**Deviations from plan:** notifications are written by one interceptor instead of "publish from handlers" (same
+effect, nothing to forget in new handlers). CriticalUnassigned / Overdue need a scheduler (S19 / S28).
+
+**Carry-over / known gaps:** email (S19); Kanban live board (S20). The local test accounts `ui.tester` /
+`ui.developer` got a new local password again (deactivate when not needed). Invalid enum in JSON → 500 still open.
+
+**Libraries added (licence):** `@microsoft/signalr` 10.0.11 (MIT, npm); `Microsoft.AspNetCore.SignalR.Client`
+10.0.14 (MIT, integration tests only). The SignalR server is part of ASP.NET Core.
+
+**Next session:** S19 – Email notifications.

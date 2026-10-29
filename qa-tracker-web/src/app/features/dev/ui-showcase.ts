@@ -1,3 +1,5 @@
+import { NOTIFICATION_META, NotificationItem } from '../../core/notifications/notification-item';
+import { AppNotification, NotificationType } from '../../shared/data/notifications.api';
 import { IssueTimeline } from '../../shared/timeline/issue-timeline';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RichTextEditor } from '../../shared/ui/rich-text-editor/rich-text-editor';
@@ -61,8 +63,14 @@ interface Swatch {
     PasteDropzone,
     RichTextEditor,
     IssueTimeline,
+    NotificationItem,
     ReactiveFormsModule,
   ],
+  styles: `
+    .qa-notes > app-notification-item + app-notification-item {
+      border-top: 1px solid var(--qa-border);
+    }
+  `,
   templateUrl: './ui-showcase.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -74,6 +82,30 @@ export class UiShowcase {
   /** app-rich-text-editor demo: the value is sanitised HTML (null when empty). */
   /** app-issue-timeline demo: live data of an existing issue (pick one with comments). */
   protected readonly timelineKey = signal('PGERP-1');
+
+  /** app-notification-item demo: every type once, neutral sample names. */
+  protected readonly sampleNotifications = signal<readonly AppNotification[]>(
+    (Object.keys(NOTIFICATION_META) as NotificationType[]).map((type, i) => ({
+      id: i + 1,
+      type,
+      title: `${NOTIFICATION_META[type].label}: John updated DEMO-${i + 1}`,
+      body:
+        i % 3 === 0
+          ? null
+          : 'Invoice total ignores the discount when the quantity is changed after saving.',
+      issueKey: type === 'TestingCompleted' ? null : `DEMO-${i + 1}`,
+      sprintId: 1,
+      projectId: 1,
+      isRead: i % 2 === 1,
+      createdAt: new Date(Date.now() - i * 47 * 60_000).toISOString(),
+    })),
+  );
+
+  protected toggleSample(n: AppNotification): void {
+    this.sampleNotifications.update((items) =>
+      items.map((i) => (i.id === n.id ? { ...i, isRead: !i.isRead } : i)),
+    );
+  }
 
   protected readonly richText = new FormControl<string | null>(
     '<p>Open <b>Sales Return Entry</b> and:</p><ol><li>Pick tomorrow as the return date</li><li>Press <code>Save</code></li></ol>',

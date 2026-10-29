@@ -58,6 +58,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/work/my-work-page').then((m) => m.MyWorkPage),
       },
       {
+        path: 'notifications',
+        title: 'Notifications',
+        data: { breadcrumb: 'Notifications' },
+        loadComponent: () =>
+          import('./features/notifications/notifications-page').then((m) => m.NotificationsPage),
+      },
+      {
         path: 'deploy-notice',
         title: 'Deploy notice',
         data: { breadcrumb: 'Deploy notice', roles: ['Developer', 'Admin'] satisfies Role[] },

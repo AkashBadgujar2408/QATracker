@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { problemMessage, problemOf } from '../../core/api/api';
 import { ToastService } from '../../core/feedback/toast.service';
+import { reloadOnIssueChanges } from '../../core/realtime/realtime.service';
 import { IssuesApi } from '../../shared/data/issues.api';
 import { MyWork, WorkApi, WorkItem } from '../../shared/data/work.api';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
@@ -80,6 +81,10 @@ export class MyWorkPage {
   );
 
   protected readonly work = rxResource({ stream: () => this.workApi.myWork() });
+
+  constructor() {
+    reloadOnIssueChanges(() => this.work.reload());
+  }
   protected readonly current = computed(() => WORK_TABS.find((t) => t.id === this.tab())!);
   protected readonly queue = computed(() =>
     this.work.hasValue() ? this.work.value()[this.current().queue] : null,

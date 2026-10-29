@@ -3,5 +3,11 @@
     "target": "http://localhost:5029",
     "secure": false,
     "changeOrigin": false
+  },
+  "/hubs": {
+    "target": "http://localhost:5029",
+    "secure": false,
+    "changeOrigin": false,
+    "ws": true
   }
 }

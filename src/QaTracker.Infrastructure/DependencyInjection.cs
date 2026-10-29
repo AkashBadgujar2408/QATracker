@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using QaTracker.Application.Abstractions;
+using QaTracker.Application.Features.Notifications;
 using QaTracker.Infrastructure.Files;
 using QaTracker.Infrastructure.Persistence;
 using QaTracker.Infrastructure.Persistence.Seeding;
@@ -19,7 +21,13 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString(ConnectionStringName)
             ?? throw new InvalidOperationException($"Connection string '{ConnectionStringName}' is missing (appsettings.json).");
 
-        services.AddDbContext<QaTrackerDbContext>(options => options.UseSqlServer(connectionString));
+        // Notifications and live updates are derived from every save (ADR-028).
+        services.AddScoped<ChangeFeed>();
+        services.AddScoped<ChangeFeedInterceptor>();
+        services.TryAddSingleton<IRealtimePublisher, NoRealtimePublisher>();
+        services.AddDbContext<QaTrackerDbContext>((sp, options) => options
+            .UseSqlServer(connectionString)
+            .AddInterceptors(sp.GetRequiredService<ChangeFeedInterceptor>()));
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<QaTrackerDbContext>());
         services.AddScoped<IIssueNumbering, IssueNumbering>();
         services.AddSingleton<IRichTextSanitizer, RichTextSanitizer>();

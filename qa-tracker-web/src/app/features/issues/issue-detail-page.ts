@@ -24,6 +24,7 @@ import { problemMessage, problemOf } from '../../core/api/api';
 import { AuthService } from '../../core/auth/auth.service';
 import { ConfirmService } from '../../core/feedback/confirm.service';
 import { ToastService } from '../../core/feedback/toast.service';
+import { reloadOnIssueChanges } from '../../core/realtime/realtime.service';
 import { BreadcrumbService } from '../../core/layout/breadcrumb.service';
 import { IssueAttachments } from '../../shared/attachments/issue-attachments';
 import {
@@ -252,6 +253,11 @@ export class IssueDetailPage {
   private readonly timeline = viewChild(IssueTimeline);
 
   constructor() {
+    // Someone else changed this issue: reload it (keeps the page, refreshes allowed actions and row version).
+    reloadOnIssueChanges(
+      () => this.issue.reload(),
+      (e) => e.issueKey === this.key().trim().toUpperCase(),
+    );
     effect(() => {
       const issue = this.current();
       this.breadcrumbs.set([

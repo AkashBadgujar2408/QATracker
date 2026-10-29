@@ -26,6 +26,7 @@ import { lucideBookmark, lucideSearch, lucideTrash2, lucideX } from '@ng-icons/l
 import { Subject, catchError, debounceTime, firstValueFrom, of } from 'rxjs';
 import { problemMessage } from '../../core/api/api';
 import { ToastService } from '../../core/feedback/toast.service';
+import { reloadOnIssueChanges } from '../../core/realtime/realtime.service';
 import { IssueListItem, IssuesApi } from '../../shared/data/issues.api';
 import { MastersApi } from '../../shared/data/masters.api';
 import { SprintsApi } from '../../shared/data/sprints.api';
@@ -220,6 +221,7 @@ export class IssueListPage {
   );
 
   constructor() {
+    reloadOnIssueChanges(() => this.result.reload());
     this.searchInput
       .pipe(debounceTime(300), takeUntilDestroyed())
       .subscribe((q) => this.update({ q }));

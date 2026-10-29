@@ -26,14 +26,7 @@
     <ng-icon [name]="theme.mode() === 'dark' ? 'lucideSun' : 'lucideMoon'" size="20" />
   </button>
 
-  <button
-    matIconButton
-    type="button"
-    aria-label="Notifications"
-    matTooltip="Notifications (coming in S18)"
-  >
-    <ng-icon name="lucideBell" size="20" />
-  </button>
+  <app-notification-bell />
 
   <button
     type="button"

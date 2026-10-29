@@ -281,4 +281,21 @@
     </p>
     <app-issue-timeline [issueKey]="timelineKey()" />
   </section>
+
+  <section class="qa-card p-6">
+    <h2 class="mt-0 mb-2 text-lg font-semibold">app-notification-item</h2>
+    <p class="mt-0 mb-4 text-sm text-muted">
+      One row per notification type (bell panel and Notifications page). Unread rows carry the
+      type's rail and a filled dot; the dot toggles read / unread.
+    </p>
+    <div class="qa-notes overflow-hidden rounded-card border border-border">
+      @for (n of sampleNotifications(); track n.id) {
+        <app-notification-item
+          [item]="n"
+          (toggled)="toggleSample($event)"
+          (opened)="toggleSample($event)"
+        />
+      }
+    </div>
+  </section>
 </div>

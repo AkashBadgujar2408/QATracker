@@ -9,6 +9,8 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, debounceTime, filter } from 'rxjs';
 import { MatButton } from '@angular/material/button';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -26,9 +28,10 @@ import {
   lucideUserPlus,
 } from '@ng-icons/lucide';
 import { problemMessage } from '../../core/api/api';
+import { RealtimeService } from '../../core/realtime/realtime.service';
 import { UserLookup } from '../data/masters.api';
 import { Activity, ActivityKind, Mention, TimelineApi, TimelineFilter } from '../data/timeline.api';
-import { IstDatePipe, formatIst } from '../pipes/ist-date.pipe';
+import { IstDatePipe, relativeTime } from '../pipes/ist-date.pipe';
 import { AttachmentGallery } from '../ui/attachment-gallery/attachment-gallery';
 import { SkeletonLines } from '../ui/skeleton/skeleton';
 import { UserAvatar } from '../ui/user-avatar/user-avatar';
@@ -61,20 +64,7 @@ export function commentSegments(body: string, mentions: readonly Mention[]): Seg
   return segments;
 }
 
-/** "just now", "5 min ago", "3 h ago", then the IST date and time. */
-export function relativeTime(iso: string, now = new Date()): string {
-  const minutes = Math.floor((now.getTime() - new Date(iso).getTime()) / 60_000);
-  if (minutes < 1) {
-    return 'just now';
-  }
-  if (minutes < 60) {
-    return `${minutes} min ago`;
-  }
-  if (minutes < 24 * 60) {
-    return `${Math.floor(minutes / 60)} h ago`;
-  }
-  return formatIst(iso, 'datetime');
-}
+export { relativeTime } from '../pipes/ist-date.pipe';
 
 const ICONS: Readonly<Record<ActivityKind, string>> = {
   Created: 'lucideFilePlus',
@@ -297,6 +287,7 @@ export class IssueTimeline {
   readonly users = input<readonly UserLookup[]>([]);
 
   private readonly api = inject(TimelineApi);
+  private readonly realtime = inject(RealtimeService);
   private readonly composer = viewChild.required(CommentComposer);
 
   protected readonly filter = signal<TimelineFilter>('All');
@@ -325,6 +316,44 @@ export class IssueTimeline {
       this.issueKey();
       this.filter();
       untracked(() => this.reload());
+    });
+    // Live: join the issue's group while shown; new or edited entries by others reload the newest page.
+    effect((onCleanup) => {
+      const key = this.issueKey();
+      onCleanup(untracked(() => this.realtime.watchIssue(key)));
+    });
+    const live = new Subject<void>();
+    this.realtime.activityAdded$
+      .pipe(
+        filter((e) => e.issueKey === this.issueKey().trim().toUpperCase()),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => live.next());
+    this.realtime.reconnected$.pipe(takeUntilDestroyed()).subscribe(() => live.next());
+    live.pipe(debounceTime(300), takeUntilDestroyed()).subscribe(() => this.refreshLive());
+  }
+
+  /** Live reload, unless a comment is being edited (that would drop the text). Keeps older pages loaded. */
+  private refreshLive(): void {
+    if (this.editingId() !== null || this.loading()) {
+      return;
+    }
+    if (this.items().length > 0 && this.hasMore()) {
+      this.mergeNewest();
+      return;
+    }
+    this.reload();
+  }
+
+  /** Replace the newest page in place so "Show older" pages stay. */
+  private mergeNewest(): void {
+    this.api.activities(this.issueKey(), this.filter()).subscribe({
+      next: (page) => {
+        this.now.set(new Date());
+        const firstNew = page.items[0]?.id ?? Number.MAX_SAFE_INTEGER;
+        this.items.update((items) => [...items.filter((i) => i.id < firstNew), ...page.items]);
+      },
+      error: () => undefined,
     });
   }
 
