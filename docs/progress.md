@@ -932,3 +932,30 @@ Local `ui.*` accounts have a new local password (deactivate when not needed). In
 **Libraries added (licence):** none (ClosedXML from S25).
 
 **Next session:** S27 – Import UI.
+
+---
+
+## S27 – Import UI   (29-Oct-2026) – partly done, carry-over S27b
+
+**Done:**
+- Import wizard `features/import` (`import-page`, `import-edits`) on `/import` with a sidebar item for testers and
+  admins; `shared/data/import.api.ts`. ADR-037.
+- Tests: 4 helper tests (corrections only for changes, unassign, warnings settled by edits, file checks) and 2 page
+  tests (drop → remembered project's Testing sprint → preview request → review counts and "To review" filter → skip a
+  row → commit body → summary text and issue-list link; a rejected file and a 400 from the preview shown inline).
+- Sample workbook generator in the legacy layout: `tests/fixtures/legacy-workbook/make-sample-workbook.cs`.
+- Fixed while testing: a missing space in "Into Sprint 1 – UAT (in Testing)" (Angular drops whitespace-only nodes).
+
+**Verified:** `ng build` (initial 723 kB) · `ng test` 163/163 · `ng lint`. No backend change (`dotnet test` 269 from
+S26).
+
+**Not done (stopped on request – moved to S27b):** the card's done-when, an end-to-end import in the browser, has not
+been run yet; no Chrome check of the wizard (light/dark, phone width). Milestone M5 waits for S27b.
+
+**Carry-over / known gaps:** S27b (plan 16.3). The anonymised real workbook is still needed for the S26 ≥ 95 %
+target. Local `ui.*` accounts have a new local password (deactivate when not needed). Invalid enum in JSON → 500 still
+open (S30).
+
+**Libraries added (licence):** none.
+
+**Next session:** S27b – Import end-to-end check, then S28.

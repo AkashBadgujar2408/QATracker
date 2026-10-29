@@ -1,0 +1,508 @@
+<app-page-header
+  title="Import from Excel"
+  subtitle="Bring the legacy testing workbook into a sprint: each sheet becomes a module, each numbered block an issue."
+/>
+
+<ol class="qa-steps" aria-label="Import steps">
+  @for (s of steps; track s.id; let i = $index) {
+    <li>
+      <button
+        type="button"
+        class="qa-step"
+        [class.qa-step-current]="step() === s.id"
+        [class.qa-step-done]="i < stepIndex()"
+        [attr.aria-current]="step() === s.id ? 'step' : null"
+        [disabled]="step() === 'done' || i > stepIndex()"
+        (click)="goTo(s.id)"
+      >
+        <span class="qa-step-number" aria-hidden="true">
+          @if (i < stepIndex()) {
+            <ng-icon name="lucideCircleCheck" size="16" />
+          } @else {
+            {{ i + 1 }}
+          }
+        </span>
+        {{ s.label }}
+      </button>
+    </li>
+  }
+</ol>
+
+@switch (step()) {
+  <!-- 1 · Workbook -->
+  @case ('file') {
+    <section class="qa-card p-5" aria-labelledby="step-file">
+      <h2 id="step-file" class="m-0 mb-1 text-md font-semibold">Choose the workbook</h2>
+      <p class="m-0 mb-4 text-sm text-muted">
+        The .xlsx testing sheet with one tab per module, issues written as “1. Title” with Actual /
+        Expected Result, “Severity: … Priority: …”, Resolve By, Is Complete, Pending Reason and
+        Valid / Invalid. Screenshots come along.
+      </p>
+
+      @if (file(); as f) {
+        <div class="qa-file">
+          <ng-icon name="lucideFileSpreadsheet" size="28" class="text-status-verified" />
+          <div class="min-w-0 flex-1">
+            <div class="truncate font-medium">{{ f.name }}</div>
+            <div class="text-sm text-muted">{{ f.size | fileSize }}</div>
+          </div>
+          <button matButton type="button" (click)="clearFile()">
+            <ng-icon name="lucideX" size="16" class="mr-1" />
+            Choose another
+          </button>
+        </div>
+      } @else {
+        <label
+          class="qa-drop"
+          [class.qa-drop-active]="dragging()"
+          (dragover)="dragOver($event)"
+          (dragleave)="dragging.set(false)"
+          (drop)="drop($event)"
+        >
+          <ng-icon name="lucideUpload" size="28" class="text-muted" />
+          <span class="font-medium"
+            >Drop the workbook here or <span class="text-primary">browse</span></span
+          >
+          <span class="text-sm text-muted">Excel .xlsx, up to 30 MB</span>
+          <input
+            class="sr-only"
+            type="file"
+            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            (change)="chooseFile($event)"
+          />
+        </label>
+      }
+      @if (fileError(); as message) {
+        <p role="alert" class="m-0 mt-3 text-sm text-severity-critical">{{ message }}</p>
+      }
+
+      <div class="mt-5 flex justify-end">
+        <button matButton="filled" type="button" [disabled]="!file()" (click)="goTo('target')">
+          Next: where to
+        </button>
+      </div>
+    </section>
+  }
+
+  <!-- 2 · Where to -->
+  @case ('target') {
+    <section class="qa-card p-5" aria-labelledby="step-target">
+      <h2 id="step-target" class="m-0 mb-1 text-md font-semibold">Where should the issues go?</h2>
+      <p class="m-0 mb-4 text-sm text-muted">
+        Issues are added to the project's sprint in Testing. Add a client or project here if it does
+        not exist yet.
+      </p>
+
+      <div class="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+        <app-entity-picker
+          label="Client"
+          noun="client"
+          [items]="clientItems()"
+          [loading]="cascade.isLoading() && !cascade.hasValue()"
+          [quickAdd]="addClient"
+          [value]="clientId()"
+          (valueChange)="chooseClient($event)"
+          (created)="cascade.reload()"
+        />
+        <app-entity-picker
+          label="Project"
+          noun="project"
+          [items]="projectItems()"
+          [disabled]="!clientId()"
+          [quickAdd]="addProject"
+          [value]="projectId()"
+          [hint]="clientId() ? '' : 'Choose a client first'"
+          (valueChange)="chooseProject($event)"
+          (created)="cascade.reload()"
+        />
+      </div>
+
+      @if (projectId()) {
+        <div class="qa-target" aria-live="polite">
+          @if (sprints.isLoading()) {
+            <div class="qa-skeleton h-5 w-64 rounded"></div>
+          } @else if (sprint(); as s) {
+            <span class="size-2 shrink-0 rounded-full bg-sprint-testing" aria-hidden="true"></span>
+            <span>
+              Into <strong>{{ s.name }}</strong
+              ><span class="text-muted"> (in Testing)</span>
+            </span>
+          } @else {
+            <span class="text-muted">This project has no sprint in Testing.</span>
+            <button matButton="tonal" type="button" (click)="startSprint()">
+              <ng-icon name="lucidePlus" size="16" class="mr-1" />
+              Start new sprint
+            </button>
+          }
+        </div>
+      }
+
+      @if (readError(); as message) {
+        <p role="alert" class="m-0 mt-3 text-sm text-severity-critical">{{ message }}</p>
+      }
+
+      <div class="mt-5 flex flex-wrap justify-between gap-2">
+        <button matButton type="button" (click)="goTo('file')">Back</button>
+        <button
+          matButton="filled"
+          type="button"
+          [disabled]="!sprint() || reading()"
+          [attr.aria-busy]="reading()"
+          (click)="readWorkbook()"
+        >
+          {{ reading() ? 'Reading the workbook…' : 'Read workbook' }}
+        </button>
+      </div>
+    </section>
+  }
+
+  <!-- 3 · Review -->
+  @case ('review') {
+    @if (preview(); as p) {
+      <section class="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4" aria-label="Import summary">
+        <div class="qa-stat">
+          <span class="text-sm text-muted">Issues found</span>
+          <strong>{{ counts().total }}</strong>
+          <span class="text-sm text-muted">in {{ p.modules.length }} sheets</span>
+        </div>
+        <div class="qa-stat">
+          <span class="text-sm text-muted">Ready as read</span>
+          <strong>{{ counts().readyPercent }}%</strong>
+          <span class="text-sm text-muted"
+            >{{ counts().ready }} of {{ counts().included }} to import</span
+          >
+        </div>
+        <div class="qa-stat" [class.qa-stat-attention]="counts().needsReview > 0">
+          <span class="text-sm text-muted">To review</span>
+          <strong class="flex items-center gap-2">
+            {{ counts().needsReview }}
+            @if (counts().needsReview > 0) {
+              <ng-icon
+                name="lucideTriangleAlert"
+                size="18"
+                class="text-severity-medium"
+                aria-label="Needs review"
+                role="img"
+              />
+            }
+          </strong>
+          <span class="text-sm text-muted">rows with warnings</span>
+        </div>
+        <div class="qa-stat">
+          <span class="text-sm text-muted">Screenshots</span>
+          <strong>{{ counts().images }}</strong>
+          <span class="text-sm text-muted">{{ counts().skipped }} rows skipped</span>
+        </div>
+      </section>
+
+      @if (p.warnings.length) {
+        <section class="qa-card mb-4 p-4" aria-label="Workbook notes">
+          <ul class="m-0 list-none space-y-1 p-0 text-sm">
+            @for (w of p.warnings; track w) {
+              <li class="flex gap-2">
+                <ng-icon
+                  name="lucideTriangleAlert"
+                  size="16"
+                  class="mt-0.5 shrink-0 text-severity-medium"
+                />
+                {{ w }}
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <section class="qa-card mb-4 p-4" aria-labelledby="modules-title">
+        <h2 id="modules-title" class="m-0 mb-1 text-md font-semibold">Modules</h2>
+        <p class="m-0 mb-3 text-sm text-muted">
+          Each sheet becomes a module of {{ p.projectKey }}. Rename it here; a name that already
+          exists is reused.
+        </p>
+        <div class="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+          @for (m of p.modules; track m.sheetIndex) {
+            <mat-form-field appearance="outline">
+              <mat-label>{{ m.sheet }} ({{ m.issues }})</mat-label>
+              <input
+                matInput
+                maxlength="150"
+                [value]="moduleName(m.sheetIndex)"
+                (input)="renameModule(m.sheetIndex, $any($event.target).value)"
+              />
+              <span matTextSuffix class="ml-2 text-xs text-muted">
+                {{ m.existingModuleId && moduleName(m.sheetIndex) === m.name ? 'existing' : 'new' }}
+              </span>
+            </mat-form-field>
+          }
+        </div>
+      </section>
+
+      <section class="qa-card mb-4" aria-labelledby="rows-title">
+        <div class="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
+          <h2 id="rows-title" class="m-0 flex-1 text-md font-semibold">Issues</h2>
+          <mat-button-toggle-group
+            hideSingleSelectionIndicator
+            aria-label="Rows to show"
+            [value]="filter()"
+            (change)="filter.set($event.value)"
+          >
+            <mat-button-toggle value="warnings"
+              >To review ({{ counts().needsReview }})</mat-button-toggle
+            >
+            <mat-button-toggle value="all">All ({{ counts().total }})</mat-button-toggle>
+          </mat-button-toggle-group>
+          <button matButton type="button" (click)="setAll(true)">Include all</button>
+        </div>
+
+        @if (shownRows().length === 0) {
+          <p class="m-0 flex items-center gap-2 p-6 text-sm text-muted">
+            <ng-icon name="lucideCircleCheck" size="18" class="text-status-verified" />
+            Nothing left to review – every included row reads cleanly.
+          </p>
+        } @else {
+          <div class="qa-grid-scroll">
+            <table class="qa-grid">
+              <thead>
+                <tr>
+                  <th scope="col"><span class="sr-only">Import</span></th>
+                  <th scope="col">Row</th>
+                  <th scope="col" class="min-w-72">Issue</th>
+                  <th scope="col">Severity</th>
+                  <th scope="col">Priority</th>
+                  <th scope="col">Assignee</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" class="min-w-64">Warnings</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of shownRows(); track r.row.id) {
+                  <tr [class.qa-skipped]="!r.edit.include">
+                    <td>
+                      <mat-checkbox
+                        [checked]="r.edit.include"
+                        [aria-label]="'Import ' + r.row.title"
+                        (change)="edit(r.row, { include: $event.checked })"
+                      />
+                    </td>
+                    <td class="whitespace-nowrap text-sm text-muted">
+                      <div>{{ r.row.module }}</div>
+                      <div>row {{ r.row.row }}</div>
+                    </td>
+                    <td>
+                      <input
+                        class="qa-cell-input font-medium"
+                        maxlength="200"
+                        [attr.aria-label]="'Title of row ' + r.row.id"
+                        [value]="r.edit.title"
+                        [disabled]="!r.edit.include"
+                        (change)="edit(r.row, { title: $any($event.target).value })"
+                      />
+                      <div class="qa-actual" [title]="r.row.actualResult">
+                        {{ r.row.actualResult }}
+                      </div>
+                      <div class="mt-1 flex flex-wrap gap-3 text-xs text-muted">
+                        @if (r.row.images) {
+                          <span class="flex items-center gap-1">
+                            <ng-icon name="lucideImage" size="14" />{{ r.row.images }} screenshot{{
+                              r.row.images === 1 ? '' : 's'
+                            }}
+                          </span>
+                        }
+                        @if (r.row.comments.length) {
+                          <span class="flex items-center gap-1" [title]="r.row.comments.join('\n')">
+                            <ng-icon name="lucideMessageSquare" size="14" />{{
+                              r.row.comments.length
+                            }}
+                            comment{{ r.row.comments.length === 1 ? '' : 's' }}
+                          </span>
+                        }
+                      </div>
+                    </td>
+                    <td>
+                      <mat-select
+                        class="qa-cell-select"
+                        panelWidth=""
+                        [aria-label]="'Severity of row ' + r.row.id"
+                        [value]="r.edit.severity"
+                        [disabled]="!r.edit.include"
+                        (selectionChange)="edit(r.row, { severity: $event.value })"
+                      >
+                        @for (s of severities; track s) {
+                          <mat-option [value]="s">
+                            <span class="flex items-center gap-1.5">
+                              <span
+                                class="size-2 rounded-full"
+                                [style.background]="'var(' + severityMeta[s].colorToken + ')'"
+                              ></span>
+                              {{ severityMeta[s].label }}
+                            </span>
+                          </mat-option>
+                        }
+                      </mat-select>
+                    </td>
+                    <td>
+                      <mat-select
+                        class="qa-cell-select"
+                        panelWidth=""
+                        [aria-label]="'Priority of row ' + r.row.id"
+                        [value]="r.edit.priority"
+                        [disabled]="!r.edit.include"
+                        (selectionChange)="edit(r.row, { priority: $event.value })"
+                      >
+                        @for (pr of priorities; track pr) {
+                          <mat-option [value]="pr">{{ priorityMeta[pr].label }}</mat-option>
+                        }
+                      </mat-select>
+                    </td>
+                    <td>
+                      <mat-select
+                        class="qa-cell-select"
+                        panelWidth=""
+                        placeholder="Unassigned"
+                        [aria-label]="'Assignee of row ' + r.row.id"
+                        [value]="r.edit.assigneeId"
+                        [disabled]="!r.edit.include"
+                        (selectionChange)="edit(r.row, { assigneeId: $event.value })"
+                      >
+                        <mat-option [value]="null">Unassigned</mat-option>
+                        @for (a of assignees(); track a.id) {
+                          <mat-option [value]="a.id">{{ a.name }}</mat-option>
+                        }
+                      </mat-select>
+                      @if (r.row.resolveBy) {
+                        <div class="mt-1 text-xs text-muted">Sheet: {{ r.row.resolveBy }}</div>
+                      }
+                    </td>
+                    <td>
+                      <app-status-pill [status]="r.status" />
+                      @if (r.row.holdReason) {
+                        <div class="mt-1 text-xs text-muted">{{ r.row.holdReason }}</div>
+                      }
+                    </td>
+                    <td>
+                      @if (r.warnings.length) {
+                        <ul class="m-0 list-none space-y-1 p-0 text-sm">
+                          @for (w of r.warnings; track w) {
+                            <li class="flex gap-1.5">
+                              <ng-icon
+                                name="lucideTriangleAlert"
+                                size="14"
+                                class="mt-0.5 shrink-0 text-severity-medium"
+                              />
+                              {{ w }}
+                            </li>
+                          }
+                        </ul>
+                      } @else {
+                        <span class="flex items-center gap-1.5 text-sm text-muted">
+                          <ng-icon
+                            name="lucideCircleCheck"
+                            size="14"
+                            class="text-status-verified"
+                          />
+                          Ready
+                        </span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      @if (commitError(); as message) {
+        <p role="alert" class="qa-card m-0 mb-4 p-4 text-sm text-severity-critical">
+          {{ message }}
+        </p>
+      }
+
+      <div class="qa-commit-bar">
+        <button matButton type="button" (click)="goTo('target')">Back</button>
+        <span class="flex-1 text-sm text-muted">
+          {{ counts().included }} issues into {{ p.projectKey }} · {{ p.sprintName }}
+          @if (counts().needsReview > 0) {
+            – {{ counts().needsReview }} with warnings are imported as shown
+          }
+        </span>
+        <button
+          matButton="filled"
+          type="button"
+          [disabled]="counts().included === 0 || committing()"
+          [attr.aria-busy]="committing()"
+          (click)="commit()"
+        >
+          {{ committing() ? 'Importing…' : 'Import ' + counts().included + ' issues' }}
+        </button>
+      </div>
+    }
+  }
+
+  <!-- 4 · Done -->
+  @case ('done') {
+    @if (result(); as r) {
+      <section class="qa-card p-6" aria-labelledby="step-done">
+        <div class="flex items-start gap-3">
+          <ng-icon name="lucideCircleCheck" size="28" class="shrink-0 text-status-verified" />
+          <div class="min-w-0 flex-1">
+            <h2 id="step-done" class="m-0 text-lg font-semibold">
+              {{ r.created }} issues imported into {{ committedSprint()?.name }}
+            </h2>
+            <p class="m-0 mt-1 text-muted">
+              @if (r.firstKey) {
+                {{ r.firstKey }}{{ r.lastKey !== r.firstKey ? ' – ' + r.lastKey : '' }} ·
+              }
+              {{ r.attachments }} screenshots · {{ r.modulesCreated }} new modules
+              @if (r.skipped) {
+                · {{ r.skipped }} rows skipped
+              }
+            </p>
+          </div>
+        </div>
+
+        @if (r.warnings.length) {
+          <ul class="m-0 mt-4 list-none space-y-1 p-0 text-sm">
+            @for (w of r.warnings; track w) {
+              <li class="flex gap-2">
+                <ng-icon
+                  name="lucideTriangleAlert"
+                  size="16"
+                  class="mt-0.5 shrink-0 text-severity-medium"
+                />
+                {{ w }}
+              </li>
+            }
+          </ul>
+        }
+
+        <div class="mt-6 flex flex-wrap gap-2">
+          <a
+            matButton="filled"
+            routerLink="/issues"
+            [queryParams]="{
+              client: clientId(),
+              project: projectId(),
+              sprint: committedSprint()?.id,
+              sort: 'key',
+            }"
+            >Open the imported issues</a
+          >
+          @if (r.firstKey) {
+            <a matButton="outlined" [routerLink]="['/issues', r.firstKey]">Open {{ r.firstKey }}</a>
+          }
+          <a
+            matButton="outlined"
+            routerLink="/testing"
+            [queryParams]="{
+              client: clientId(),
+              project: projectId(),
+              sprint: committedSprint()?.id,
+            }"
+            >Go to Testing</a
+          >
+          <button matButton type="button" (click)="startOver()">Import another workbook</button>
+        </div>
+      </section>
+    }
+  }
+}

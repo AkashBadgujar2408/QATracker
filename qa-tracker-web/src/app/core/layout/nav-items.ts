@@ -43,6 +43,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     ],
   },
   { label: 'Masters', icon: 'lucideFolderTree', link: '/masters', roles: ['Tester', 'Admin'] },
+  {
+    label: 'Import',
+    icon: 'lucideFileUp',
+    link: '/import',
+    roles: ['Tester', 'Admin'],
+  },
   { label: 'Users', icon: 'lucideSettings', link: '/admin/users', roles: ['Admin'] },
   { label: 'E-mail', icon: 'lucideMail', link: '/admin/email', roles: ['Admin'] },
 ];

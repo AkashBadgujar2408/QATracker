@@ -128,6 +128,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/work/retest-queue-page').then((m) => m.RetestQueuePage),
       },
+      {
+        path: 'import',
+        title: 'Import from Excel',
+        data: { breadcrumb: 'Import from Excel', roles: ['Tester', 'Admin'] satisfies Role[] },
+        loadComponent: () => import('./features/import/import-page').then((m) => m.ImportPage),
+      },
       placeholder('sprints', 'Sprints', 'S08 / S29'),
       {
         path: 'dashboards',

@@ -598,3 +598,16 @@ new alerts/mails and background tasks configurable in the app; one database for 
   Screenshots go through `FileInspector` and `AttachmentWriter` (thumbnail + Attachment activity); one that is not an
   image is skipped with a result warning. Importing sets initial states directly – it is creation, not a workflow
   transition, so it does not go through IssueWorkflow.
+
+## ADR-037 – Import wizard (29-Oct-2026, S27)
+- `/import` (Tester/Admin, sidebar "Import"): four steps on one page – Workbook (drop or browse, .xlsx ≤ 30 MB checked
+  in the browser too) → Where to (client / project pickers with quick-add, remembered from the Testing screen; the
+  target is the project's sprint in Testing, with "Start new sprint" when there is none) → Review → Done.
+- **Review**: four counters (issues found, ready as read %, to review, screenshots / skipped), sheet notes, a module
+  name per sheet ("existing" / "new"), and the grid – include checkbox, sheet + row, editable title, actual result,
+  screenshot / comment counts, severity / priority / assignee selects, status (New ↔ Assigned follows the assignee),
+  warnings. Opens on "To review" when rows have warnings. An edit settles its warning in the grid exactly as the API
+  does on commit. The commit sends only changes (skips, edited fields, unassign, renamed modules).
+- **Done**: created / skipped / screenshots / new modules, result warnings, links to the imported issues (issue list
+  filtered by the sprint, sorted by key), the first issue and the Testing screen.
+- The grid scrolls sideways inside its card on narrow screens; the commit bar sticks to the bottom.

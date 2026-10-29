@@ -682,6 +682,7 @@ The build is split into **8 phases** and **32 sessions**. Each session is design
 | S25 | P6 Reports & import | Sprint report export | S21 |
 | S26 | P6 Reports & import | Excel import API | S09, S10 |
 | S27 | P6 Reports & import | Import UI | S26 |
+| S27b | P6 Reports & import | Import end-to-end check (carry-over of S27) | S27 |
 | S28 | P7 Hardening | SLA, overdue & settings | S19 |
 | S29 | P7 Hardening | Sprint close & carry forward | S08, S13 |
 | S30 | P7 Hardening | Security & integration test pass | S29 |
@@ -1073,6 +1074,25 @@ The build is split into **8 phases** and **32 sessions**. Each session is design
 **Done when**
 
 - Legacy workbook imported into a test project end-to-end. **Milestone M5.**
+
+### S27b · Import end-to-end check (carry-over of S27)
+
+**Goal:** Prove the import wizard end-to-end and close Milestone M5. · **Depends on:** S27
+
+**Tasks**
+
+- Start API + web; as a tester in Chrome run `/import` with the sample workbook
+  (`dotnet run tests/fixtures/legacy-workbook/make-sample-workbook.cs -- "<path>.xlsx"`): upload → client/project
+  (quick-add a test project) → start a sprint if needed → review (fix a warning, skip a row, rename a module) →
+  import → check the summary links, the issue list, statuses, screenshots and comments. Check dark theme and phone
+  width (grid scrolls inside its card, no page scroll).
+- Run the preview on the anonymised real "Pardi Gears Testing Sheet" if it is available; tune the parser for the
+  ≥ 95 % rows-without-correction target (S26 done-when) and add it as a test fixture.
+- Fix what the check finds; update progress.md.
+
+**Done when**
+
+- A legacy workbook is imported into a test project end-to-end in the browser. **Milestone M5.**
 
 **Phase 7 – Hardening & go-live (S28–S32)**
 
