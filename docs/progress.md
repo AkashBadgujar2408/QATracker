@@ -743,3 +743,28 @@ Dark theme not re-checked in the browser (tab group closed during the check) –
 **Libraries added (licence):** none (`@angular/cdk/drag-drop` is part of @angular/cdk, already used).
 
 **Next session:** S21 – Analytics API.
+
+---
+
+## S21 – Analytics API   (29-Oct-2026)
+
+**Done:**
+- Domain: `WorkingCalendar.WorkingHoursBetween / WorkingDaysBetween / IstDate`.
+- Application `Features/Analytics`: shared filter + range + status groups (`AnalyticsCommon`), `OverviewHandler`
+  (9.1), `SprintDashboardHandler` (9.2 incl. burn-down and sprint comparison), `DevelopersHandler` (9.3 incl. My
+  stats), `QualityHandler` (9.4), `ClientsHandler` (9.5 incl. health rule). API `AnalyticsEndpoints`. ADR-031.
+- Tests: 4 domain tests (working hours between, Sundays/holidays, inverse of AddWorkingHours, IST date) and 4
+  integration tests (a played sprint – closed, reopened, rejected, untouched – checked on all five dashboards; overdue
+  turns the client amber; filter validation and 404; health and ageing rules; 5 000 issues < 800 ms per endpoint).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 236/236. Timings on 5 000 issues (local SQL Express): overview
+≈ 250 ms, sprint ≈ 180 ms, developers / quality / clients 30–60 ms.
+
+**Deviations from plan:** the date range applies to time-based widgets only (ADR-031). Workload counts Reopened under
+Assigned.
+
+**Carry-over / known gaps:** none for the API; the UI comes in S22–S24. Invalid enum in JSON → 500 still open (S30).
+
+**Libraries added (licence):** none.
+
+**Next session:** S22 – Chart components & Overview dashboard.

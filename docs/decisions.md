@@ -432,3 +432,34 @@ new alerts/mails and background tasks configurable in the app; one database for 
   (fresh version and actions) and open the S15 `ActionDialog`; cancel puts the card back. The card menu (⋮) offers the
   same moves for keyboard and touch. 409 → toast and reload. Live: reloads on IssueChanged of the project.
 - `IssuesApi` workflow calls take `IssueRef` (key + rowVersion), so board cards and issues share them.
+
+## ADR-031 – Analytics API (29-Oct-2026, S21)
+- Routes: `GET /api/analytics/overview | developers | quality | clients?clientId=&projectId=&sprintId=&from=&to=` and
+  `GET /api/analytics/sprints/{sprintId}`. Every signed-in user may read them. Dates are IST days (`yyyy-MM-dd`);
+  default range = the last 30 days up to today; `to` before `from` or more than 366 days → 400.
+- **What the range applies to**: widgets about events in time – created vs closed per day, recent activity, fixes per
+  week and the fix metrics (average fix time, first-time-right, SLA), retest turnaround, severity trend, closure time.
+  Current-state widgets (KPIs, status groups, open by severity / project / client, workload, ageing, hotspots, leakage,
+  rejected ratio, health) show today within the client / project / sprint scope.
+- **Status groups**: Open (New, Assigned, In Progress, Need Info, On Hold, Disputed, Reopened = `IssueStates.AwaitingFix`),
+  Fixed, Verified, Closed, Rejected; each group lists its statuses so the UI can click through to the issue list.
+- **History from the timeline**: "open a week ago" and the sprint burn-down use the latest StatusChanged activity at
+  that moment (no status → New). A fix = the first StatusChanged to Fixed of an issue, credited to who made it.
+  Average fix time = first fix − max(testing completed, first assignment) in working hours; first-time-right =
+  1 − reopened / fixed; SLA compliance = fixed on or before the due date / fixed with a due date.
+- **Working time**: `WorkingCalendar.WorkingHoursBetween` counts the clock time on working days (Sundays and holidays
+  skipped, IST) with a full day = 8 working hours – the inverse of `AddWorkingHours`. Closure time per client is in
+  working days; retest turnaround and fix time in working hours.
+- **Sprint dashboard**: testing days = working days from start to testing completed (or now); found per testing day =
+  issues created up to testing completed; burn-down from testing completed to the later of today and the latest due
+  date (`open` null for days still to come; ideal from the open count at testing completed to 0 on the latest due date);
+  comparison = issues per sprint of the project by severity in start order.
+- **Developers**: workload columns Assigned (incl. Reopened), In Progress, Need Info, On Hold; `me` = the caller's
+  open, overdue, fixed this week (since Monday IST) and average fix time (all time).
+- **Quality**: leakage = issues per project by sprint phase (phases in sort order, only those used); ageing buckets as
+  the retest queue (< 1 day, 1–2, 3–5, > 5 days, calendar days); hotspots = top 30 modules.
+- **Client health**: Red when a critical issue is open or more than 3 are overdue, Amber when anything is overdue,
+  otherwise Green. UAT vs LIVE uses the found-on environment's type (an issue without one takes the sprint default).
+- Aggregation is grouped in SQL; per-row work happens in memory only on bounded sets (one sprint's history, fixes and
+  retests in scope). Measured on 5 000 seeded issues: overview ≈ 250 ms, sprint ≈ 180 ms, others ≤ 60 ms (test asserts
+  < 800 ms per endpoint).

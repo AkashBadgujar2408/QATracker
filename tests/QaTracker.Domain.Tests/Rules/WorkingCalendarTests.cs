@@ -58,4 +58,33 @@ public sealed class WorkingCalendarTests
     [Fact]
     public void NegativeHours_AreRejected() =>
         Should.Throw<ArgumentOutOfRangeException>(() => WorkingCalendar.AddWorkingHours(Ist(10, 27, 10), -1, NoHolidays));
+
+    [Fact]
+    public void Between_CountsAFullWorkingDayAsEightHours()
+    {
+        WorkingCalendar.WorkingHoursBetween(Ist(10, 27, 18), Ist(10, 29, 18), NoHolidays).ShouldBe(16, 0.0001);
+        // Six clock hours inside one working day = 2 working hours.
+        WorkingCalendar.WorkingHoursBetween(Ist(10, 27, 9), Ist(10, 27, 15), NoHolidays).ShouldBe(2, 0.0001);
+    }
+
+    [Fact]
+    public void Between_SkipsSundaysAndHolidays_AndInvertsAddWorkingHours()
+    {
+        // Sat 31/Oct 18:00 → Mon 02/Nov 18:00: Sunday skipped → 1 day.
+        WorkingCalendar.WorkingHoursBetween(Ist(10, 31, 18), Ist(11, 2, 18), NoHolidays).ShouldBe(8, 0.0001);
+        var holidays = new HashSet<DateOnly> { new(2026, 10, 28) };
+        var start = Ist(10, 27, 10);
+        WorkingCalendar.WorkingDaysBetween(start, WorkingCalendar.AddWorkingHours(start, 40, holidays), holidays).ShouldBe(5, 0.0001);
+    }
+
+    [Fact]
+    public void Between_IsZeroWhenTheEndIsNotLater()
+    {
+        WorkingCalendar.WorkingHoursBetween(Ist(10, 27, 18), Ist(10, 27, 18), NoHolidays).ShouldBe(0);
+        WorkingCalendar.WorkingHoursBetween(Ist(10, 28, 18), Ist(10, 27, 18), NoHolidays).ShouldBe(0);
+    }
+
+    [Fact]
+    public void IstDate_UsesTheIndianCalendarDay() =>
+        WorkingCalendar.IstDate(new DateTimeOffset(2026, 10, 27, 20, 0, 0, TimeSpan.Zero)).ShouldBe(new DateOnly(2026, 10, 28));
 }

@@ -42,6 +42,48 @@ public static class WorkingCalendar
         return due.ToUniversalTime();
     }
 
+    /// <summary>
+    /// Working hours from <paramref name="start"/> to <paramref name="end"/> (fix time, retest turnaround, closure time):
+    /// the clock time that falls on working days (IST), with a full working day counting <see cref="HoursPerDay"/> hours –
+    /// the inverse of <see cref="AddWorkingHours"/> for whole days. Example: Sat 18:00 → Mon 18:00 IST = 8 h (Sunday
+    /// skipped). Zero when <paramref name="end"/> is not after <paramref name="start"/>.
+    /// </summary>
+    public static double WorkingHoursBetween(DateTimeOffset start, DateTimeOffset end, IReadOnlySet<DateOnly> holidays)
+    {
+        if (end <= start)
+        {
+            return 0;
+        }
+
+        var from = start.ToOffset(Ist);
+        var to = end.ToOffset(Ist);
+        var day = DateOnly.FromDateTime(from.DateTime);
+        var lastDay = DateOnly.FromDateTime(to.DateTime);
+        var clock = TimeSpan.Zero;
+        for (; day <= lastDay; day = day.AddDays(1))
+        {
+            if (!IsWorkingDay(day, holidays))
+            {
+                continue;
+            }
+
+            var dayStart = new DateTimeOffset(day.ToDateTime(TimeOnly.MinValue), Ist);
+            var segmentStart = from > dayStart ? from : dayStart;
+            var dayEnd = dayStart.AddDays(1);
+            var segmentEnd = to < dayEnd ? to : dayEnd;
+            clock += segmentEnd - segmentStart;
+        }
+
+        return clock.TotalHours * HoursPerDay / 24;
+    }
+
+    /// <summary><see cref="WorkingHoursBetween"/> in working days (8 hours each).</summary>
+    public static double WorkingDaysBetween(DateTimeOffset start, DateTimeOffset end, IReadOnlySet<DateOnly> holidays) =>
+        WorkingHoursBetween(start, end, holidays) / HoursPerDay;
+
+    /// <summary>The IST calendar date of an instant (dashboards group by IST day).</summary>
+    public static DateOnly IstDate(DateTimeOffset instant) => DateOnly.FromDateTime(instant.ToOffset(Ist).DateTime);
+
     private static DateOnly NextWorkingDay(DateOnly date, IReadOnlySet<DateOnly> holidays)
     {
         do
