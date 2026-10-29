@@ -898,3 +898,37 @@ needed). Invalid enum in JSON → 500 still open (S30).
 2.0.0 (MIT), ExcelNumberFormat 1.1.0 (MIT), RBush.Signed 4.0.0 (MIT), SixLabors.Fonts 1.0.0 (Apache-2.0).
 
 **Next session:** S26 – Excel import API.
+
+---
+
+## S26 – Excel import API   (29-Oct-2026)
+
+**Done:**
+- API `POST /api/import/excel/preview` and `/commit` (ImportEndpoints). ADR-036.
+- Application `Features/Import`: raw workbook model + `ILegacyWorkbookParser`, `LegacyImportMapper` (Appendix C rules,
+  corrections), `LegacyImportReader`, `ImportPreviewHandler`, `ImportCommitHandler` (modules, numbering, statuses,
+  activities, comments, screenshots).
+- Infrastructure `Import/ClosedXmlLegacyWorkbookParser` (header detection, issue blocks, labels, severity | priority,
+  status columns, other texts, anchored pictures).
+- Tests: 22 mapper unit tests (severity / priority words, first-name matching incl. ambiguous / several / unknown,
+  status precedence, missing actual result, long titles, module matching, corrections, HTML escaping) and 3 integration
+  tests on a workbook built like the legacy layout (preview of 2 sheets / 5 blocks incl. multi-row block, `<br>`,
+  "Not yet assessed", Invalid, Pending Reason, picture, "For your refer." comment; commit with module rename, skip and
+  corrections → issues, statuses, VerifiedAt, attachment, activities; refusals: developer 403, not a workbook / wrong
+  extension / bad JSON / unknown row 400, unknown sprint 404, sprint no longer in Testing 422).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 269/269. No frontend change (Import UI is S27).
+
+**Deviations from plan:** the card's done-when ("real workbook parses with ≥ 95 % rows needing no manual
+correction") **could not be checked** – the anonymised copy of the real "Pardi Gears Testing Sheet" is not in the
+repository. The parser follows Appendix C and is tested on a synthetic copy of that layout. Note: by Appendix C a
+"Not yet assessed" / "Pending…" severity or priority is itself a warning, so such rows count as needing correction.
+
+**Carry-over / known gaps:** run the preview on the anonymised real workbook (S27 or before) and tune the parser if
+needed; screenshots written before a failed commit could stay on disk (transaction rolls back the rows only).
+Local `ui.*` accounts have a new local password (deactivate when not needed). Invalid enum in JSON → 500 still open
+(S30).
+
+**Libraries added (licence):** none (ClosedXML from S25).
+
+**Next session:** S27 – Import UI.

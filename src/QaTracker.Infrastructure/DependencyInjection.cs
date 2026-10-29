@@ -4,10 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using QaTracker.Application.Abstractions;
 using QaTracker.Application.Common;
+using QaTracker.Application.Features.Import;
 using QaTracker.Application.Features.Notifications;
 using QaTracker.Application.Features.Reports;
 using QaTracker.Infrastructure.Email;
 using QaTracker.Infrastructure.Files;
+using QaTracker.Infrastructure.Import;
 using QaTracker.Infrastructure.Persistence;
 using QaTracker.Infrastructure.Persistence.Seeding;
 using QaTracker.Infrastructure.Reports;
@@ -43,6 +45,7 @@ public static class DependencyInjection
         services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddSingleton<IThumbnailGenerator, SkiaThumbnailGenerator>();
         services.AddSingleton<IReportRenderer, ReportRenderer>();
+        services.AddSingleton<ILegacyWorkbookParser, ClosedXmlLegacyWorkbookParser>();
         services.AddSingleton<IAttachmentUrlSigner, AttachmentUrlSigner>();
 
         services.AddSingleton(TimeProvider.System);

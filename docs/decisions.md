@@ -566,3 +566,35 @@ new alerts/mails and background tasks configurable in the app; one database for 
   screenshots, busy text while preparing, toast on failure – in the sprint dashboard header (the Sprints page gets it
   in S29). The issue list has "Export" next to Views (current filters and sort; 422 explained in the toast). Files are
   fetched with the access token as a blob and saved through a temporary link (`shared/data/download.ts`).
+
+## ADR-036 – Legacy Excel import API (29-Oct-2026, S26)
+- **Routes** (tester/admin, multipart, ≤ 30 MB workbook): `POST /api/import/excel/preview` (file, sprintId) →
+  `ImportPreview` (modules, rows with warnings, ready-row count, sheet warnings); `POST /api/import/excel/commit`
+  (file, sprintId, corrections JSON) → `ImportResult` (created, skipped, modules created, attachments, first/last key).
+  The target sprint must be in Testing (same rule as adding issues; otherwise 422). **Stateless**: the commit sends the
+  file again and it is parsed again, so nothing is stored between preview and commit; row ids are "sheet-row"
+  ("1-14") and an unknown id → 400 "preview it again".
+- **Parsing** (`ClosedXmlLegacyWorkbookParser`, Infrastructure): visible sheets; header row = first of the top 15
+  rows naming ≥ 2 known columns (Issue/Description, Severity, Priority, Resolve By, Is Complete, Pending Reason,
+  Valid/Invalid, Sr. No); issue column = the "Issue" header, else column B. A block starts at a cell whose first line
+  is `N. Title` / `N) Title` and runs to the next start. Labels Issue / Description / Steps, Actual (Result), Expected
+  (Result), Impact – text inline or on the next lines/rows; unlabelled text after the title joins Steps.
+  "Severity: X" / "Priority: Y" anywhere in the block (same cell with a line break, a literal `<br>`, "|" or ","),
+  or Severity / Priority columns. Status columns take the block's first value. Text in other columns becomes a
+  comment, except "img B"-style labels and bare numbers. Pictures belong to the block containing their top-left row
+  (the last block also gets pictures below it); pictures above the first issue are ignored with a sheet warning.
+- **Mapping** (`LegacyImportMapper`, Application, pure): sheet → module (name trimmed to 150, matched to an existing
+  module case-insensitively, renamed from the preview); severity words (Critical/Blocker/Showstopper, High/Major,
+  Medium/Moderate/Normal, Low/Minor/Trivial/Cosmetic), "Not yet assessed" / "Pending…" / empty → Not assessed;
+  priority (High/Urgent/Immediate, Medium/Normal, Low), pending / empty → Medium – each fallback is a warning (Appendix
+  C). Resolve By → the active non-tester user with that first name; none, several, or several names → warning.
+  Status: Valid/Invalid = Invalid → Rejected (Invalid) > Is Complete = Yes → Verified > Pending Reason → On Hold (the
+  reason) > assignee → Assigned > New. Missing Actual Result → the issue text (or title) with a warning; titles over
+  200 characters are shortened with a warning. A row needs no manual correction when it has no warnings.
+- **Commit**: one transaction under the project's numbering lock – missing modules created (an inactive one with the
+  same name is reactivated), issues numbered in workbook order, type Bug, found on the sprint's default environment,
+  reporter = importer. Activities: Created ("Imported from the Excel testing workbook."), Assigned, and a
+  StatusChanged New/Assigned → imported state (so timeline and analytics history see it), one Comment per other text.
+  Screenshots go through `FileInspector` and `AttachmentWriter` (thumbnail + Attachment activity); one that is not an
+  image is skipped with a result warning. Importing sets initial states directly – it is creation, not a workflow
+  transition, so it does not go through IssueWorkflow.

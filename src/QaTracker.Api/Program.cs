@@ -91,6 +91,7 @@ try
     app.MapNotificationsEndpoints();
     app.MapEmailAdminEndpoints();
     app.MapAnalyticsEndpoints();
+    app.MapImportEndpoints();
     app.MapHub<TrackerHub>(TrackerHub.Path);
 
     await app.RunAsync();
