@@ -181,7 +181,7 @@ Requested by Akash during S05 review:
   `sort` = field or `-field`; severity/priority sort by importance. `GET /api/projects/{id}/screens` suggests screens.
 - `IssueDto.permissions` (canEdit/canDelete) until IssueWorkflow's `allowedActions` arrives in S12/S13.
 
-## ADR-019 – E-mail, scheduled jobs and a jobs admin app (28-Oct-2026) – PROPOSED, to confirm before S19
+## ADR-019 – E-mail, scheduled jobs and a jobs admin app (28-Oct-2026) – S19 part DECIDED (see ADR-029)
 **Request (Akash, during S09):** after the planned sessions, add SMTP mail: set-level mails to members (sprint started,
 testing completed, SLA/overdue …) sent as they happen; per-issue events collected into a **daily mail at 18:00 IST**;
 a background job framework (Hangfire or better); an **MVC front end to manage background jobs without delete options**;
@@ -381,3 +381,36 @@ new alerts/mails and background tasks configurable in the app; one database for 
   issues, one bell nudge per live arrival, none with reduced motion) and the `/notifications` page (history by IST
   day – Today, Yesterday, 27/Oct/2026 – "Show older", mark read / unread). Type icons and rails use status / severity
   tokens. Tests use `FakeRealtime` (provided by `provideFakeAuth`).
+
+## ADR-029 – E-mail notifications (29-Oct-2026, S19)
+- **Decision on ADR-019 for now** (Akash: "use whatever feels correct and best"): no scheduler library yet. The outbox
+  sender and the daily digest are .NET `BackgroundService`s in the API process (`EmailOutboxWorker`,
+  `DailyDigestWorker`); the last run of each job is kept in `dbo.JobRuns` (script 005) so a missed 18:00 slot is
+  caught up after a restart. Hangfire/Quartz and the `QaTracker.Jobs` MVC admin stay possible later (S19b/S28b) – the
+  outbox and JobRuns tables are what they would read.
+- **Queueing**: `NotificationMailer` runs inside the ChangeFeed (ADR-028), so instant mails go into `EmailOutbox` in
+  the same save as their notification, and `Notifications.EmailedAt` marks them. Instant types: Assigned, Mentioned,
+  Reopened, Fixed (one per deploy notice), NeedInfo, Disputed, TestingCompleted (the one summary per person),
+  CriticalUnassigned. Digest types: Comment, Overdue. Nothing is queued while `Email:Enabled` is false.
+- **Preferences**: `NotificationPreferences (UserId, Type, Email)`; no row = mailed (plan defaults). In-app is always
+  on. `GET/PUT /api/notifications/preferences` → `{emailEnabled, digestTimeIst, email, items[{type, label, description,
+  delivery: Instant|Digest, email}]}`; page `/settings/notifications` (user menu, bell panel, Notifications page).
+- **Daily digest** at `Email:DigestTimeIst` (18:00) IST: per user the comment notifications not mailed yet (grouped by
+  issue) and the issues assigned to them that are overdue (awaiting a fix, due date passed, testing completed). Comment
+  notifications are marked mailed even when the user opted out, so switching the mail on later sends no backlog.
+- **Sender**: System.Net.Mail SMTP (no extra library), batches of `BatchSize` oldest first, saved per mail; a failure
+  keeps Attempts / LastError and waits 1, 5, 15, 30 min, then hourly, up to `MaxAttempts` (8). Mails are never deleted.
+- **Templates**: inline-styled HTML (logo mark, card, one button, "Change e-mail settings" footer); everything
+  user-written is HTML-encoded; dates 27/Oct/2026 IST; links use `Email:AppBaseUrl`.
+- **Admin › E-mail** `/admin/email` (Akash, S19: "SMTP settings shall be verifiable by admin through a screen"):
+  `GET /api/admin/email` shows the effective settings (password only as set / not set), outbox counts (waiting, gave
+  up, sent in 24 h), mails not delivered (with "Try again" = fresh attempts) and the latest mails, and the digest's last
+  run; `POST /api/admin/email/test {to}` sends straight through SMTP (also while e-mail is off) and returns the server's
+  answer or 422 `smtp_failed` with its message; `POST /api/admin/email/digest` queues the summary now. Editing the
+  settings in the app stays with S28; today they live in appsettings (`Email` section) + user secrets
+  (`Email:Smtp:Password`).
+- **Dev**: smtp4dev as a local dotnet tool – `dotnet smtp4dev --urls=http://localhost:5081 --smtpport=2525 --db=`
+  (inbox at http://localhost:5081); Development settings point at localhost:2525. Integration tests queue mails but run
+  no workers (`Email:Workers=false`) and use a closed SMTP port for the failure path.
+- **Scrollbars** (Akash, S19): thin rounded thumbs without track or arrows everywhere (`--qa-scrollbar-thumb(-hover)`,
+  dark variant), a faint light thumb on the ink sidebar (`.qa-sidebar-scroll`); Firefox gets `scrollbar-width: thin`.

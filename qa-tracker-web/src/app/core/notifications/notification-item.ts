@@ -16,6 +16,20 @@ import {
 import { AppNotification, NotificationType } from '../../shared/data/notifications.api';
 import { formatIst, relativeTime } from '../../shared/pipes/ist-date.pipe';
 
+/** Icons of every notification type, for components that show them. */
+export const NOTIFICATION_ICONS = {
+  lucideAtSign,
+  lucideCircleHelp,
+  lucideClockAlert,
+  lucideFlag,
+  lucideMessageSquare,
+  lucideMessageSquareWarning,
+  lucideRocket,
+  lucideRotateCcw,
+  lucideSiren,
+  lucideUserPlus,
+};
+
 interface TypeMeta {
   readonly icon: string;
   /** Token the icon chip and unread rail are tinted with. */
@@ -52,20 +66,7 @@ export const NOTIFICATION_META: Readonly<Record<NotificationType, TypeMeta>> = {
 @Component({
   selector: 'app-notification-item',
   imports: [NgIcon, MatTooltip],
-  viewProviders: [
-    provideIcons({
-      lucideAtSign,
-      lucideCircleHelp,
-      lucideClockAlert,
-      lucideFlag,
-      lucideMessageSquare,
-      lucideMessageSquareWarning,
-      lucideRocket,
-      lucideRotateCcw,
-      lucideSiren,
-      lucideUserPlus,
-    }),
-  ],
+  viewProviders: [provideIcons(NOTIFICATION_ICONS)],
   template: `
     <div
       class="qa-note group relative flex gap-3 py-3 pl-4 pr-2"

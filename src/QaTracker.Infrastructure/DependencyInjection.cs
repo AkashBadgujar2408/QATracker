@@ -3,7 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using QaTracker.Application.Abstractions;
+using QaTracker.Application.Common;
 using QaTracker.Application.Features.Notifications;
+using QaTracker.Infrastructure.Email;
 using QaTracker.Infrastructure.Files;
 using QaTracker.Infrastructure.Persistence;
 using QaTracker.Infrastructure.Persistence.Seeding;
@@ -48,6 +50,19 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
         services.AddScoped<DatabaseSeeder>();
+
+        services.AddOptions<EmailOptions>()
+            .Bind(configuration.GetSection(EmailOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<EmailOutboxProcessor>();
+        var email = configuration.GetSection(EmailOptions.SectionName).Get<EmailOptions>() ?? new EmailOptions();
+        if (email.Enabled && email.Workers)
+        {
+            services.AddHostedService<EmailOutboxWorker>();
+            services.AddHostedService<DailyDigestWorker>();
+        }
 
         return services;
     }

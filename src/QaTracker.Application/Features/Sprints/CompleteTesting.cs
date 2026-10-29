@@ -105,7 +105,7 @@ public sealed class CompleteTestingHandler(
         }
     }
 
-    /// <summary>In-app notification for project members and assigned developers (e-mail delivery comes with the notifications sessions).</summary>
+    /// <summary>In-app notification (and the one summary mail, ADR-029) for project members and assigned developers.</summary>
     private async Task NotifyAsync(TestingSprint sprint, List<Issue> issues, DateTimeOffset now, CancellationToken cancellationToken)
     {
         var members = await db.ProjectMembers.AsNoTracking()

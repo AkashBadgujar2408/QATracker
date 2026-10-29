@@ -27,11 +27,15 @@ public sealed partial class TestDatabase : IAsyncLifetime
 
         foreach (var script in SchemaScripts())
         {
+            // One connection per script, as sqlcmd does: a transaction may span its GO batches.
+            await using var connection = new SqlConnection(ConnectionString);
+            await connection.OpenAsync();
             foreach (var batch in GoSeparator().Split(await File.ReadAllTextAsync(script)))
             {
                 if (!string.IsNullOrWhiteSpace(batch))
                 {
-                    await ExecuteAsync(ConnectionString, batch);
+                    await using var command = new SqlCommand(batch, connection) { CommandTimeout = 120 };
+                    await command.ExecuteNonQueryAsync();
                 }
             }
         }

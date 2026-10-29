@@ -15,7 +15,7 @@ namespace QaTracker.Application.Features.Notifications;
 /// deploy notices, comments, mentions) notifies the same way. The actor is never notified; one save gives each user
 /// at most one notification per issue (the most important one).</para>
 /// </summary>
-public sealed class ChangeFeed(IClock clock)
+public sealed class ChangeFeed(IClock clock, NotificationMailer mailer)
 {
     private const int TitleMax = 200;
     private const int BodyMax = 1000;
@@ -81,6 +81,9 @@ public sealed class ChangeFeed(IClock clock)
             db.Notifications.Add(item.Notification);
             pending.Notifications.Add(item);
         }
+
+        // Instant e-mails go into the outbox in the same save (ADR-029).
+        await mailer.QueueAsync(db, pending.Notifications.Select(n => (n.Notification, n.IssueKey, n.ProjectId)).ToList(), cancellationToken);
 
         _pending.Add(pending);
     }

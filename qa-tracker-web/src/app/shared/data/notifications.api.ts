@@ -89,3 +89,38 @@ export function notificationLink(
   }
   return null;
 }
+
+export type EmailDelivery = 'Instant' | 'Digest';
+
+export interface NotificationPreference {
+  readonly type: NotificationType;
+  readonly label: string;
+  readonly description: string;
+  readonly delivery: EmailDelivery;
+  readonly email: boolean;
+}
+
+/** The signed-in user's e-mail choices (ADR-029); in-app notifications are always on. */
+export interface EmailSettings {
+  /** False when the server sends no mail at all (Email:Enabled). */
+  readonly emailEnabled: boolean;
+  readonly digestTimeIst: string;
+  readonly email: string | null;
+  readonly items: readonly NotificationPreference[];
+}
+
+@Injectable({ providedIn: 'root' })
+export class NotificationPreferencesApi {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = inject(API_BASE_URL);
+
+  get(): Observable<EmailSettings> {
+    return this.http.get<EmailSettings>(`${this.baseUrl}/notifications/preferences`, {
+      context: new HttpContext().set(SILENT_ERRORS, true),
+    });
+  }
+
+  save(items: readonly { type: NotificationType; email: boolean }[]): Observable<EmailSettings> {
+    return this.http.put<EmailSettings>(`${this.baseUrl}/notifications/preferences`, { items });
+  }
+}

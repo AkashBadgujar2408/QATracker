@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<Features.Workflow.WorkflowSupport>();
         services.AddScoped<Features.Attachments.AttachmentWriter>();
         services.AddScoped<Features.Timeline.TimelineReader>();
+        services.AddScoped<Features.Notifications.NotificationMailer>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         return services;
     }

@@ -68,6 +68,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Database:SeedOnStartup", "false");
         builder.UseSetting("Storage:Root", StorageRoot);
         builder.UseSetting("RateLimiting:LoginPermitLimit", "10000");
+        // Mails are queued (and checked by the tests) but not sent; the SMTP port is closed on purpose.
+        builder.UseSetting("Email:Enabled", "true");
+        builder.UseSetting("Email:Workers", "false");
+        builder.UseSetting("Email:Smtp:Host", "127.0.0.1");
+        builder.UseSetting("Email:Smtp:Port", "1");
     }
 
     /// <summary>Client that keeps cookies (refresh token) – one per simulated browser.</summary>

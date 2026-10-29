@@ -21,6 +21,7 @@ public interface IApplicationDbContext
     DbSet<IssueActivity> IssueActivities { get; }
     DbSet<IssueLink> IssueLinks { get; }
     DbSet<IssueWatcher> IssueWatchers { get; }
+    DbSet<JobRun> JobRuns { get; }
     DbSet<Mention> Mentions { get; }
     DbSet<Module> Modules { get; }
     DbSet<Notification> Notifications { get; }

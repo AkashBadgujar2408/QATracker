@@ -109,3 +109,59 @@ public sealed class MarkNotificationsHandler(IApplicationDbContext db, ICurrentU
         return new UnreadCountDto(unread);
     }
 }
+
+public sealed record NotificationPreferenceDto(NotificationType Type, string Label, string Description, EmailDelivery Delivery, bool Email);
+
+public sealed record EmailSettingsDto(bool EmailEnabled, string DigestTimeIst, string? Email, IReadOnlyList<NotificationPreferenceDto> Items);
+
+public sealed record SavePreferenceItem(NotificationType Type, bool Email);
+
+public sealed record SavePreferencesCommand(IReadOnlyList<SavePreferenceItem>? Items);
+
+/// <summary>E-mail choice per notification type (in-app notifications are always on). No saved row = mailed.</summary>
+public sealed class GetNotificationPreferencesHandler(IApplicationDbContext db, ICurrentUser currentUser, Microsoft.Extensions.Options.IOptions<EmailOptions> options)
+{
+    public async Task<EmailSettingsDto> HandleAsync(CancellationToken cancellationToken)
+    {
+        var userId = currentUser.UserId;
+        var saved = await db.NotificationPreferences.AsNoTracking().Where(p => p.UserId == userId).ToDictionaryAsync(p => p.Type, p => p.Email, cancellationToken);
+        var email = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => u.Email).SingleAsync(cancellationToken);
+        var items = NotificationChannels.All
+            .Select(c => new NotificationPreferenceDto(c.Type, c.Label, c.Description, c.Delivery, saved.GetValueOrDefault(c.Type, NotificationChannels.DefaultEmail)))
+            .ToList();
+        return new EmailSettingsDto(options.Value.Enabled, options.Value.DigestTimeIst, string.IsNullOrWhiteSpace(email) ? null : email, items);
+    }
+}
+
+public sealed class SaveNotificationPreferencesHandler(IApplicationDbContext db, ICurrentUser currentUser, GetNotificationPreferencesHandler reader)
+{
+    public async Task<Result<EmailSettingsDto>> HandleAsync(SavePreferencesCommand command, CancellationToken cancellationToken)
+    {
+        if (command.Items is null || command.Items.Count == 0)
+        {
+            return Error.Validation("items", "Send at least one preference.");
+        }
+
+        if (command.Items.Any(i => !Enum.IsDefined(i.Type)) || command.Items.Select(i => i.Type).Distinct().Count() != command.Items.Count)
+        {
+            return Error.Validation("items", "Each notification type may appear once.");
+        }
+
+        var userId = currentUser.UserId;
+        var existing = await db.NotificationPreferences.Where(p => p.UserId == userId).ToDictionaryAsync(p => p.Type, cancellationToken);
+        foreach (var item in command.Items)
+        {
+            if (existing.TryGetValue(item.Type, out var row))
+            {
+                row.Email = item.Email;
+            }
+            else
+            {
+                db.NotificationPreferences.Add(new NotificationPreference { UserId = userId, Type = item.Type, Email = item.Email });
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return await reader.HandleAsync(cancellationToken);
+    }
+}

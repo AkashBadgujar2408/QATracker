@@ -669,3 +669,46 @@ effect, nothing to forget in new handlers). CriticalUnassigned / Overdue need a 
 10.0.14 (MIT, integration tests only). The SignalR server is part of ASP.NET Core.
 
 **Next session:** S19 – Email notifications.
+
+---
+
+## S19 – Email notifications   (29-Oct-2026)
+
+**Done:**
+- Script `005_EmailDelivery.sql` (Notifications.EmailedAt, EmailOutbox.NextAttemptAt, JobRuns, digest index);
+  re-scaffolded (JobRun entity).
+- Application: `EmailOptions`, `NotificationChannels` (instant vs digest per type), `NotificationMailer` (queues
+  instant mails in the ChangeFeed save, respects preferences), `DailyDigestHandler`, `EmailTemplates` (notification,
+  digest, test), preferences handlers, `Features/EmailAdmin` (status, test mail, run digest, retry).
+- Infrastructure: `SmtpEmailSender`, `EmailOutboxProcessor` (back-off, max attempts), `EmailOutboxWorker`,
+  `DailyDigestWorker` (18:00 IST, catch-up after restart).
+- API: `GET/PUT /api/notifications/preferences`, `/api/admin/email` (+ `/test`, `/digest`, `/outbox/{id}/retry`,
+  admin only). ADR-029; ADR-019 marked decided for the S19 part.
+- Angular: `/settings/notifications` (switch per type, grouped "Mailed right away" / "In the daily summary"), admin
+  `/admin/email` (status line, test mail with the SMTP answer, settings in use, outbox counts, not delivered + Try
+  again, latest mails, daily summary + "Send the summary now"); nav item "E-mail" (Admin); links from the user menu,
+  bell panel and Notifications page. Modern thin scrollbars app-wide (Akash's request during the session).
+- Tests: 5 integration tests (instant mails with the notification + preferences; digest of comments and overdue,
+  once; digest slot; outbox send / back-off / admin retry; admin status without password, SMTP failure answer,
+  validation, 403) and 2 Angular tests (settings page, admin page). Test DB builder now runs a script's GO batches on
+  one connection (a transaction may span them, as with sqlcmd).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 226/226 (89 integration + 88 domain + 49 application) ·
+`ng build` · `ng test` 112/112 · `ng lint`. With smtp4dev (localhost:2525): on API start the daily summary caught up
+the missed slot and arrived ("2 new comments"); a mention arrived at once; after switching mention mails off the next
+mention was not mailed; the admin test mail was accepted in 12 ms and shown on the E-mail screen; outbox counts and
+digest run displayed. Scrollbars checked on the sidebar and page edge.
+
+**Deviations from plan:** no Hangfire (hosted services + JobRuns, see ADR-029). In-app Overdue / CriticalUnassigned
+notifications still need the SLA job (S28); the digest already lists overdue issues.
+
+**Carry-over / known gaps:**
+- Local dev DB: new test admin `ui.admin` (same local password as `ui.tester` / `ui.developer`; deactivate when not
+  needed); digest JobRuns row and a few outbox mails from the check.
+- SMTP settings editable in the app – S28 (today appsettings + user secrets).
+- Invalid enum in JSON → 500 still open.
+
+**Libraries added (licence):** `Rnwood.Smtp4dev` 3.15.0 (BSD-3-Clause) as a local dotnet tool for development only
+(dotnet-tools.json); no runtime libraries (SMTP via System.Net.Mail).
+
+**Next session:** S20 – Kanban board.

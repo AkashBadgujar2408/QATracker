@@ -24,6 +24,8 @@ public partial class Notification
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    public DateTimeOffset? EmailedAt { get; set; }
+
     public virtual Issue? Issue { get; set; }
 
     public virtual TestingSprint? Sprint { get; set; }

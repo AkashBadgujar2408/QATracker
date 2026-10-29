@@ -96,6 +96,13 @@
   --qa-sidebar-accent: #818cf8;
   --qa-sidebar-font-size: 16px;
   --qa-sidebar-child-font-size: 15px;
+  /* Thin scrollbar on the ink panel (both themes) */
+  --qa-sidebar-scrollbar: rgb(148 163 184 / 0.28);
+  --qa-sidebar-scrollbar-hover: rgb(148 163 184 / 0.5);
+
+  /* Scrollbars (thin, rounded thumb, no track) */
+  --qa-scrollbar-thumb: var(--qa-slate-300);
+  --qa-scrollbar-thumb-hover: var(--qa-slate-400);
 
   /* User avatars (white initials; all ≥ 4.5:1 contrast) */
   --qa-danger-contrast: #ffffff;
@@ -118,6 +125,8 @@
 }
 
 :root.app-dark {
+  --qa-scrollbar-thumb: var(--qa-slate-700);
+  --qa-scrollbar-thumb-hover: var(--qa-slate-600);
   --qa-primary: #818cf8;
   --qa-primary-contrast: var(--qa-slate-950);
   --qa-bg: var(--qa-slate-950);

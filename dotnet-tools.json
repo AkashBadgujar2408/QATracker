@@ -8,6 +8,13 @@
         "dotnet-ef"
       ],
       "rollForward": false
+    },
+    "rnwood.smtp4dev": {
+      "version": "3.15.0",
+      "commands": [
+        "smtp4dev"
+      ],
+      "rollForward": false
     }
   }
 }

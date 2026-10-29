@@ -47,6 +47,10 @@
       <div class="text-xs text-muted">{{ auth.user()?.userName }} · {{ auth.user()?.role }}</div>
     </div>
     <mat-divider />
+    <a mat-menu-item routerLink="/settings/notifications">
+      <ng-icon name="lucideBellRing" size="16" class="mr-3" />
+      <span>Notification settings</span>
+    </a>
     <a mat-menu-item routerLink="/change-password">
       <ng-icon name="lucideKeyRound" size="16" class="mr-3" />
       <span>Change password</span>

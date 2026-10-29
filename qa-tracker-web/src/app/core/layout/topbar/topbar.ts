@@ -6,6 +6,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltip } from '@angular/material/tooltip';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
+  lucideBellRing,
   lucideKeyRound,
   lucideLogOut,
   lucideMoon,
@@ -31,7 +32,14 @@ import { ThemeService } from '../../theme/theme.service';
     NotificationBell,
   ],
   viewProviders: [
-    provideIcons({ lucideKeyRound, lucideLogOut, lucideMoon, lucideSearch, lucideSun }),
+    provideIcons({
+      lucideBellRing,
+      lucideKeyRound,
+      lucideLogOut,
+      lucideMoon,
+      lucideSearch,
+      lucideSun,
+    }),
   ],
   templateUrl: './topbar.html',
   host: {

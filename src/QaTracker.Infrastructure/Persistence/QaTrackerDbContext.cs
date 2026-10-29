@@ -32,6 +32,8 @@ public partial class QaTrackerDbContext : DbContext
 
     public virtual DbSet<IssueWatcher> IssueWatchers { get; set; }
 
+    public virtual DbSet<JobRun> JobRuns { get; set; }
+
     public virtual DbSet<Mention> Mentions { get; set; }
 
     public virtual DbSet<Module> Modules { get; set; }
@@ -306,6 +308,14 @@ public partial class QaTrackerDbContext : DbContext
                 .HasConstraintName("FK_IssueWatchers_User");
         });
 
+        modelBuilder.Entity<JobRun>(entity =>
+        {
+            entity.HasKey(e => e.Name);
+
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.LastResult).HasMaxLength(1000);
+        });
+
         modelBuilder.Entity<Mention>(entity =>
         {
             entity.HasIndex(e => new { e.ActivityId, e.UserId }, "UX_Mentions_Activity_User").IsUnique();
@@ -346,6 +356,8 @@ public partial class QaTrackerDbContext : DbContext
 
         modelBuilder.Entity<Notification>(entity =>
         {
+            entity.HasIndex(e => new { e.Type, e.CreatedAt }, "IX_Notifications_Digest").HasFilter("([EmailedAt] IS NULL)");
+
             entity.HasIndex(e => e.IssueId, "IX_Notifications_Issue").HasFilter("([IssueId] IS NOT NULL)");
 
             entity.HasIndex(e => new { e.UserId, e.IsRead, e.CreatedAt }, "IX_Notifications_User_IsRead_CreatedAt");

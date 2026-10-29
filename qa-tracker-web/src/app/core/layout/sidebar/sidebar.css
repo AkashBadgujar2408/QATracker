@@ -103,3 +103,9 @@
     transition: none;
   }
 }
+
+/* Scrollbar on the ink panel: a faint light thumb instead of the page's grey one. */
+.qa-sidebar-scroll {
+  --qa-scrollbar-thumb: var(--qa-sidebar-scrollbar);
+  --qa-scrollbar-thumb-hover: var(--qa-sidebar-scrollbar-hover);
+}

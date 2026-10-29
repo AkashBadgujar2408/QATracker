@@ -58,6 +58,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/work/my-work-page').then((m) => m.MyWorkPage),
       },
       {
+        path: 'settings/notifications',
+        title: 'Notification settings',
+        data: { breadcrumb: 'Notification settings' },
+        loadComponent: () =>
+          import('./features/settings/notification-settings-page').then(
+            (m) => m.NotificationSettingsPage,
+          ),
+      },
+      {
         path: 'notifications',
         title: 'Notifications',
         data: { breadcrumb: 'Notifications' },
@@ -127,6 +136,13 @@ export const routes: Routes = [
             data: { breadcrumb: 'Users' },
             loadComponent: () =>
               import('./features/admin/users/users-page').then((m) => m.UsersPage),
+          },
+          {
+            path: 'email',
+            title: 'E-mail',
+            data: { breadcrumb: 'E-mail' },
+            loadComponent: () =>
+              import('./features/admin/email/email-admin-page').then((m) => m.EmailAdminPage),
           },
         ],
       },

@@ -88,6 +88,7 @@ try
     app.MapWorkQueuesEndpoints();
     app.MapAttachmentsEndpoints();
     app.MapNotificationsEndpoints();
+    app.MapEmailAdminEndpoints();
     app.MapHub<TrackerHub>(TrackerHub.Path);
 
     await app.RunAsync();

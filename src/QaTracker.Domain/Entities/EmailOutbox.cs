@@ -20,4 +20,6 @@ public partial class EmailOutbox
     public int Attempts { get; set; }
 
     public string? LastError { get; set; }
+
+    public DateTimeOffset? NextAttemptAt { get; set; }
 }

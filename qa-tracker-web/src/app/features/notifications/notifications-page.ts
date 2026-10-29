@@ -9,10 +9,10 @@ import {
   untracked,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatButton } from '@angular/material/button';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCheckCheck } from '@ng-icons/lucide';
+import { lucideCheckCheck, lucideSettings } from '@ng-icons/lucide';
 import { problemMessage } from '../../core/api/api';
 import { NotificationItem } from '../../core/notifications/notification-item';
 import { NotificationStore } from '../../core/notifications/notification.store';
@@ -57,13 +57,17 @@ export function groupByDay(items: readonly AppNotification[], now = new Date()):
 /** Full notification history (ADR-028): read and unread, by day, older pages on demand, kept live. */
 @Component({
   selector: 'app-notifications-page',
-  imports: [PageHeader, NotificationItem, EmptyState, SkeletonLines, MatButton, NgIcon],
-  viewProviders: [provideIcons({ lucideCheckCheck })],
+  imports: [PageHeader, NotificationItem, EmptyState, SkeletonLines, MatButton, NgIcon, RouterLink],
+  viewProviders: [provideIcons({ lucideCheckCheck, lucideSettings })],
   template: `
     <app-page-header
       title="Notifications"
       subtitle="Everything that was sent to you, newest first. Open one to go to the issue."
     >
+      <a actions matButton routerLink="/settings/notifications">
+        <ng-icon name="lucideSettings" size="16" class="mr-1" />
+        Settings
+      </a>
       <button
         actions
         matButton="outlined"

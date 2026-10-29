@@ -12,7 +12,7 @@ import { Router, RouterLink } from '@angular/router';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideBell, lucideBellOff, lucideCheckCheck } from '@ng-icons/lucide';
+import { lucideBell, lucideBellOff, lucideCheckCheck, lucideSettings } from '@ng-icons/lucide';
 import { AppNotification, notificationLink } from '../../shared/data/notifications.api';
 import { NotificationItem } from './notification-item';
 import { NotificationStore } from './notification.store';
@@ -40,7 +40,7 @@ const POSITIONS: ConnectedPosition[] = [
     NotificationItem,
     RouterLink,
   ],
-  viewProviders: [provideIcons({ lucideBell, lucideBellOff, lucideCheckCheck })],
+  viewProviders: [provideIcons({ lucideBell, lucideBellOff, lucideCheckCheck, lucideSettings })],
   template: `
     <button
       matIconButton
@@ -81,8 +81,8 @@ const POSITIONS: ConnectedPosition[] = [
       >
         <header class="flex items-center gap-2 border-b border-border px-4 pb-0 pt-3">
           <div class="flex flex-1 flex-col">
-            <div class="flex items-center justify-between">
-              <h2 class="m-0 text-md font-semibold text-text">Notifications</h2>
+            <div class="flex items-center gap-1">
+              <h2 class="m-0 mr-auto text-md font-semibold text-text">Notifications</h2>
               <button
                 matButton
                 type="button"
@@ -93,6 +93,16 @@ const POSITIONS: ConnectedPosition[] = [
                 <ng-icon name="lucideCheckCheck" size="16" class="mr-1" />
                 Mark all as read
               </button>
+              <a
+                matIconButton
+                routerLink="/settings/notifications"
+                class="qa-compact-icon -mr-2"
+                aria-label="Notification settings"
+                matTooltip="Notification settings"
+                (click)="open.set(false)"
+              >
+                <ng-icon name="lucideSettings" size="18" />
+              </a>
             </div>
             <div class="mt-1 flex gap-4" role="tablist" aria-label="Show">
               @for (t of tabs; track t.id) {
@@ -249,6 +259,12 @@ const POSITIONS: ConnectedPosition[] = [
     }
     .qa-skel {
       background: var(--qa-surface-muted);
+    }
+    .qa-compact-icon {
+      --mat-icon-button-state-layer-size: 34px;
+      width: 34px;
+      height: 34px;
+      padding: 8px;
     }
     .qa-compact {
       --mat-button-text-container-height: 32px;
