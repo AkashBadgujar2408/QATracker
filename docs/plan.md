@@ -1082,12 +1082,18 @@ The build is split into **8 phases** and **32 sessions**. Each session is design
 
 **Tasks**
 
-- Settings pages: SLA hours, holidays, phases, SMTP test.
-- Hourly job: overdue flags, critical-unassigned alert; overdue badges in list/board/detail.
+- Settings pages: SLA hours, holidays, phases. SMTP test already exists (Admin › E-mail, S19); add **editing the SMTP
+  settings in the app** (today appsettings + user secrets, ADR-029).
+- Hourly job (a BackgroundService next to the S19 workers, last run in `JobRuns`): creates the in-app **Overdue**
+  notification for the assignee (once per issue and due date) and the **CriticalUnassigned** alert for all project
+  members (critical issue in a completed sprint unassigned > 2 h, once per issue). Both go through the ChangeFeed, so
+  CriticalUnassigned is also mailed instantly and Overdue stays in the daily digest (S19). Overdue badges in
+  list/board/detail.
 
 **Done when**
 
-- Changing SLA affects new due dates; overdue alerts fire in a test.
+- Changing SLA affects new due dates; overdue and critical-unassigned notifications fire once each in a test; SMTP
+  settings changed in the app are used by the next test mail.
 
 ### S29 · Sprint close & carry forward
 
@@ -1109,6 +1115,7 @@ The build is split into **8 phases** and **32 sessions**. Each session is design
 **Tasks**
 
 - Review against 15.2: rate limiting, headers, upload checks, IDOR tests for every endpoint group.
+- Malformed JSON bodies (non-UTF-8, invalid enum value) answer **400 ProblemDetails, not 500** (open since S08).
 - Playwright E2E for the 3 critical flows.
 
 **Done when**
