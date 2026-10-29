@@ -2,6 +2,7 @@ import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, SILENT_ERRORS } from '../../core/api/api';
+import { DownloadedFile, getFile } from './download';
 import { IssueStatus, IssueType, Priority, Severity } from '../models/issue-enums';
 import { SprintStatus } from './sprints.api';
 
@@ -205,17 +206,14 @@ export class IssuesApi {
   private readonly base = inject(API_BASE_URL);
 
   list(query: IssueQuery): Observable<PagedResult<IssueListItem>> {
-    let params = new HttpParams();
-    for (const [name, value] of Object.entries(query)) {
-      if (Array.isArray(value)) {
-        for (const item of value as readonly string[]) {
-          params = params.append(name, item); // repeated: status=New&status=Fixed
-        }
-      } else if (value !== undefined && value !== null && value !== '' && value !== false) {
-        params = params.set(name, value as string | number | boolean);
-      }
-    }
-    return this.http.get<PagedResult<IssueListItem>>(`${this.base}/issues`, { params });
+    return this.http.get<PagedResult<IssueListItem>>(`${this.base}/issues`, {
+      params: issueParams(query),
+    });
+  }
+
+  /** The list with the same filters and sort as an Excel file (GET /api/issues/export). */
+  export(query: IssueQuery): Observable<DownloadedFile> {
+    return getFile(this.http, `${this.base}/issues/export`, issueParams(query), 'Issues.xlsx');
   }
 
   get(key: string): Observable<Issue> {
@@ -307,4 +305,19 @@ export class IssuesApi {
   private issueUrl(key: string): string {
     return `${this.base}/issues/${encodeURIComponent(key)}`;
   }
+}
+
+/** Query string of the list and the export: multi-value filters repeat (status=New&status=Fixed). */
+function issueParams(query: IssueQuery): HttpParams {
+  let params = new HttpParams();
+  for (const [name, value] of Object.entries(query)) {
+    if (Array.isArray(value)) {
+      for (const item of value as readonly string[]) {
+        params = params.append(name, item);
+      }
+    } else if (value !== undefined && value !== null && value !== '' && value !== false) {
+      params = params.set(name, value as string | number | boolean);
+    }
+  }
+  return params;
 }

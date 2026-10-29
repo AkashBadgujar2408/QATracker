@@ -1,6 +1,7 @@
 using QaTracker.Api.Auth;
 using QaTracker.Api.Common;
 using QaTracker.Application.Features.Lookups;
+using QaTracker.Application.Features.Reports;
 using QaTracker.Application.Features.Sprints;
 
 namespace QaTracker.Api.Endpoints;
@@ -50,6 +51,12 @@ public static class SprintsEndpoints
                 (await handler.HandleAsync(new ReopenTestingCommand(id, request.RowVersion, request.Note), ct)).ToHttp(sprint => TypedResults.Ok(sprint)))
             .RequireAuthorization(Policies.AdminOnly)
             .WithSummary("Admin override: put a completed sprint back into Testing (note required, logged).");
+
+        sprints.MapGet("/{id:int}/report", async (int id, string? format, SprintReportHandler handler, CancellationToken ct) =>
+                ReportFormats.TryParse(format, out var reportFormat)
+                    ? (await handler.HandleAsync(id, reportFormat, ct)).ToHttp(file => TypedResults.File(file.Content, file.ContentType, file.FileName))
+                    : ReportFormats.Invalid())
+            .WithSummary("Sprint report as Excel (summary, a sheet per module, all issues) or PDF (cover, summary, issues with screenshots): ?format=xlsx|pdf.");
 
         app.MapGet("/api/lookups/phases", async (PhaseLookupHandler handler, CancellationToken ct) => TypedResults.Ok(await handler.HandleAsync(ct)))
             .WithTags("Lookups")

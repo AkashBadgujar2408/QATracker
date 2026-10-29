@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using QaTracker.Api.Auth;
 using QaTracker.Api.Common;
 using QaTracker.Application.Features.Issues;
+using QaTracker.Application.Features.Reports;
 using QaTracker.Domain.Enums;
 
 namespace QaTracker.Api.Endpoints;
@@ -100,6 +101,10 @@ public static class IssuesEndpoints
         issues.MapGet("/", async ([AsParameters] IssueListRequest request, ListIssuesHandler handler, CancellationToken ct) =>
                 (await handler.HandleAsync(request.ToQuery(), ct)).ToHttp(page => TypedResults.Ok(page)))
             .WithSummary("Filter (status/severity/priority repeat for several values), sort (\"-dueDate\") and page issues.");
+
+        issues.MapGet("/export", async ([AsParameters] IssueListRequest request, ExportIssuesHandler handler, CancellationToken ct) =>
+                (await handler.HandleAsync(request.ToQuery(), ct)).ToHttp(file => TypedResults.File(file.Content, file.ContentType, file.FileName)))
+            .WithSummary("The issue list with the same filters and sort as an Excel file (paging ignored, at most 10 000 rows).");
 
         issues.MapPost("/", async (CreateIssueRequest r, CreateIssueHandler handler, HttpContext http, CancellationToken ct) =>
                 (await handler.HandleAsync(

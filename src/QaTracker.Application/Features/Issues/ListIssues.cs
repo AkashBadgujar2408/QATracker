@@ -75,7 +75,7 @@ public sealed class ListIssuesHandler(IValidator<ListIssuesQuery> validator, IAp
         return new PagedResult<IssueListItemDto>(items, query.Page, query.PageSize, total);
     }
 
-    private static IQueryable<Issue> Filter(IQueryable<Issue> issues, ListIssuesQuery query, DateTimeOffset now)
+    internal static IQueryable<Issue> Filter(IQueryable<Issue> issues, ListIssuesQuery query, DateTimeOffset now)
     {
         if (query.ClientId is { } clientId)
         {
@@ -142,7 +142,7 @@ public sealed class ListIssuesHandler(IValidator<ListIssuesQuery> validator, IAp
     }
 
     /// <summary>Severity and priority sort by importance (Critical first), not alphabetically; ties newest first.</summary>
-    private static IQueryable<Issue> Sort(IQueryable<Issue> issues, string? sort)
+    internal static IQueryable<Issue> Sort(IQueryable<Issue> issues, string? sort)
     {
         var descending = sort?.StartsWith('-') == true;
         var field = sort?.TrimStart('-').ToLowerInvariant() ?? "createdat";

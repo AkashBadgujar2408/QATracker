@@ -44,6 +44,7 @@ try
         .WithOrigins(builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
         .AllowAnyHeader()
         .AllowAnyMethod()
+        .WithExposedHeaders("Content-Disposition")
         .AllowCredentials()));
 
     var app = builder.Build();

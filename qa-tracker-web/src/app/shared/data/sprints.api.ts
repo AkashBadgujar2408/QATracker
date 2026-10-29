@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, SILENT_ERRORS } from '../../core/api/api';
 import { Severity } from '../models/issue-enums';
+import { DownloadedFile, getFile } from './download';
 import { LookupItem } from './masters.api';
 
 /** Testing sprints (plan 6, plan 14 SPRINTS, ADR-017). */
@@ -66,6 +67,16 @@ const inline = { context: new HttpContext().set(SILENT_ERRORS, true) };
 export class SprintsApi {
   private readonly http = inject(HttpClient);
   private readonly base = inject(API_BASE_URL);
+
+  /** Sprint report (GET /api/sprints/{id}/report): Excel workbook or PDF. */
+  report(sprintId: number, format: 'xlsx' | 'pdf'): Observable<DownloadedFile> {
+    return getFile(
+      this.http,
+      `${this.base}/sprints/${sprintId}/report`,
+      new HttpParams().set('format', format),
+      `Sprint report.${format}`,
+    );
+  }
 
   /** Newest first. */
   list(projectId: number): Observable<Sprint[]> {

@@ -859,3 +859,42 @@ needed). Invalid enum in JSON → 500 still open (S30).
 **Libraries added (licence):** none.
 
 **Next session:** S25 – Sprint report export.
+
+---
+
+## S25 – Sprint report export   (29-Oct-2026)
+
+**Done:**
+- API: `GET /api/sprints/{id}/report?format=xlsx|pdf`, `GET /api/issues/export` (list filters + sort). ADR-035.
+- Application `Features/Reports`: `SprintReportHandler` (report model, summary, thumbnails, closed-sprint snapshot),
+  `ExportIssuesHandler` (reuses the list filter/sort, 10 000-row cap, filters described in words), `ReportText`
+  (IST dates, HTML → lines), `ReportNames`.
+- Infrastructure `Reports`: `ExcelReportWriter` (summary, a sheet per module like the legacy workbook with
+  screenshots, all issues; issue-list export), `PdfReportWriter` (SkiaSharp PDF: cover, summary bars and table, issues
+  with thumbnails), `ReportImages` (WebP thumbnails → PNG), `ReportRenderer`. CORS exposes `Content-Disposition`.
+- Web: `app-sprint-report-button` on the sprint dashboard (and /dev/ui), "Export" on the issue list,
+  `shared/data/download.ts` (blob GET, file name from Content-Disposition, save).
+- Tests: 4 integration (Excel sheets / module layout / status columns / picture / real dates; PDF valid, ≥ 3 pages,
+  image embedded; 400 / 404; export filters, sort, no paging, description), 4 Application (HTML → lines, IST dates,
+  file names, summary counts), 6 web (file name parsing, save link, export params, fallback name, button progress
+  and error toast).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 244/244 · `ng build` · `ng test` 157/157 · `ng lint`. Real
+reports for UICHK Sprint 2: the PDF (1.1 MB) rendered cleanly in a PDF viewer – cover, summary, 4 issues with severity
+chips; the workbook was opened and checked with ClosedXML in the tests (not opened in desktop Excel in this session).
+In Chrome as `ui.developer`: "Download report › Excel" delivered "UICHK Sprint 2 - UI check report 29-Oct-2026.xlsx";
+"Export" on the issue list (Billing, High: 3 of 3) delivered a workbook with the same 3 issues (link click stubbed,
+nothing saved to disk).
+
+**Deviations from plan:** PDF with SkiaSharp (MIT) instead of QuestPDF – the Community licence eligibility is not
+confirmed (ADR-035). Sprint report button on the sprint dashboard; the Sprints page is S29.
+
+**Carry-over / known gaps:** open both files once in desktop Excel / Acrobat before sending to a client. PDF size is
+mostly embedded fonts (~1 MB). Linux hosting needs a UI font for the PDF. Closed-sprint numbers come from
+SprintSnapshots, which S29 must write on close. Local `ui.*` accounts have a new local password (deactivate when not
+needed). Invalid enum in JSON → 500 still open (S30).
+
+**Libraries added (licence):** `ClosedXML` 0.105.0 (MIT) with DocumentFormat.OpenXml 3.1.1 (MIT), ClosedXML.Parser
+2.0.0 (MIT), ExcelNumberFormat 1.1.0 (MIT), RBush.Signed 4.0.0 (MIT), SixLabors.Fonts 1.0.0 (Apache-2.0).
+
+**Next session:** S26 – Excel import API.

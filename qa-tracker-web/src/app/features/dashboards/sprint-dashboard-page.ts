@@ -33,6 +33,7 @@ import { SPRINT_STATUS_LABELS, Sprint, SprintsApi } from '../../shared/data/spri
 import { SEVERITY_META, Severity } from '../../shared/models/issue-enums';
 import { IstDatePipe } from '../../shared/pipes/ist-date.pipe';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
+import { SprintReportButton } from '../../shared/reports/sprint-report-button';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { StatusPill } from '../../shared/ui/status-pill/status-pill';
 import { GROUP_META, shortDay } from './overview-page';
@@ -152,6 +153,7 @@ export function sprintClickThrough(
     EmptyState,
     PageHeader,
     StatusPill,
+    SprintReportButton,
   ],
   templateUrl: './sprint-dashboard-page.html',
   styles: `

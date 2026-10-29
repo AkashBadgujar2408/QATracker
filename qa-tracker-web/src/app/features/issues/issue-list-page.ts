@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -22,12 +23,19 @@ import { MatSort, MatSortHeader, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideBookmark, lucideSearch, lucideTrash2, lucideX } from '@ng-icons/lucide';
+import {
+  lucideBookmark,
+  lucideDownload,
+  lucideSearch,
+  lucideTrash2,
+  lucideX,
+} from '@ng-icons/lucide';
 import { Subject, catchError, debounceTime, firstValueFrom, of } from 'rxjs';
 import { problemMessage } from '../../core/api/api';
 import { ToastService } from '../../core/feedback/toast.service';
 import { reloadOnIssueChanges } from '../../core/realtime/realtime.service';
 import { IssueListItem, IssuesApi } from '../../shared/data/issues.api';
+import { saveFile } from '../../shared/data/download';
 import { MastersApi } from '../../shared/data/masters.api';
 import { SprintsApi } from '../../shared/data/sprints.api';
 import {
@@ -124,7 +132,9 @@ export class SaveViewDialog {
     StatusPill,
     UserAvatar,
   ],
-  viewProviders: [provideIcons({ lucideBookmark, lucideSearch, lucideTrash2, lucideX })],
+  viewProviders: [
+    provideIcons({ lucideBookmark, lucideDownload, lucideSearch, lucideTrash2, lucideX }),
+  ],
   templateUrl: './issue-list-page.html',
   styles: `
     .qa-issue-table .mat-mdc-row:hover {
@@ -234,6 +244,27 @@ export class IssueListPage {
           this.search.set(q);
         }
       });
+    });
+  }
+
+  protected readonly exporting = signal(false);
+
+  /** The list as Excel with the current filters and sort (all pages). */
+  protected exportList(): void {
+    this.exporting.set(true);
+    this.issuesApi.export(filtersToQuery(this.filters())).subscribe({
+      next: (file) => {
+        saveFile(file);
+        this.exporting.set(false);
+      },
+      error: (error: unknown) => {
+        this.exporting.set(false);
+        this.toast.error(
+          error instanceof HttpErrorResponse && error.status === 422
+            ? 'Too many issues match – narrow the filters and export again.'
+            : 'The export could not be created. Try again in a moment.',
+        );
+      },
     });
   }
 

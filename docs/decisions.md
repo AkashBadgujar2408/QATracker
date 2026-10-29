@@ -538,3 +538,31 @@ new alerts/mails and background tasks configurable in the app; one database for 
   leakage, UAT vs LIVE, turnaround and the trend have no click-through (the issue list has no phase, environment or
   date filter). Retest turnaround shows "–" when nothing was retested and the rejected ratio "–" with no issues.
 - Chart kit: `app-chart-line [stacked]` stacks the series as filled areas (75 % fill).
+
+## ADR-035 – Sprint report export and issue-list export (29-Oct-2026, S25)
+- **Routes**: `GET /api/sprints/{id}/report?format=xlsx|pdf` (default xlsx; anything else 400, unknown sprint 404) and
+  `GET /api/issues/export?…` with the issue-list query (filters and sort; paging ignored; more than 10 000 rows → 422
+  `export_too_large`). Every signed-in user may download. Files come with `Content-Disposition` (exposed to CORS);
+  names like "PGERP Sprint 2 – UAT report 29-Oct-2026.xlsx" / "Issues 29-Oct-2026.xlsx".
+- **Model** (`Application/Features/Reports`): `SprintReportHandler` builds a `SprintReport` (header, issues ordered by
+  module and number, summary by status group / severity / module). Rich text becomes plain lines (paragraphs, breaks,
+  list items kept). Up to 3 screenshots per issue – the stored thumbnails of the issue's own uploads, not comment
+  attachments – and at most 600 per report. A **Closed** sprint reports status, severity and assignee from
+  `SprintSnapshots` (frozen at closing; written by S29). Rendering is behind `IReportRenderer` (Infrastructure).
+- **Excel** (ClosedXML 0.105, MIT): "Summary" (facts, by status, by severity, by module × group and severity),
+  one sheet per module mirroring the legacy workbook – #, issue block ("N. Title", Screen, Issue, Actual Result,
+  Expected Result, Impact), "Severity: X / Priority: Y", screenshots (PNG, 110 px high, side by side), Resolve By,
+  Status, Is Complete (Verified/Closed = Yes), Pending Reason (On Hold), Valid / Invalid (reject type), Key, Due –
+  and "All issues" (filterable table). Sheet names are cleaned of `: \ / ? * [ ]`, cut to 31 characters and made unique.
+  Dates in tables are real dates shown dd/mmm/yyyy (IST).
+- **PDF – SkiaSharp instead of QuestPDF**: the plan lists QuestPDF with "Community licence – confirm eligibility".
+  That eligibility is a business decision, so the PDF is drawn with SkiaSharp's PDF backend (MIT), already a
+  dependency for thumbnails – no new library and no licence question. A4 portrait: dark cover with the sprint facts,
+  summary page (bars per status group and severity with %, module table), issues grouped by module (key, title,
+  severity chip with a word, meta line, actual / expected result cut with "…", reject or hold reason, thumbnails),
+  footer with sprint and page number. Text uses Segoe UI (Windows server) with fallbacks; a Linux host needs a UI font
+  installed. Switching to QuestPDF later only replaces `PdfReportWriter`.
+- **UI**: `app-sprint-report-button` (shared/reports, in /dev/ui) – "Download report" › Excel workbook / PDF with
+  screenshots, busy text while preparing, toast on failure – in the sprint dashboard header (the Sprints page gets it
+  in S29). The issue list has "Export" next to Views (current filters and sort; 422 explained in the toast). Files are
+  fetched with the access token as a blob and saved through a temporary link (`shared/data/download.ts`).

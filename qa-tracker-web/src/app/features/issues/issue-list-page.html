@@ -1,4 +1,15 @@
 <app-page-header title="Issues" subtitle="Every issue across clients, projects and sprints.">
+  <button
+    actions
+    matButton="outlined"
+    type="button"
+    [disabled]="exporting()"
+    [attr.aria-busy]="exporting()"
+    (click)="exportList()"
+  >
+    <ng-icon name="lucideDownload" size="16" class="mr-1" />
+    {{ exporting() ? 'Exporting…' : 'Export' }}
+  </button>
   <button actions matButton="outlined" type="button" [matMenuTriggerFor]="viewsMenu">
     <ng-icon name="lucideBookmark" size="16" class="mr-1" />
     Views

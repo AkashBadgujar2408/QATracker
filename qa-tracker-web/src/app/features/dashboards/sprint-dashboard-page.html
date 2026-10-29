@@ -1,7 +1,11 @@
 <app-page-header
   title="Sprint dashboard"
   subtitle="How one testing sprint is going: what was found, what is fixed and what is left."
-/>
+>
+  @if (filters().sprintId; as sprintId) {
+    <app-sprint-report-button actions [sprintId]="sprintId" />
+  }
+</app-page-header>
 
 <section class="qa-card mb-4 p-4" aria-label="Filters">
   <app-dashboard-filters [showPeriod]="false" />
