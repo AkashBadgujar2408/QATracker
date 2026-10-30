@@ -18,6 +18,7 @@ import {
   lucidePanelLeftOpen,
   lucideRotateCcw,
   lucideSettings,
+  lucideUsers,
   lucideSquareKanban,
 } from '@ng-icons/lucide';
 import { Logo } from '../../../shared/ui/logo/logo';
@@ -44,6 +45,7 @@ import { NavItem } from '../nav-items';
       lucidePanelLeftOpen,
       lucideRotateCcw,
       lucideSettings,
+      lucideUsers,
       lucideSquareKanban,
     }),
   ],

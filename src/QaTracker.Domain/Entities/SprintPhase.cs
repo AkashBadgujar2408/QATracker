@@ -13,5 +13,7 @@ public partial class SprintPhase
 
     public bool IsActive { get; set; }
 
+    public byte[] RowVersion { get; set; } = null!;
+
     public virtual ICollection<TestingSprint> TestingSprints { get; set; } = new List<TestingSprint>();
 }

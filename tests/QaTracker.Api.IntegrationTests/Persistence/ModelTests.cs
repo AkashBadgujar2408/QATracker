@@ -19,10 +19,11 @@ public sealed class ModelTests
 
         var tables = db.Model.GetEntityTypes().Select(e => e.GetTableName()).ToList();
 
-        tables.Count.ShouldBe(26);
+        tables.Count.ShouldBe(27);
         tables.ShouldContain("Issues");
         tables.ShouldContain("ProjectEnvironments");
         tables.ShouldContain("JobRuns");
+        tables.ShouldContain("EmailSettings");
         tables.ShouldNotContain("SchemaVersions");
     }
 

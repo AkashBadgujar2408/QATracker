@@ -95,8 +95,23 @@ describe('EmailAdminPage', () => {
     const fixture = TestBed.createComponent(EmailAdminPage);
     fixture.detectChanges();
     http.expectOne('/api/admin/email').flush(status);
+    http.expectOne('/api/admin/email/settings').flush({
+      smtpHost: 'smtp.example.com',
+      smtpPort: 587,
+      smtpEnableSsl: true,
+      smtpUserName: 'qa',
+      passwordSet: true,
+      fromAddress: 'qa@example.com',
+      fromName: 'QA Tracker',
+      savedInApp: false,
+      updatedAt: null,
+      updatedBy: null,
+      rowVersion: null,
+    });
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('From the server configuration');
+    expect(el.textContent).not.toContain('Use the configuration');
     expect(el.textContent).toContain('smtp.example.com:587 (TLS)');
     expect(el.textContent).toContain('password set');
     expect(el.textContent).toContain('Mailbox unavailable');

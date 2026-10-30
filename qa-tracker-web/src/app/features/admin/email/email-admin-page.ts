@@ -9,6 +9,7 @@ import {
   lucideCircleCheck,
   lucideCircleX,
   lucideMailCheck,
+  lucidePencil,
   lucideRefreshCw,
   lucideSend,
 } from '@ng-icons/lucide';
@@ -19,7 +20,10 @@ import { IstDatePipe, relativeTime } from '../../../shared/pipes/ist-date.pipe';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../../shared/ui/page-header/page-header';
 import { SkeletonLines } from '../../../shared/ui/skeleton/skeleton';
-import { EmailAdminApi, OutboxMail, TestEmailResult } from './email-admin.api';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmService } from '../../../core/feedback/confirm.service';
+import { EmailAdminApi, MailServerSettings, OutboxMail, TestEmailResult } from './email-admin.api';
+import { MailServerDialog } from './mail-server-dialog';
 
 type TestState =
   | { readonly kind: 'idle' }
@@ -29,8 +33,8 @@ type TestState =
 
 /**
  * Admin › E-mail (ADR-029): the SMTP settings the server runs with, a test mail that shows the server's answer, the
- * outbox (queued, failed, sent) with retry, and the daily summary. Settings themselves live in appsettings / user
- * secrets (editing them here comes with S28).
+ * outbox (queued, failed, sent) with retry, and the daily summary. The mail server can be edited here (saved in the
+ * app, ADR-038); until then the configuration applies.
  */
 @Component({
   selector: 'app-email-admin-page',
@@ -52,6 +56,7 @@ type TestState =
       lucideCircleCheck,
       lucideCircleX,
       lucideMailCheck,
+      lucidePencil,
       lucideRefreshCw,
       lucideSend,
     }),
@@ -178,10 +183,31 @@ type TestState =
             <dt>Retries</dt>
             <dd>up to {{ s.maxAttempts }} attempts, waiting 1, 5, 15, 30 min, then hourly</dd>
           </dl>
-          <p class="m-0 mt-3 text-xs text-muted">
-            Change these in appsettings.json (section Email); keep the SMTP password in user
-            secrets.
-          </p>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              matButton="outlined"
+              type="button"
+              [disabled]="!mailServer.hasValue()"
+              (click)="editMailServer()"
+            >
+              <ng-icon name="lucidePencil" size="16" class="mr-1" />
+              Edit mail server
+            </button>
+            @if (mailServer.value()?.savedInApp) {
+              <button matButton type="button" (click)="resetMailServer()">
+                Use the configuration
+              </button>
+            }
+          </div>
+          @if (mailServer.value(); as m) {
+            <p class="m-0 mt-2 text-sm text-muted">
+              @if (m.savedInApp) {
+                Saved here by {{ m.updatedBy }} on {{ m.updatedAt | istDate: 'datetime' }}.
+              } @else {
+                From the server configuration (appsettings, section Email) until you save them here.
+              }
+            </p>
+          }
         </section>
 
         <div class="flex flex-col gap-4">
@@ -407,8 +433,11 @@ type TestState =
 export class EmailAdminPage {
   private readonly api = inject(EmailAdminApi);
   private readonly toast = inject(ToastService);
+  private readonly dialog = inject(MatDialog);
+  private readonly confirm = inject(ConfirmService);
 
   protected readonly status = rxResource({ stream: () => this.api.status() });
+  protected readonly mailServer = rxResource({ stream: () => this.api.mailServer() });
   protected readonly loadError = computed(() =>
     problemMessage(this.status.error(), 'E-mail status could not be loaded.'),
   );
@@ -442,6 +471,49 @@ export class EmailAdminPage {
       error: (error: unknown) =>
         this.test.set({ kind: 'failed', message: problemMessage(error, 'The test mail failed.') }),
     });
+  }
+
+  protected editMailServer(): void {
+    const settings = this.mailServer.value();
+    if (!settings) {
+      return;
+    }
+    this.dialog
+      .open<MailServerDialog, MailServerSettings, MailServerSettings>(MailServerDialog, {
+        data: settings,
+        width: '560px',
+        maxWidth: 'calc(100vw - 32px)',
+        restoreFocus: true,
+      })
+      .afterClosed()
+      .subscribe((saved) => {
+        if (saved) {
+          this.mailServerChanged(saved, 'Mail server saved. The next mail uses it.');
+        }
+      });
+  }
+
+  protected async resetMailServer(): Promise<void> {
+    const ok = await this.confirm.ask({
+      title: 'Use the configuration again?',
+      message:
+        'The mail server saved here is forgotten; mails go out with the settings in appsettings (section Email).',
+      confirmLabel: 'Use the configuration',
+    });
+    if (ok) {
+      this.api
+        .resetMailServer()
+        .subscribe((settings) =>
+          this.mailServerChanged(settings, 'The configured mail server is used again.'),
+        );
+    }
+  }
+
+  private mailServerChanged(settings: MailServerSettings, message: string): void {
+    this.mailServer.set(settings);
+    this.test.set({ kind: 'idle' });
+    this.status.reload();
+    this.toast.success(message);
   }
 
   protected runDigest(): void {

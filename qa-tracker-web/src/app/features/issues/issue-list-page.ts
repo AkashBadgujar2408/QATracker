@@ -55,6 +55,7 @@ import { SeverityBadge } from '../../shared/ui/severity-badge/severity-badge';
 import { SkeletonTable } from '../../shared/ui/skeleton/skeleton';
 import { StatusPill } from '../../shared/ui/status-pill/status-pill';
 import { UserAvatar } from '../../shared/ui/user-avatar/user-avatar';
+import { OverdueBadge } from '../../shared/ui/overdue-badge/overdue-badge';
 import {
   DEFAULT_SORT,
   EMPTY_FILTERS,
@@ -123,6 +124,7 @@ export class SaveViewDialog {
     RouterLink,
     NgIcon,
     IstDatePipe,
+    OverdueBadge,
     PluralPipe,
     EmptyState,
     PageHeader,

@@ -16,6 +16,7 @@ public interface IApplicationDbContext
     DbSet<DeployNotice> DeployNotices { get; }
     DbSet<Deployment> Deployments { get; }
     DbSet<EmailOutbox> EmailOutboxes { get; }
+    DbSet<EmailSetting> EmailSettings { get; }
     DbSet<Holiday> Holidays { get; }
     DbSet<Issue> Issues { get; }
     DbSet<IssueActivity> IssueActivities { get; }

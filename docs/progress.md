@@ -32,8 +32,8 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | S26 | Excel import API | ✅ Done (29-Oct-2026) |
 | S27 | Import UI | ✅ Done (29-Oct-2026), check moved to S27b |
 | S27b | Import end-to-end check (M5) | ✅ Done (30-Oct-2026) |
-| S28 | SLA, overdue & settings | ⏭ Next |
-| S29 | Sprint close & carry forward | |
+| S28 | SLA, overdue & settings | ✅ Done (30-Oct-2026) |
+| S29 | Sprint close & carry forward | ⏭ Next |
 | S30 | Security & integration test pass | |
 | S31 | UX polish & performance | |
 | S32 | Deployment & handover (M6) | |
@@ -1000,3 +1000,41 @@ JSON → 500 still open (S30).
 **Libraries added (licence):** none.
 
 **Next session:** S28 – SLA, overdue & settings.
+
+---
+
+## S28 – SLA, overdue & settings   (30-Oct-2026)
+
+**Done:**
+- DB script `006_SettingsAndSmtp.sql` (RowVersion on SlaPolicies / SprintPhases, table EmailSettings); re-scaffolded.
+- Application `Features/Settings` (SLA, holidays, phases incl. reorder), `EmailAdmin/MailServerSettings`
+  (`EmailSettingsSource`, get / save / reset), `Notifications/SlaAlerts` (overdue + critical unassigned).
+  Infrastructure: `SlaAlertsWorker` (hourly), SMTP sender uses the effective settings. API `SettingsEndpoints`,
+  `/api/admin/email/settings` (GET/PUT/DELETE). ADR-038.
+- Web: `/admin/settings` (SLA with bars on one scale, Holidays, Sprint phases), sidebar "Settings", "Edit mail
+  server" dialog and source line on Admin › E-mail, `app-overdue-badge` in list / board / detail and /dev/ui.
+- Tests: integration – SLA change gives a new due date within 1 working hour (and 400 / 403 / 409), holidays
+  (201 / 409 / 204 / 404), phases (add, duplicate, reorder, rename + switch off hides from the lookup, 409), SLA
+  alerts fire once (overdue for the assignee, critical unassigned for both members, not for an issue unassigned 30 min
+  ago; critical mailed instantly, overdue not) and overdue fires again for a new due date; SMTP settings saved in the
+  app are used by the next test mail (fake SMTP server checks the envelope), password never returned, 409 on a second
+  first save, reset. Web – working-day text, overdue label, SLA bars and payload, holidays by year, phase reorder
+  payload, mail-server dialog password keep / remove.
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 274/274 · `ng build` (initial 724 kB) · `ng test` 169/169 ·
+`ng lint`. In Chrome as `ui.admin`: Settings tabs (SLA bars 7 / 14 / 21 / 28 / 35 working days, phases with sprint
+counts, holidays empty state), mail-server dialog (fixed: the sign-in hint overlapped the sender field), overdue
+badges in /dev/ui. The local SMTP settings were not changed (dialog cancelled).
+
+**Deviations from plan:** none in scope. SLA / holiday changes are not applied to existing due dates (stated in the
+UI, ADR-038). The browser check did not save settings or wait for a live hourly alert – those paths are covered by
+the integration tests.
+
+**Carry-over / known gaps:** "Due date editable by tester" (plan 8.4) is still not built. The IST date adapter lives
+in `shared/charts/dashboard-filters.ts` (now also used by Holidays – could move to shared/dates in S31). Local
+`ui.tester` / `ui.admin` have a new local password (deactivate when not needed). Invalid enum in JSON → 500 still open
+(S30).
+
+**Libraries added (licence):** none.
+
+**Next session:** S29 – Sprint close & carry forward.

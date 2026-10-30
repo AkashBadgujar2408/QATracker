@@ -50,6 +50,8 @@ public partial class User
 
     public virtual ICollection<Deployment> DeploymentRetestedBies { get; set; } = new List<Deployment>();
 
+    public virtual ICollection<EmailSetting> EmailSettings { get; set; } = new List<EmailSetting>();
+
     public virtual ICollection<IssueActivity> IssueActivities { get; set; } = new List<IssueActivity>();
 
     public virtual ICollection<Issue> IssueAssignees { get; set; } = new List<Issue>();

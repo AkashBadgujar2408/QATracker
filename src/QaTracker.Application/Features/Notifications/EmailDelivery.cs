@@ -265,10 +265,10 @@ public static class EmailTemplates
         return (subject, Layout(options, $"Daily summary · {FormatIst(now)}", body.ToString(), "You get this summary for comments and overdue issues."));
     }
 
-    public static (string Subject, string Html) Test(EmailOptions options, string admin, DateTimeOffset now)
+    public static (string Subject, string Html) Test(EmailOptions options, EmailAdmin.SmtpConfiguration smtp, string admin, DateTimeOffset now)
     {
         var body = Paragraph($"This is a test mail sent by {E(admin)} from the QA Tracker e-mail settings on {FormatIst(now)}.", Ink)
-            + Paragraph(E($"Sender: {options.FromName} <{options.From}>, SMTP server {options.Smtp.Host}:{options.Smtp.Port}."), Muted)
+            + Paragraph(E($"Sender: {smtp.FromName} <{smtp.From}>, SMTP server {smtp.Server}."), Muted)
             + Paragraph("If you can read this, notification mails will arrive.", Muted);
         return ("QA Tracker test mail", Layout(options, "Test mail", body, "An administrator sent this test mail."));
     }

@@ -611,3 +611,33 @@ new alerts/mails and background tasks configurable in the app; one database for 
 - **Done**: created / skipped / screenshots / new modules, result warnings, links to the imported issues (issue list
   filtered by the sprint, sorted by key), the first issue and the Testing screen.
 - The grid scrolls sideways inside its card on narrow screens; the commit bar sticks to the bottom.
+
+## ADR-038 – SLA alerts and admin settings (30-Oct-2026, S28)
+- **Settings** `/admin/settings` (Admin, sidebar "Settings"; Users now has a people icon), tabs in the URL (`?tab=`):
+  **SLA** – working hours per severity (1 … 2 400, i.e. ≤ 300 working days) with the day equivalent and a bar per
+  severity on one scale; only changed severities are sent. **Holidays** – add (date picker dd/MMM/yyyy) / remove,
+  grouped by year. **Sprint phases** – add, rename inline, switch off (hidden from new sprints, existing sprints keep
+  theirs; the last active phase cannot be switched off), move up/down. API `GET/PUT /api/settings/sla`,
+  `GET/POST /api/settings/holidays`, `DELETE /api/settings/holidays/{yyyy-MM-dd}`, `GET/POST /api/settings/phases`,
+  `PUT /api/settings/phases/{id}`, `PUT /api/settings/phases/order`. SlaPolicies and SprintPhases got a RowVersion
+  (script 006); every update and the reorder send versions (409 on conflict).
+- **SLA and holiday changes are not retroactive**: they apply to due dates set from then on (testing completed);
+  existing due dates stay. Said on both tabs.
+- **Mail server in the app**: table `EmailSettings` (one row, Id = 1). `EmailSettingsSource` (scoped) gives the
+  effective settings – the saved row, otherwise the `Email` section of the configuration – and the SMTP sender (now
+  scoped), the test mail and the status screen all use it, so a save applies to the next mail. Enabled, Workers,
+  AppBaseUrl, digest time and retries stay in the configuration. The SMTP password is stored as typed (same decision
+  as ADR-009) and never returned: `null` keeps it (on the first save the configured one is copied), `""` removes it,
+  no sign-in user drops it. "Use the configuration" deletes the row. Admin › E-mail: "Edit mail server" dialog and
+  where the settings come from (saved by whom / configuration).
+- **SLA alerts job** (`SlaAlertsHandler`, hourly `SlaAlertsWorker`, first run at start-up; runs whenever
+  `Email:Workers` is on, also with e-mail off; last run in `JobRuns` "sla-alerts"). Only issues developers act on
+  (sprint Testing Completed, status awaiting a fix):
+  **Overdue** – assignee (active), once per issue and due date (no Overdue notification created at or after the
+  current due date), so a new due date that passes alerts again; mailed only in the daily summary.
+  **Critical unassigned** – every active project member, when a critical issue has had no assignee for > 2 h since
+  testing completed and since its last assignment change; once per issue; mailed instantly. Both are plain
+  Notification rows, so the change feed mails and pushes them like any other.
+- **Overdue badge** `app-overdue-badge` (shared/ui, in /dev/ui): clock-alert icon + "Overdue" / "Overdue 3 d" in the
+  critical tone, title "Was due …" – in the issue list Due column, on board cards (instead of the red date) and in
+  the issue header.

@@ -14,6 +14,16 @@ public static class EmailAdminEndpoints
         group.MapGet("/", async (EmailStatusHandler handler, CancellationToken ct) => TypedResults.Ok(await handler.HandleAsync(ct)))
             .WithSummary("Effective SMTP settings (password only as set / not set), outbox counts, recent problems and the daily summary's last run.");
 
+        group.MapGet("/settings", async (GetMailServerSettingsHandler handler, CancellationToken ct) => TypedResults.Ok(await handler.HandleAsync(ct)))
+            .WithSummary("SMTP server and sender for the form (saved in the app, else the configuration); the password only as set / not set.");
+
+        group.MapPut("/settings", async (UpdateMailServerSettingsCommand command, UpdateMailServerSettingsHandler handler, CancellationToken ct) =>
+                (await handler.HandleAsync(command, ct)).ToHttp(settings => TypedResults.Ok(settings)))
+            .WithSummary("Save the SMTP server and sender in the app; the next mail uses them. Password: null keeps it, \"\" removes it.");
+
+        group.MapDelete("/settings", async (ResetMailServerSettingsHandler handler, CancellationToken ct) => TypedResults.Ok(await handler.HandleAsync(ct)))
+            .WithSummary("Forget the settings saved in the app – the configuration applies again.");
+
         group.MapPost("/test", async (SendTestEmailCommand command, SendTestEmailHandler handler, CancellationToken ct) =>
                 (await handler.HandleAsync(command, ct)).ToHttp(result => TypedResults.Ok(result)))
             .WithSummary("Send a test mail straight through SMTP and return the server's answer (422 smtp_failed with the reason).");

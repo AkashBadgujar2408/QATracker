@@ -61,13 +61,19 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(EmailOptions.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
-        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<EmailOutboxProcessor>();
         var email = configuration.GetSection(EmailOptions.SectionName).Get<EmailOptions>() ?? new EmailOptions();
         if (email.Enabled && email.Workers)
         {
             services.AddHostedService<EmailOutboxWorker>();
             services.AddHostedService<DailyDigestWorker>();
+        }
+
+        // In-app SLA alerts run with or without e-mail; Email:Workers keeps all background jobs out of a process.
+        if (email.Workers)
+        {
+            services.AddHostedService<SlaAlertsWorker>();
         }
 
         return services;

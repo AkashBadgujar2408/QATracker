@@ -78,4 +78,46 @@ export class EmailAdminApi {
   retry(id: number): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/admin/email/outbox/${id}/retry`, null);
   }
+
+  mailServer(): Observable<MailServerSettings> {
+    return this.http.get<MailServerSettings>(`${this.baseUrl}/admin/email/settings`);
+  }
+
+  /** Errors are shown in the dialog (field messages), not as a toast. */
+  saveMailServer(settings: MailServerUpdate): Observable<MailServerSettings> {
+    return this.http.put<MailServerSettings>(`${this.baseUrl}/admin/email/settings`, settings, {
+      context: new HttpContext().set(SILENT_ERRORS, true),
+    });
+  }
+
+  resetMailServer(): Observable<MailServerSettings> {
+    return this.http.delete<MailServerSettings>(`${this.baseUrl}/admin/email/settings`);
+  }
+}
+
+/** SMTP server and sender (ADR-038): saved in the app, otherwise the configuration. No password, only whether one is set. */
+export interface MailServerSettings {
+  readonly smtpHost: string;
+  readonly smtpPort: number;
+  readonly smtpEnableSsl: boolean;
+  readonly smtpUserName: string | null;
+  readonly passwordSet: boolean;
+  readonly fromAddress: string;
+  readonly fromName: string;
+  readonly savedInApp: boolean;
+  readonly updatedAt: string | null;
+  readonly updatedBy: string | null;
+  readonly rowVersion: string | null;
+}
+
+/** `smtpPassword`: null keeps the current one, '' removes it. */
+export interface MailServerUpdate {
+  readonly smtpHost: string;
+  readonly smtpPort: number;
+  readonly smtpEnableSsl: boolean;
+  readonly smtpUserName: string | null;
+  readonly smtpPassword: string | null;
+  readonly fromAddress: string;
+  readonly fromName: string;
+  readonly rowVersion: string | null;
 }

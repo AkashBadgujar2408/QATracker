@@ -44,9 +44,12 @@
         }
       </span>
       @if (i.dueDate) {
-        <span class="flex items-center gap-1" [class.text-severity-critical]="overdue()">
+        <span class="flex items-center gap-1.5">
           <ng-icon name="lucideClock" size="14" />
-          Due {{ i.dueDate | istDate }}{{ overdue() ? ' · overdue' : '' }}
+          Due {{ i.dueDate | istDate }}
+          @if (overdue()) {
+            <app-overdue-badge [dueDate]="i.dueDate" />
+          }
         </span>
       }
       <span>{{ i.sprintName }} · {{ sprintLabels[i.sprintStatus] }}</span>

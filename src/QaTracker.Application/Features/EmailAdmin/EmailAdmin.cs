@@ -46,7 +46,7 @@ public sealed class SendTestEmailValidator : AbstractValidator<SendTestEmailComm
     }
 }
 
-public sealed class EmailStatusHandler(IApplicationDbContext db, IOptions<EmailOptions> options, IClock clock)
+public sealed class EmailStatusHandler(IApplicationDbContext db, EmailSettingsSource settings, IOptions<EmailOptions> options, IClock clock)
 {
     private const int ListSize = 10;
 
@@ -72,15 +72,16 @@ public sealed class EmailStatusHandler(IApplicationDbContext db, IOptions<EmailO
         var digest = await db.JobRuns.AsNoTracking().Where(j => j.Name == DailyDigestHandler.JobName)
             .Select(j => new { j.LastRunAt, j.LastResult })
             .SingleOrDefaultAsync(cancellationToken);
+        var smtp = await settings.GetAsync(cancellationToken);
 
         return new EmailStatusDto(
             o.Enabled,
             o.Workers,
-            o.From,
-            o.FromName,
+            smtp.From,
+            smtp.FromName,
             o.AppBaseUrl,
             o.MaxAttempts,
-            new SmtpSettingsDto(o.Smtp.Host, o.Smtp.Port, o.Smtp.EnableSsl, string.IsNullOrWhiteSpace(o.Smtp.UserName) ? null : o.Smtp.UserName, !string.IsNullOrEmpty(o.Smtp.Password)),
+            new SmtpSettingsDto(smtp.Host, smtp.Port, smtp.EnableSsl, smtp.UserName, !string.IsNullOrEmpty(smtp.Password)),
             new OutboxStatsDto(pending, failed, sent, oldest, lastSent),
             problems,
             recent,
@@ -95,6 +96,7 @@ public sealed class EmailStatusHandler(IApplicationDbContext db, IOptions<EmailO
 public sealed class SendTestEmailHandler(
     IValidator<SendTestEmailCommand> validator,
     IEmailSender sender,
+    EmailSettingsSource settings,
     IOptions<EmailOptions> options,
     ICurrentUser currentUser,
     IApplicationDbContext db,
@@ -107,11 +109,11 @@ public sealed class SendTestEmailHandler(
             return invalid;
         }
 
-        var o = options.Value;
+        var smtp = await settings.GetAsync(cancellationToken);
         var to = command.To!.Trim();
         var admin = await db.Users.AsNoTracking().Where(u => u.Id == currentUser.UserId).Select(u => u.FullName).SingleAsync(cancellationToken);
-        var (subject, html) = EmailTemplates.Test(o, admin, clock.UtcNow);
-        var server = $"{o.Smtp.Host}:{o.Smtp.Port}{(o.Smtp.EnableSsl ? " (TLS)" : string.Empty)}";
+        var (subject, html) = EmailTemplates.Test(options.Value, smtp, admin, clock.UtcNow);
+        var server = smtp.Server;
         var watch = Stopwatch.StartNew();
         try
         {

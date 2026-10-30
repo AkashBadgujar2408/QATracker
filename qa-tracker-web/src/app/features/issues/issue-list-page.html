@@ -297,13 +297,11 @@
         </ng-container>
         <ng-container matColumnDef="dueDate">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Due</th>
-          <td
-            mat-cell
-            *matCellDef="let row"
-            class="whitespace-nowrap tabular-nums"
-            [class.text-severity-critical]="isOverdue(row)"
-          >
+          <td mat-cell *matCellDef="let row" class="whitespace-nowrap tabular-nums">
             {{ row.dueDate ? (row.dueDate | istDate) : '–' }}
+            @if (isOverdue(row)) {
+              <app-overdue-badge class="ml-1.5 align-middle" [dueDate]="row.dueDate" />
+            }
           </td>
         </ng-container>
         <ng-container matColumnDef="createdAt">

@@ -182,6 +182,13 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./features/admin/email/email-admin-page').then((m) => m.EmailAdminPage),
           },
+          {
+            path: 'settings',
+            title: 'Settings',
+            data: { breadcrumb: 'Settings' },
+            loadComponent: () =>
+              import('./features/admin/settings/settings-page').then((m) => m.SettingsPage),
+          },
         ],
       },
       {

@@ -49,8 +49,14 @@ export const NAV_ITEMS: readonly NavItem[] = [
     link: '/import',
     roles: ['Tester', 'Admin'],
   },
-  { label: 'Users', icon: 'lucideSettings', link: '/admin/users', roles: ['Admin'] },
+  { label: 'Users', icon: 'lucideUsers', link: '/admin/users', roles: ['Admin'] },
   { label: 'E-mail', icon: 'lucideMail', link: '/admin/email', roles: ['Admin'] },
+  {
+    label: 'Settings',
+    icon: 'lucideSettings',
+    link: '/admin/settings',
+    roles: ['Admin'],
+  },
 ];
 
 /** Navigation for a role: the items (and dashboard children) that role may see. */

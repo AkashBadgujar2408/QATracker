@@ -22,6 +22,8 @@ public partial class QaTrackerDbContext : DbContext
 
     public virtual DbSet<EmailOutbox> EmailOutboxes { get; set; }
 
+    public virtual DbSet<EmailSetting> EmailSettings { get; set; }
+
     public virtual DbSet<Holiday> Holidays { get; set; }
 
     public virtual DbSet<Issue> Issues { get; set; }
@@ -174,6 +176,24 @@ public partial class QaTrackerDbContext : DbContext
             entity.Property(e => e.LastError).HasMaxLength(2000);
             entity.Property(e => e.Subject).HasMaxLength(300);
             entity.Property(e => e.ToAddress).HasMaxLength(256);
+        });
+
+        modelBuilder.Entity<EmailSetting>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.FromAddress).HasMaxLength(256);
+            entity.Property(e => e.FromName).HasMaxLength(100);
+            entity.Property(e => e.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
+            entity.Property(e => e.SmtpHost).HasMaxLength(255);
+            entity.Property(e => e.SmtpPassword).HasMaxLength(256);
+            entity.Property(e => e.SmtpUserName).HasMaxLength(256);
+
+            entity.HasOne(d => d.UpdatedBy).WithMany(p => p.EmailSettings)
+                .HasForeignKey(d => d.UpdatedById)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_EmailSettings_UpdatedBy");
         });
 
         modelBuilder.Entity<Holiday>(entity =>
@@ -493,6 +513,9 @@ public partial class QaTrackerDbContext : DbContext
         {
             entity.HasIndex(e => e.Severity, "UX_SlaPolicies_Severity").IsUnique();
 
+            entity.Property(e => e.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
             entity.Property(e => e.Severity).HasMaxLength(20);
         });
 
@@ -519,6 +542,9 @@ public partial class QaTrackerDbContext : DbContext
             entity.HasIndex(e => e.Name, "UX_SprintPhases_Name").IsUnique();
 
             entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
         });
 
         modelBuilder.Entity<SprintSnapshot>(entity =>

@@ -34,6 +34,7 @@ import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { PriorityIcon } from '../../shared/ui/priority-icon/priority-icon';
 import { HealthBadge } from '../../shared/ui/health-badge/health-badge';
+import { OverdueBadge } from '../../shared/ui/overdue-badge/overdue-badge';
 import { SprintReportButton } from '../../shared/reports/sprint-report-button';
 import { SeverityBadge } from '../../shared/ui/severity-badge/severity-badge';
 import { SkeletonLines, SkeletonTable } from '../../shared/ui/skeleton/skeleton';
@@ -73,6 +74,7 @@ interface Swatch {
     StatusPill,
     SeverityBadge,
     HealthBadge,
+    OverdueBadge,
     SprintReportButton,
     PriorityIcon,
     UserAvatar,
@@ -203,6 +205,10 @@ export class UiShowcase {
   protected readonly statuses = ISSUE_STATUSES;
   protected readonly severities = SEVERITIES;
   protected readonly healths = ['Green', 'Amber', 'Red'] as const;
+  // 2 hours, 1 day and 9 days past the due date.
+  protected readonly overdueSamples = [2, 26, 9 * 24 + 3].map((h) =>
+    new Date(Date.now() - h * 3_600_000).toISOString(),
+  );
   protected readonly priorities = PRIORITIES;
   protected readonly people = [
     'John Carter',

@@ -10,6 +10,7 @@ import { ISSUE_STATUS_META, SEVERITY_META } from '../../shared/models/issue-enum
 import { IstDatePipe } from '../../shared/pipes/ist-date.pipe';
 import { PriorityIcon } from '../../shared/ui/priority-icon/priority-icon';
 import { UserAvatar } from '../../shared/ui/user-avatar/user-avatar';
+import { OverdueBadge } from '../../shared/ui/overdue-badge/overdue-badge';
 
 /**
  * One issue on the board: severity edge, key + title, where it is, due date, reopen count, assignee. The menu offers
@@ -25,6 +26,7 @@ import { UserAvatar } from '../../shared/ui/user-avatar/user-avatar';
     RouterLink,
     NgIcon,
     IstDatePipe,
+    OverdueBadge,
     PriorityIcon,
     UserAvatar,
   ],
@@ -69,17 +71,15 @@ import { UserAvatar } from '../../shared/ui/user-avatar/user-avatar';
     <p class="m-0 mt-1 truncate text-sm text-muted" [title]="where()">{{ where() }}</p>
     <div class="mt-2 flex items-center gap-3 text-sm">
       <app-priority-icon [priority]="card().priority" />
-      @if (card().dueDate) {
-        <span
-          class="inline-flex items-center gap-1 tabular-nums"
-          [class.text-severity-critical]="card().overdue"
-          [class.font-medium]="card().overdue"
-          [class.text-muted]="!card().overdue"
-          [title]="card().overdue ? 'Overdue' : 'Due date'"
-        >
-          <ng-icon name="lucideClock" size="14" />
-          {{ card().dueDate | istDate }}
-        </span>
+      @if (card().dueDate; as due) {
+        @if (card().overdue) {
+          <app-overdue-badge [dueDate]="due" />
+        } @else {
+          <span class="inline-flex items-center gap-1 text-muted tabular-nums" title="Due date">
+            <ng-icon name="lucideClock" size="14" />
+            {{ due | istDate }}
+          </span>
+        }
       }
       @if (card().reopenCount > 0) {
         <span

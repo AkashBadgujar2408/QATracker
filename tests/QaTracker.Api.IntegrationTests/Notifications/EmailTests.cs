@@ -277,4 +277,57 @@ public sealed class EmailTests(ApiFactory api)
         (await (await api.ClientForAsync(UserRole.Developer)).GetAsync("/api/admin/email", Ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         (await admin.PostAsync("/api/admin/email/digest", null, Ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
     }
+
+    /// <summary>In this class on purpose: tests of one class run one after another, and the screen test above expects the configured server.</summary>
+    [Fact]
+    public async Task SmtpSettingsSavedInTheApp_AreUsedByTheNextTestMail_AndCanBeReset()
+    {
+        var admin = await api.ClientForAsync(UserRole.Admin);
+        var configured = await (await admin.GetAsync("/api/admin/email/settings", Ct)).ShouldBeOkAsync<MailServerSettingsDto>();
+        (configured.SavedInApp, configured.SmtpHost, configured.SmtpPort, configured.RowVersion).ShouldBe((false, "127.0.0.1", 1, (string?)null));
+
+        await using var smtp = new FakeSmtpServer();
+        await (await admin.PutAsJsonAsync("/api/admin/email/settings", new { smtpHost = "127.0.0.1", smtpPort = 0, fromAddress = "alerts@test.local", fromName = "QA alerts" }, Ct))
+            .ShouldBeProblemAsync(HttpStatusCode.BadRequest);
+        try
+        {
+            // First save (no version yet) with a sign-in: the password is stored but never returned.
+            var response = await admin.PutAsJsonAsync("/api/admin/email/settings", new
+            {
+                smtpHost = " relay.test.local ", smtpPort = 587, smtpEnableSsl = true, smtpUserName = "relay", smtpPassword = "s3cret",
+                fromAddress = "alerts@test.local", fromName = "QA alerts", rowVersion = (string?)null,
+            }, Ct);
+            var raw = await response.Content.ReadAsStringAsync(Ct);
+            response.StatusCode.ShouldBe(HttpStatusCode.OK, raw);
+            raw.ShouldNotContain("s3cret");
+            var first = JsonSerializer.Deserialize<MailServerSettingsDto>(raw, ApiFactory.Json)!;
+            (first.SavedInApp, first.SmtpHost, first.PasswordSet).ShouldBe((true, "relay.test.local", true));
+
+            // Another "first save" is a conflict; with the version it saves – here the fake server without sign-in.
+            await (await admin.PutAsJsonAsync("/api/admin/email/settings", new
+            {
+                smtpHost = "127.0.0.1", smtpPort = smtp.Port, smtpEnableSsl = false, fromAddress = "alerts@test.local", fromName = "QA alerts", rowVersion = (string?)null,
+            }, Ct)).ShouldBeProblemAsync(HttpStatusCode.Conflict, "concurrency");
+            var saved = await (await admin.PutAsJsonAsync("/api/admin/email/settings", new
+            {
+                smtpHost = "127.0.0.1", smtpPort = smtp.Port, smtpEnableSsl = false, smtpUserName = "", fromAddress = "alerts@test.local", fromName = "QA alerts",
+                rowVersion = first.RowVersion,
+            }, Ct)).ShouldBeOkAsync<MailServerSettingsDto>();
+            (saved.SmtpPort, saved.SmtpUserName, saved.PasswordSet).ShouldBe((smtp.Port, (string?)null, false));
+
+            var sent = await (await admin.PostAsJsonAsync("/api/admin/email/test", new { to = "someone@test.local" }, Ct)).ShouldBeOkAsync<TestEmailResultDto>();
+            sent.Server.ShouldBe($"127.0.0.1:{smtp.Port}");
+            smtp.Received.ShouldBe([("alerts@test.local", "someone@test.local")]);
+
+            var status = await (await admin.GetAsync("/api/admin/email", Ct)).ShouldBeOkAsync<EmailStatusDto>();
+            (status.Smtp.Port, status.From, status.FromName).ShouldBe((smtp.Port, "alerts@test.local", "QA alerts"));
+        }
+        finally
+        {
+            var reset = await (await admin.DeleteAsync("/api/admin/email/settings", Ct)).ShouldBeOkAsync<MailServerSettingsDto>();
+            (reset.SavedInApp, reset.SmtpPort).ShouldBe((false, 1));
+        }
+
+        (await (await api.ClientForAsync(UserRole.Tester)).GetAsync("/api/admin/email/settings", Ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
 }

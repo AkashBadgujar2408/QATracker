@@ -30,6 +30,31 @@ internal sealed class EmailOutboxWorker(IServiceScopeFactory scopes, IOptions<Em
     }
 }
 
+/// <summary>Overdue and critical-unassigned alerts once an hour, the first run right after start-up (ADR-038).</summary>
+internal sealed class SlaAlertsWorker(IServiceScopeFactory scopes, ILogger<SlaAlertsWorker> logger) : BackgroundService
+{
+    public static readonly TimeSpan Interval = TimeSpan.FromHours(1);
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        using var timer = new PeriodicTimer(Interval);
+        do
+        {
+            try
+            {
+                await using var scope = scopes.CreateAsyncScope();
+                var result = await scope.ServiceProvider.GetRequiredService<SlaAlertsHandler>().HandleAsync(stoppingToken);
+                logger.LogInformation("SLA alerts: {Overdue} overdue, {Critical} critical unassigned", result.Overdue, result.CriticalUnassigned);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogError(ex, "SLA alerts run failed");
+            }
+        }
+        while (await timer.WaitForNextTickAsync(stoppingToken));
+    }
+}
+
 /// <summary>
 /// Queues the daily summary at <see cref="EmailOptions.DigestTimeIst"/> IST. After a restart it catches up a slot it
 /// missed (last run before the latest slot).

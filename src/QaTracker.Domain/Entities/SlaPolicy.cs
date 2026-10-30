@@ -11,4 +11,6 @@ public partial class SlaPolicy
     public Severity Severity { get; set; }
 
     public int WorkingHours { get; set; }
+
+    public byte[] RowVersion { get; set; } = null!;
 }

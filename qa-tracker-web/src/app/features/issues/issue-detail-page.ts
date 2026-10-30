@@ -46,6 +46,7 @@ import { SkeletonLines } from '../../shared/ui/skeleton/skeleton';
 import { StatusPill } from '../../shared/ui/status-pill/status-pill';
 import { UserAvatar } from '../../shared/ui/user-avatar/user-avatar';
 import { ActionDialog, ActionDialogData } from './action-dialog';
+import { OverdueBadge } from '../../shared/ui/overdue-badge/overdue-badge';
 
 /** Button text per action; MarkFixed from Fixed/Verified adds a deployment. */
 export function actionLabel(
@@ -135,6 +136,7 @@ export function environmentStrip(deployments: readonly Deployment[]): Environmen
     RouterLink,
     NgIcon,
     IstDatePipe,
+    OverdueBadge,
     EmptyState,
     IssueAttachments,
     IssueTimeline,

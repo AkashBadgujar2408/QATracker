@@ -90,6 +90,7 @@ try
     app.MapAttachmentsEndpoints();
     app.MapNotificationsEndpoints();
     app.MapEmailAdminEndpoints();
+    app.MapSettingsEndpoints();
     app.MapAnalyticsEndpoints();
     app.MapImportEndpoints();
     app.MapHub<TrackerHub>(TrackerHub.Path);
