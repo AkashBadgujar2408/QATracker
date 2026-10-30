@@ -201,9 +201,9 @@ describe('ImportPage', () => {
     // skip the second row
     el.querySelectorAll<HTMLInputElement>('tbody input[type="checkbox"]')[1].click();
     fixture.detectChanges();
-    expect(button(el, 'Import 1 issues')).toBeTruthy();
+    expect(text(button(el, 'Import 1 issue')).trim()).toBe('Import 1 issue');
 
-    button(el, 'Import 1 issues').click();
+    button(el, 'Import 1 issue').click();
     const commit = http.expectOne('/api/import/excel/commit');
     expect(JSON.parse((commit.request.body as FormData).get('corrections') as string)).toEqual({
       modules: [],
@@ -221,8 +221,8 @@ describe('ImportPage', () => {
     fixture.detectChanges();
 
     // 4 · summary with links
-    expect(text(el)).toContain('1 issues imported into Sprint 1 – UAT');
-    expect(text(el)).toContain('PGERP-143 · 2 screenshots · 1 new modules · 1 rows skipped');
+    expect(text(el)).toContain('1 issue imported into Sprint 1 – UAT');
+    expect(text(el)).toContain('PGERP-143 · 2 screenshots · 1 new module · 1 row skipped');
     const open = [...el.querySelectorAll<HTMLAnchorElement>('a')].find((a) =>
       text(a).includes('Open the imported issues'),
     )!;

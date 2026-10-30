@@ -317,7 +317,9 @@ export class EntityPicker implements ControlValueAccessor {
       this.search.setValue(this.value() ?? '', { emitEvent: false });
     }
     this.cdr.markForCheck();
+    // Focus opens the autocomplete; the choice is made, so keep the list closed.
     this.inputRef().nativeElement.focus();
+    this.trigger().closePanel();
   }
 
   private choose(id: number | null): void {

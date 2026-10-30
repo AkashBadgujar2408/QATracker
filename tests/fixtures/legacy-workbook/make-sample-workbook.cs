@@ -1,6 +1,6 @@
 // Usage: dotnet run tests/fixtures/legacy-workbook/make-sample-workbook.cs -- "<output.xlsx>"
-#:package ClosedXML@0.105.0
-#:package SkiaSharp@4.154.0
+#:package ClosedXML
+#:package SkiaSharp
 using ClosedXML.Excel;
 using SkiaSharp;
 

@@ -163,7 +163,7 @@
         <div class="qa-stat">
           <span class="text-sm text-muted">Issues found</span>
           <strong>{{ counts().total }}</strong>
-          <span class="text-sm text-muted">in {{ p.modules.length }} sheets</span>
+          <span class="text-sm text-muted">in {{ p.modules.length | plural: 'sheet' }}</span>
         </div>
         <div class="qa-stat">
           <span class="text-sm text-muted">Ready as read</span>
@@ -191,7 +191,7 @@
         <div class="qa-stat">
           <span class="text-sm text-muted">Screenshots</span>
           <strong>{{ counts().images }}</strong>
-          <span class="text-sm text-muted">{{ counts().skipped }} rows skipped</span>
+          <span class="text-sm text-muted">{{ counts().skipped | plural: 'row' }} skipped</span>
         </div>
       </section>
 
@@ -355,7 +355,7 @@
                     </td>
                     <td>
                       <mat-select
-                        class="qa-cell-select"
+                        class="qa-cell-select qa-cell-select-wide"
                         panelWidth=""
                         placeholder="Unassigned"
                         [aria-label]="'Assignee of row ' + r.row.id"
@@ -420,7 +420,7 @@
       <div class="qa-commit-bar">
         <button matButton type="button" (click)="goTo('target')">Back</button>
         <span class="flex-1 text-sm text-muted">
-          {{ counts().included }} issues into {{ p.projectKey }} · {{ p.sprintName }}
+          {{ counts().included | plural: 'issue' }} into {{ p.projectKey }} · {{ p.sprintName }}
           @if (counts().needsReview > 0) {
             – {{ counts().needsReview }} with warnings are imported as shown
           }
@@ -432,7 +432,7 @@
           [attr.aria-busy]="committing()"
           (click)="commit()"
         >
-          {{ committing() ? 'Importing…' : 'Import ' + counts().included + ' issues' }}
+          {{ committing() ? 'Importing…' : 'Import ' + (counts().included | plural: 'issue') }}
         </button>
       </div>
     }
@@ -446,15 +446,16 @@
           <ng-icon name="lucideCircleCheck" size="28" class="shrink-0 text-status-verified" />
           <div class="min-w-0 flex-1">
             <h2 id="step-done" class="m-0 text-lg font-semibold">
-              {{ r.created }} issues imported into {{ committedSprint()?.name }}
+              {{ r.created | plural: 'issue' }} imported into {{ committedSprint()?.name }}
             </h2>
             <p class="m-0 mt-1 text-muted">
               @if (r.firstKey) {
                 {{ r.firstKey }}{{ r.lastKey !== r.firstKey ? ' – ' + r.lastKey : '' }} ·
               }
-              {{ r.attachments }} screenshots · {{ r.modulesCreated }} new modules
+              {{ r.attachments | plural: 'screenshot' }} ·
+              {{ r.modulesCreated | plural: 'new module' }}
               @if (r.skipped) {
-                · {{ r.skipped }} rows skipped
+                · {{ r.skipped | plural: 'row' }} skipped
               }
             </p>
           </div>

@@ -177,12 +177,16 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
+/* Wide enough for "Not assessed" and a full developer name without running into the arrow. */
 .qa-cell-select {
-  min-width: 8.5rem;
+  min-width: 9.5rem;
   padding: 4px 8px;
   border: 1px solid var(--qa-border);
   border-radius: var(--qa-radius-control);
   background: var(--qa-surface);
+}
+.qa-cell-select-wide {
+  min-width: 12rem;
 }
 .qa-commit-bar {
   position: sticky;

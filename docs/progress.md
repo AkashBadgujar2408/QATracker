@@ -19,19 +19,20 @@ Plan: 32 sessions (S01–S32), ~2 h each. Milestones: M1 after S11 · M2 after S
 | S13 | Workflow API | ✅ Done (28-Oct-2026) |
 | S14 | Timeline & comments API | ✅ Done (28-Oct-2026) |
 | S15 | Issue list & detail UI | ✅ Done (28-Oct-2026) |
-| S16 | My work, retest queue & deploy notice API | ⏭ Next |
-| S17 | My work, retest queue & deploy notice UI (M2) | |
-| S18 | SignalR & in-app notifications | |
-| S19 | Email notifications | |
-| S20 | Kanban board (M3) | |
-| S21 | Analytics API | |
-| S22 | Chart components & Overview dashboard | |
-| S23 | Sprint & Developer dashboards | |
-| S24 | Quality & Client health dashboards (M4) | |
-| S25 | Sprint report export | |
-| S26 | Excel import API | |
-| S27 | Import UI (M5) | |
-| S28 | SLA, overdue & settings | |
+| S16 | My work, retest queue & deploy notice API | ✅ Done (28-Oct-2026) |
+| S17 | My work, retest queue & deploy notice UI (M2) | ✅ Done (28-Oct-2026) |
+| S18 | SignalR & in-app notifications | ✅ Done (29-Oct-2026) |
+| S19 | Email notifications | ✅ Done (29-Oct-2026) |
+| S20 | Kanban board (M3) | ✅ Done (29-Oct-2026) |
+| S21 | Analytics API | ✅ Done (29-Oct-2026) |
+| S22 | Chart components & Overview dashboard | ✅ Done (29-Oct-2026) |
+| S23 | Sprint & Developer dashboards | ✅ Done (29-Oct-2026) |
+| S24 | Quality & Client health dashboards (M4) | ✅ Done (29-Oct-2026) |
+| S25 | Sprint report export | ✅ Done (29-Oct-2026) |
+| S26 | Excel import API | ✅ Done (29-Oct-2026) |
+| S27 | Import UI | ✅ Done (29-Oct-2026), check moved to S27b |
+| S27b | Import end-to-end check (M5) | ✅ Done (30-Oct-2026) |
+| S28 | SLA, overdue & settings | ⏭ Next |
 | S29 | Sprint close & carry forward | |
 | S30 | Security & integration test pass | |
 | S31 | UX polish & performance | |
@@ -959,3 +960,43 @@ open (S30).
 **Libraries added (licence):** none.
 
 **Next session:** S27b – Import end-to-end check, then S28.
+
+---
+
+## S27b – Import end-to-end check   (30-Oct-2026)
+
+**Done:**
+- End-to-end import in Chrome as `ui.tester`: sample workbook (generator in `tests/fixtures/legacy-workbook`) →
+  UI Check Client → quick-added project "Import Check" (UCCIC) → started "Sprint 1 – Early Testing" from the wizard →
+  review: renamed module "Item Mast, BOM, Tax Str.Mast" → "Item Masters", set the not-assessed severity to High
+  (warning settled), skipped one row → "Import 4 issues" → UCCIC-1…4, 2 screenshots, 2 new modules, 1 row skipped.
+  Issue list (4 issues, statuses Assigned / Verified / On Hold / New, renamed module), UCCIC-1 screenshot and
+  "assigned to" activity, UCCIC-2 "verified the fix" activity and the imported "For your refer." comment all checked.
+  Dark theme checked.
+- Fixed from the check: counts in the wizard used fixed plurals ("1 rows skipped", "Import 1 issues") – now the
+  `plural` pipe throughout; review-grid selects were too narrow for "Not assessed" and full developer names (text ran
+  into the arrow) – 9.5 rem, assignee 12 rem; the entity picker re-opened its list after a quick-add (the dialog
+  returns focus to the input, which opens the autocomplete) – the panel is now closed after the choice.
+- Sample workbook generator ran into Central Package Management (NU1008) – `#:package` lines without versions now
+  take the versions from Directory.Packages.props.
+- Flaky web tests (random "Test timed out in 5000ms", first test of a file paying for the jsdom set-up): `ng test`
+  now loads `vitest-base.config.mts` (angular.json `runnerConfig`) with a 15 s test timeout.
+
+**Verified:** `ng build` (initial 723 kB) · `ng test` 163/163 (twice in a row) · `ng lint`. No backend change (`dotnet test` 269 from
+S26). Preview timing: 2.2 s cold after an API restart, 0.03 s warm (the first run in the session took 37 s while the
+API and the Angular dev server were still building – machine load, not reproducible). Wizard at 1024 px: the grid
+scrolls inside its card (1 419 px content in a 716 px card), no horizontal page scroll. **Milestone M5 – import.**
+
+**Deviations from plan:** "phone width" in the card was checked at 1024 px instead – plan 10.x sets responsive down to
+tablet (1024 px); the shell has no phone layout (sidebar stays open). The anonymised real "Pardi Gears Testing Sheet"
+is still not available, so the S26 ≥ 95 % target remains unchecked. The picker fix has no unit test – jsdom does not
+reproduce the dialog's focus return (checked in the browser).
+
+**Carry-over / known gaps:** run the preview on the real anonymised workbook when it is provided. A phone layout for
+the shell (drawer sidebar) would be new scope – S31 at the earliest. Test data left in the local DB: project UCCIC with
+4 issues. Local `ui.tester` / `ui.admin` have a new local password (deactivate when not needed). Invalid enum in
+JSON → 500 still open (S30).
+
+**Libraries added (licence):** none.
+
+**Next session:** S28 – SLA, overdue & settings.

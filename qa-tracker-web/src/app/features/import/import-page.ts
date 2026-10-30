@@ -34,6 +34,7 @@ import {
   SEVERITY_META,
 } from '../../shared/models/issue-enums';
 import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
+import { PluralPipe } from '../../shared/pipes/plural.pipe';
 import { EntityPicker, PickerItem } from '../../shared/ui/entity-picker/entity-picker';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { StatusPill } from '../../shared/ui/status-pill/status-pill';
@@ -104,6 +105,7 @@ export function displayStatus(row: ImportRow, edit: RowEdit): IssueStatus {
     EntityPicker,
     FileSizePipe,
     PageHeader,
+    PluralPipe,
     StatusPill,
   ],
   viewProviders: [
