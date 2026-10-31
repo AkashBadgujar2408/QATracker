@@ -560,12 +560,16 @@ public partial class QaTrackerDbContext : DbContext
                 .HasForeignKey(d => d.AssigneeAtCloseId)
                 .HasConstraintName("FK_SprintSnapshots_AssigneeAtClose");
 
+            entity.HasOne(d => d.CarriedToSprint).WithMany(p => p.SprintSnapshotCarriedToSprints)
+                .HasForeignKey(d => d.CarriedToSprintId)
+                .HasConstraintName("FK_SprintSnapshots_CarriedToSprint");
+
             entity.HasOne(d => d.Issue).WithMany(p => p.SprintSnapshots)
                 .HasForeignKey(d => d.IssueId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_SprintSnapshots_Issue");
 
-            entity.HasOne(d => d.Sprint).WithMany(p => p.SprintSnapshots)
+            entity.HasOne(d => d.Sprint).WithMany(p => p.SprintSnapshotSprints)
                 .HasForeignKey(d => d.SprintId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_SprintSnapshots_Sprint");

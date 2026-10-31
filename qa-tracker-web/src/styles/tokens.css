@@ -145,6 +145,8 @@
   --qa-border-strong: var(--qa-slate-500);
   --qa-text: var(--qa-slate-50);
   --qa-text-muted: var(--qa-slate-400);
+  /* The light value is too dim on the dark surface for chip text (3.7:1) – slate-400 reads at 6.9:1. */
+  --qa-sprint-closed: var(--qa-slate-400);
   --qa-shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
   --qa-shadow-dialog: 0 10px 30px rgb(0 0 0 / 0.5);
   --qa-sidebar-bg: var(--qa-slate-950);

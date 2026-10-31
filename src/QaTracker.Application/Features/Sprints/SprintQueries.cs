@@ -115,3 +115,32 @@ public sealed class CompletionSummaryHandler(IApplicationDbContext db)
             byModule.OrderByDescending(m => m.Count).ThenBy(m => m.ModuleName).ToList());
     }
 }
+
+/// <summary>An issue that is neither Closed nor Rejected, with its version for carry forward.</summary>
+public sealed record OpenIssueDto(int Id, string Key, string Title, string ModuleName, Severity Severity, IssueStatus Status, string? AssigneeName, string RowVersion);
+
+/// <summary>What closing a sprint would carry forward (plan 6.1), in key order.</summary>
+public sealed class OpenIssuesHandler(IApplicationDbContext db)
+{
+    public async Task<Result<IReadOnlyList<OpenIssueDto>>> HandleAsync(int sprintId, CancellationToken cancellationToken)
+    {
+        if (!await db.TestingSprints.AnyAsync(s => s.Id == sprintId, cancellationToken))
+        {
+            return Error.NotFound("Sprint");
+        }
+
+        return await db.Issues.AsNoTracking()
+            .Where(i => i.SprintId == sprintId && i.Status != IssueStatus.Closed && i.Status != IssueStatus.Rejected)
+            .OrderBy(i => i.Number)
+            .Select(i => new OpenIssueDto(
+                i.Id,
+                i.IssueKey,
+                i.Title,
+                i.Module.Name,
+                i.Severity,
+                i.Status,
+                i.Assignee == null ? null : i.Assignee.FullName,
+                Convert.ToBase64String(i.RowVersion)))
+            .ToListAsync(cancellationToken);
+    }
+}

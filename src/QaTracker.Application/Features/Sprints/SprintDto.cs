@@ -5,6 +5,7 @@ using QaTracker.Domain.Enums;
 namespace QaTracker.Application.Features.Sprints;
 
 /// <param name="OpenIssueCount">Issues that are neither Closed nor Rejected.</param>
+/// <param name="CarriedForwardCount">Issues carried forward out of this sprint to another one (ADR-039).</param>
 public sealed record SprintDto(
     int Id,
     int ProjectId,
@@ -25,6 +26,7 @@ public sealed record SprintDto(
     DateTimeOffset? ClosedAt,
     int IssueCount,
     int OpenIssueCount,
+    int CarriedForwardCount,
     string RowVersion)
 {
     public static readonly Expression<Func<TestingSprint, SprintDto>> Projection = s => new SprintDto(
@@ -47,6 +49,7 @@ public sealed record SprintDto(
         s.ClosedAt,
         s.IssueSprints.Count,
         s.IssueSprints.Count(i => i.Status != IssueStatus.Closed && i.Status != IssueStatus.Rejected),
+        s.SprintSnapshotSprints.Count(x => x.CarriedToSprintId != null),
         Convert.ToBase64String(s.RowVersion));
 }
 

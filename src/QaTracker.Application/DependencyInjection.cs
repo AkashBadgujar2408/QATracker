@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<Features.Import.LegacyImportReader>();
         services.AddScoped<Features.Notifications.NotificationMailer>();
         services.AddScoped<Features.EmailAdmin.EmailSettingsSource>();
+        services.AddScoped<Features.Sprints.CarryForwardStep>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         return services;
     }

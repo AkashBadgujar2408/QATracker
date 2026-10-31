@@ -95,6 +95,12 @@
         <app-overdue-badge [dueDate]="due" />
       }
     </div>
+    <h3 class="mt-4 mb-2 text-sm font-semibold text-muted">app-sprint-status</h3>
+    <div class="flex flex-wrap gap-2">
+      <app-sprint-status status="Testing" />
+      <app-sprint-status status="TestingCompleted" />
+      <app-sprint-status status="Closed" />
+    </div>
     <h3 class="mt-4 mb-2 text-sm font-semibold text-muted">app-priority-icon</h3>
     <div class="flex flex-wrap items-center gap-6">
       @for (priority of priorities; track priority) {

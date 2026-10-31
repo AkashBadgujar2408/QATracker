@@ -1,0 +1,215 @@
+<app-page-header
+  title="Sprints"
+  subtitle="Every testing sprint of a project: where it stands, what is still open, and the next step."
+/>
+
+<section class="qa-card mb-4 p-4" aria-label="Project">
+  <div class="qa-filter-row">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Client</mat-label>
+      <mat-select
+        placeholder="Choose a client"
+        [value]="clientId()"
+        (selectionChange)="choose({ client: $event.value, project: null })"
+      >
+        @for (c of cascade.value()?.clients ?? []; track c.id) {
+          <mat-option [value]="c.id">{{ c.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Project</mat-label>
+      <mat-select
+        placeholder="Choose a project"
+        [value]="projectId()"
+        [disabled]="!clientId()"
+        (selectionChange)="choose({ client: clientId(), project: $event.value })"
+      >
+        @for (p of cascade.value()?.projects ?? []; track p.id) {
+          <mat-option [value]="p.id">{{ p.name }} ({{ p.key }})</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+</section>
+
+@if (!projectId()) {
+  <app-empty-state
+    title="Choose a project"
+    message="Pick the client and project above to see their testing sprints."
+  />
+} @else if (sprints.error()) {
+  <app-empty-state kind="error" title="The sprints could not be loaded" [message]="loadError()">
+    <button matButton="filled" type="button" (click)="sprints.reload()">Try again</button>
+  </app-empty-state>
+} @else if (!sprints.hasValue()) {
+  <div class="grid gap-3" aria-busy="true">
+    @for (n of [1, 2, 3]; track n) {
+      <div class="qa-card p-5"><app-skeleton-lines [lines]="3" /></div>
+    }
+  </div>
+} @else if (sprints.value().length === 0) {
+  <app-empty-state
+    title="No sprints yet"
+    message="Testing sprints are started on the Testing screen when testing of this project begins."
+  >
+    @if (canManage) {
+      <a matButton="filled" routerLink="/testing">Go to Testing</a>
+    }
+  </app-empty-state>
+} @else {
+  <ol class="m-0 grid list-none gap-3 p-0" aria-label="Sprints, newest first">
+    @for (s of sprints.value(); track s.id) {
+      <li class="qa-card qa-sprint" [class.qa-sprint-closed]="s.status === 'Closed'">
+        <div class="qa-sprint-head">
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h2 class="m-0 text-lg font-semibold">{{ s.name }}</h2>
+              <app-sprint-status [status]="s.status" />
+            </div>
+            <p class="m-0 mt-1 text-sm text-muted">
+              {{ s.phaseName }} phase{{
+                s.defaultEnvironmentName ? ', found on ' + s.defaultEnvironmentName : ''
+              }}
+            </p>
+          </div>
+
+          <div class="qa-sprint-actions">
+            @if (canManage && s.status === 'Testing') {
+              <button matButton="filled" type="button" (click)="completeTesting(s)">
+                Mark testing completed
+              </button>
+            }
+            @if (canManage && s.status === 'TestingCompleted') {
+              <button matButton="filled" type="button" (click)="close(s)">Close sprint</button>
+            }
+            <app-sprint-report-button [sprintId]="s.id" />
+            @if (canManage && s.status === 'TestingCompleted') {
+              <button
+                matButton
+                type="button"
+                class="qa-more"
+                [matMenuTriggerFor]="more"
+                [attr.aria-label]="'More actions for ' + s.name"
+              >
+                <ng-icon name="lucideEllipsisVertical" size="18" />
+              </button>
+              <mat-menu #more="matMenu" xPosition="before">
+                <button
+                  mat-menu-item
+                  type="button"
+                  [disabled]="s.openIssueCount === 0"
+                  (click)="close(s, 'carry')"
+                >
+                  Carry issues forward…
+                </button>
+                @if (isAdmin) {
+                  <button mat-menu-item type="button" (click)="reopen(s)">Reopen testing…</button>
+                }
+              </mat-menu>
+            }
+          </div>
+        </div>
+
+        <!-- The lifecycle track: where the sprint is, with the date each stop was reached. -->
+        <ol class="qa-track" [attr.aria-label]="'Lifecycle of ' + s.name">
+          @for (step of lifecycle(s); track step.label) {
+            <li [class.qa-reached]="!!step.at" [class.qa-current]="step.current">
+              <span class="qa-node" aria-hidden="true"></span>
+              <span class="qa-step-label">{{ step.label }}</span>
+              <span class="qa-step-date">{{ step.at ? (step.at | istDate) : 'Not yet' }}</span>
+            </li>
+          }
+        </ol>
+
+        <div class="qa-sprint-foot">
+          <div class="min-w-0 flex-1">
+            <div
+              class="qa-progress"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-valuenow]="donePercent(s)"
+              [attr.aria-label]="'Issues finished in ' + s.name"
+            >
+              <span [style.width.%]="donePercent(s)"></span>
+            </div>
+            <p class="m-0 mt-1.5 text-sm text-muted">
+              @if (s.issueCount === 0 && s.carriedForwardCount > 0) {
+                All {{ s.carriedForwardCount | plural: 'issue' }} carried forward
+              } @else if (s.issueCount === 0) {
+                No issues logged
+              } @else {
+                <span class="font-semibold text-text tabular-nums">{{
+                  s.issueCount - s.openIssueCount
+                }}</span>
+                of {{ s.issueCount }} closed or rejected,
+                <span class="tabular-nums">{{ s.openIssueCount }}</span> open
+                @if (s.carriedForwardCount > 0) {
+                  , {{ s.carriedForwardCount }} carried forward
+                }
+              }
+            </p>
+          </div>
+          <nav class="flex flex-wrap items-center gap-1" [attr.aria-label]="s.name + ' links'">
+            <a
+              matButton
+              [routerLink]="['/issues']"
+              [queryParams]="{ client: s.clientId, project: s.projectId, sprint: s.id }"
+            >
+              <ng-icon name="lucideList" size="16" /> Issues
+            </a>
+            <a
+              matButton
+              [routerLink]="['/dashboards/sprint']"
+              [queryParams]="{ client: s.clientId, project: s.projectId, sprint: s.id }"
+            >
+              <ng-icon name="lucideChartColumn" size="16" /> Dashboard
+            </a>
+            <button
+              matButton
+              type="button"
+              [attr.aria-expanded]="historyOf() === s.id"
+              [attr.aria-controls]="'history-' + s.id"
+              (click)="toggleHistory(s)"
+            >
+              <ng-icon name="lucideHistory" size="16" /> History
+              <ng-icon
+                name="lucideChevronDown"
+                size="16"
+                class="qa-chevron"
+                [class.qa-open]="historyOf() === s.id"
+              />
+            </button>
+          </nav>
+        </div>
+
+        @if (historyOf() === s.id) {
+          <section class="qa-history" [id]="'history-' + s.id" aria-label="Sprint history">
+            @if (history.isLoading()) {
+              <app-skeleton-lines [lines]="3" />
+            } @else if (history.error()) {
+              <p role="alert" class="m-0 text-sm text-severity-critical">
+                The history could not be loaded.
+              </p>
+            } @else if (history.value(); as detail) {
+              <ol class="m-0 list-none p-0">
+                @for (e of detail.events; track $index) {
+                  <li class="qa-event">
+                    <span class="qa-event-date">{{ e.at | istDate: 'datetime' }}</span>
+                    <div class="min-w-0">
+                      <span class="font-medium">{{ eventText(e) }}</span>
+                      @if (e.note) {
+                        <p class="m-0 mt-0.5 text-sm text-muted">{{ e.note }}</p>
+                      }
+                    </div>
+                  </li>
+                }
+              </ol>
+            }
+          </section>
+        }
+      </li>
+    }
+  </ol>
+}

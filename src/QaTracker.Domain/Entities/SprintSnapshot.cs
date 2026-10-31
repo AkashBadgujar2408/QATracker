@@ -16,7 +16,11 @@ public partial class SprintSnapshot
 
     public int? AssigneeAtCloseId { get; set; }
 
+    public int? CarriedToSprintId { get; set; }
+
     public virtual User? AssigneeAtClose { get; set; }
+
+    public virtual TestingSprint? CarriedToSprint { get; set; }
 
     public virtual Issue Issue { get; set; } = null!;
 

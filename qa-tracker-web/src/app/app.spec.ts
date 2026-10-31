@@ -51,7 +51,7 @@ describe('App shell', () => {
 
   it('shows navigation by role', async () => {
     setup(testUser('Developer'));
-    const harness = await RouterTestingHarness.create('/sprints'); // a page without data requests
+    const harness = await RouterTestingHarness.create('/no-such-page'); // a page without data requests (not found)
     const developer = navLabels(harness);
     expect(developer).toContain('My work');
     expect(developer).not.toContain('Testing');
@@ -88,7 +88,7 @@ describe('App shell', () => {
 
   it('toggles the dark theme from the top bar', async () => {
     setup(testUser('Tester'));
-    const harness = await RouterTestingHarness.create('/sprints'); // a page without data requests
+    const harness = await RouterTestingHarness.create('/no-such-page'); // a page without data requests (not found)
     const toggle = host(harness).querySelector<HTMLButtonElement>(
       'app-topbar button[aria-label^="Switch to"]',
     );

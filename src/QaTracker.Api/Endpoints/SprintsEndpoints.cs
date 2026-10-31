@@ -9,10 +9,12 @@ namespace QaTracker.Api.Endpoints;
 public sealed record StartSprintRequest(string Name, int PhaseId, int? DefaultEnvironmentId, string? Note);
 public sealed record CompleteTestingRequest(string RowVersion, string? Note);
 public sealed record ReopenTestingRequest(string RowVersion, string Note);
+public sealed record CarryForwardRequest(int TargetSprintId, IReadOnlyList<IssueVersion> Issues, string? Note);
+public sealed record CloseSprintRequest(string RowVersion, string? Note, CarryForwardPart? CarryForward);
 
 /// <summary>
 /// Testing sprints (plan 14 SPRINTS, plan 6). Everyone signed in can read; testers and admins start sprints and mark
-/// testing completed; only admins reopen testing. Rule violations (second Testing sprint …) are 422.
+/// testing completed, carry issues forward and close; only admins reopen testing. Rule violations (second Testing sprint …) are 422.
 /// </summary>
 public static class SprintsEndpoints
 {
@@ -51,6 +53,20 @@ public static class SprintsEndpoints
                 (await handler.HandleAsync(new ReopenTestingCommand(id, request.RowVersion, request.Note), ct)).ToHttp(sprint => TypedResults.Ok(sprint)))
             .RequireAuthorization(Policies.AdminOnly)
             .WithSummary("Admin override: put a completed sprint back into Testing (note required, logged).");
+
+        sprints.MapGet("/{id:int}/open-issues", async (int id, OpenIssuesHandler handler, CancellationToken ct) =>
+                (await handler.HandleAsync(id, ct)).ToHttp(issues => TypedResults.Ok(issues)))
+            .WithSummary("Issues that are neither Closed nor Rejected, with their versions – what closing would carry forward.");
+
+        sprints.MapPost("/{id:int}/carry-forward", async (int id, CarryForwardRequest request, CarryForwardHandler handler, CancellationToken ct) =>
+                (await handler.HandleAsync(new CarryForwardCommand(id, request.TargetSprintId, request.Issues ?? [], request.Note), ct)).ToHttp(result => TypedResults.Ok(result)))
+            .RequireAuthorization(Policies.TesterOrAdmin)
+            .WithSummary("Move open issues of a completed sprint to another open sprint of the project (they keep their key; 409 when an issue changed).");
+
+        sprints.MapPost("/{id:int}/close", async (int id, CloseSprintRequest request, CloseSprintHandler handler, CancellationToken ct) =>
+                (await handler.HandleAsync(new CloseSprintCommand(id, request.RowVersion, request.Note, request.CarryForward), ct)).ToHttp(sprint => TypedResults.Ok(sprint)))
+            .RequireAuthorization(Policies.TesterOrAdmin)
+            .WithSummary("Close a completed sprint (422 while issues are open) – optionally carrying the open ones forward first. Freezes the report numbers.");
 
         sprints.MapGet("/{id:int}/report", async (int id, string? format, SprintReportHandler handler, CancellationToken ct) =>
                 ReportFormats.TryParse(format, out var reportFormat)

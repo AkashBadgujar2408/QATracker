@@ -7,4 +7,10 @@ public enum SprintEventKind
     TestingCompleted,
     ReopenedForTesting,
     Closed,
+
+    /// <summary>Open issues left this sprint for another sprint of the project (carry forward, plan 6.1).</summary>
+    IssuesCarriedForward,
+
+    /// <summary>Issues joined this sprint, carried forward from another one.</summary>
+    IssuesCarriedIn,
 }

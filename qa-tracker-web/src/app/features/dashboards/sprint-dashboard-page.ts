@@ -29,13 +29,14 @@ import {
 } from '../../shared/charts/dashboard-filters';
 import { KpiCard } from '../../shared/charts/kpi-card';
 import { AnalyticsApi, SprintDashboard } from '../../shared/data/analytics.api';
-import { SPRINT_STATUS_LABELS, Sprint, SprintsApi } from '../../shared/data/sprints.api';
+import { Sprint, SprintsApi } from '../../shared/data/sprints.api';
 import { SEVERITY_META, Severity } from '../../shared/models/issue-enums';
 import { IstDatePipe } from '../../shared/pipes/ist-date.pipe';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SprintReportButton } from '../../shared/reports/sprint-report-button';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { StatusPill } from '../../shared/ui/status-pill/status-pill';
+import { SprintStatusBadge } from '../../shared/ui/sprint-status/sprint-status';
 import { GROUP_META, shortDay } from './overview-page';
 
 /** The sprint to show when the URL names a project but no sprint: the newest one. */
@@ -154,25 +155,10 @@ export function sprintClickThrough(
     PageHeader,
     StatusPill,
     SprintReportButton,
+    SprintStatusBadge,
   ],
   templateUrl: './sprint-dashboard-page.html',
   styles: `
-    .qa-sprint-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 2px 10px;
-      border-radius: 999px;
-      border: 1px solid currentColor;
-      font-size: var(--qa-text-sm);
-      font-weight: 500;
-    }
-    .qa-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: currentColor;
-    }
     .qa-facts {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -196,7 +182,6 @@ export class SprintDashboardPage {
   private readonly route = inject(ActivatedRoute);
 
   protected readonly filters = injectDashboardFilters();
-  protected readonly sprintStatusLabels = SPRINT_STATUS_LABELS;
 
   private readonly sprints = rxResource({
     params: () => this.filters().projectId ?? undefined,

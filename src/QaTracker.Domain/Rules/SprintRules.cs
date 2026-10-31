@@ -84,6 +84,42 @@ public static class SprintRules
                 $"{unfinishedIssues} issue(s) are still open. Close or reject them, or carry them forward to another sprint.");
     }
 
+    /// <summary>
+    /// Carry forward (plan 6.1): open issues of a completed sprint move to another sprint of the same project that is
+    /// not closed. The issues keep their key.
+    /// </summary>
+    /// <param name="target">The sprint the issues go to: its project and state.</param>
+    public static RuleCheck CanCarryForward(UserRole role, int sourceId, int sourceProjectId, SprintStatus sourceStatus, (int Id, int ProjectId, SprintStatus Status) target)
+    {
+        if (!IsTesterOrAdmin(role))
+        {
+            return RuleCheck.Deny("role_not_allowed", "Only testers and admins carry issues forward.");
+        }
+
+        if (sourceStatus != SprintStatus.TestingCompleted)
+        {
+            return RuleCheck.Deny(
+                "sprint_not_testing_completed",
+                sourceStatus == SprintStatus.Testing
+                    ? "Mark testing completed before carrying issues forward."
+                    : "The sprint is closed – its issues can no longer be carried forward.");
+        }
+
+        if (target.Id == sourceId)
+        {
+            return RuleCheck.Deny("same_sprint", "Choose another sprint to carry the issues to.");
+        }
+
+        if (target.ProjectId != sourceProjectId)
+        {
+            return RuleCheck.Deny("other_project", "Issues can only be carried forward to a sprint of the same project.");
+        }
+
+        return target.Status == SprintStatus.Closed
+            ? RuleCheck.Deny("target_closed", "The chosen sprint is closed. Choose an open sprint or start a new one.")
+            : RuleCheck.Ok;
+    }
+
     /// <summary>Add, edit or delete issues (details, not workflow): tester/admin while the sprint is in Testing.</summary>
     public static RuleCheck CanChangeIssues(UserRole role, SprintStatus status)
     {

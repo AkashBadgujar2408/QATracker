@@ -87,6 +87,7 @@ const NOTE_KINDS: ReadonlySet<ActivityKind> = new Set([
   'Deployed',
   'RetestPassed',
   'RetestFailed',
+  'CarriedForward',
 ]);
 
 /**

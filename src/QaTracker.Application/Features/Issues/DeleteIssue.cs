@@ -34,6 +34,12 @@ public sealed class DeleteIssueHandler(
             return check.ToError();
         }
 
+        // A carried-forward issue is part of the earlier sprint's frozen report (ADR-039).
+        if (issue.CarriedFromSprintId is not null || await db.SprintSnapshots.AnyAsync(s => s.IssueId == issue.Id, cancellationToken))
+        {
+            return Error.Rule("issue_carried_forward", "This issue was carried forward from an earlier sprint and is part of its report, so it cannot be deleted.");
+        }
+
         db.IssueLinks.RemoveRange(await db.IssueLinks.Where(l => l.ToIssueId == issue.Id).ToListAsync(cancellationToken));
         foreach (var duplicate in await db.Issues.Where(i => i.DuplicateOfIssueId == issue.Id).ToListAsync(cancellationToken))
         {

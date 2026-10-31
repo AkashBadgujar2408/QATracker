@@ -1,0 +1,174 @@
+.qa-filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 280px));
+  gap: 12px;
+  --mat-form-field-container-height: 40px;
+  --mat-form-field-container-vertical-padding: 8px;
+}
+
+.qa-sprint {
+  padding: 20px 20px 16px;
+}
+
+/* A closed sprint is an archive: quieter, still readable. */
+.qa-sprint-closed {
+  background: var(--qa-surface-muted);
+}
+
+.qa-sprint-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 16px;
+}
+
+.qa-sprint-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.qa-more {
+  min-width: 40px;
+  padding: 0 8px;
+}
+
+/* Lifecycle track – Started → Testing completed → Closed. A reached stop is filled in the sprint-state colour of
+   that stop, the line between reached stops is solid, the stops ahead are hollow with a dashed line. */
+.qa-track {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  --node: 14px;
+}
+.qa-track li {
+  position: relative;
+  display: grid;
+  grid-template-rows: var(--node) auto auto;
+  row-gap: 6px;
+  padding-right: 12px;
+}
+.qa-track li:nth-child(1) {
+  --stop: var(--qa-sprint-testing);
+}
+.qa-track li:nth-child(2) {
+  --stop: var(--qa-sprint-testing-completed);
+}
+.qa-track li:nth-child(3) {
+  --stop: var(--qa-sprint-closed);
+}
+.qa-track li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--node) / 2 - 1px);
+  left: calc(var(--node) + 6px);
+  right: 6px;
+  border-top: 2px dashed var(--qa-border);
+}
+.qa-track li.qa-reached:has(+ li.qa-reached)::after {
+  border-top-style: solid;
+  border-top-color: var(--qa-text-muted);
+}
+.qa-node {
+  width: var(--node);
+  height: var(--node);
+  border-radius: 50%;
+  border: 2px solid var(--qa-border);
+  background: var(--qa-surface);
+  box-sizing: border-box;
+}
+.qa-reached .qa-node {
+  border-color: var(--stop);
+  background: var(--stop);
+}
+.qa-current .qa-node {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--stop) 22%, transparent);
+}
+.qa-step-label {
+  font-size: var(--qa-text-sm);
+  color: var(--qa-text-muted);
+}
+.qa-current .qa-step-label {
+  color: var(--qa-text);
+  font-weight: 600;
+}
+.qa-step-date {
+  font-size: var(--qa-text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--qa-text);
+}
+li:not(.qa-reached) .qa-step-date {
+  color: var(--qa-text-muted);
+}
+
+.qa-sprint-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 24px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--qa-border);
+}
+
+.qa-progress {
+  height: 8px;
+  max-width: 420px;
+  border-radius: var(--qa-radius-pill);
+  background: color-mix(in srgb, var(--qa-text-muted) 18%, transparent);
+  overflow: hidden;
+}
+.qa-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--qa-status-closed);
+}
+
+.qa-sprint-foot ng-icon {
+  margin-right: 4px;
+}
+.qa-chevron {
+  margin: 0 0 0 4px !important;
+  transition: transform 150ms ease;
+}
+.qa-chevron.qa-open {
+  transform: rotate(180deg);
+}
+
+.qa-history {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: var(--qa-radius-control);
+  background: color-mix(in srgb, var(--qa-text-muted) 7%, transparent);
+}
+.qa-event {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 12px;
+  padding: 6px 0;
+}
+.qa-event + .qa-event {
+  border-top: 1px solid var(--qa-border);
+}
+.qa-event-date {
+  color: var(--qa-text-muted);
+  font-size: var(--qa-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .qa-event {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qa-chevron {
+    transition: none;
+  }
+}

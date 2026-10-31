@@ -230,6 +230,7 @@ public static class TimelineSummary
             ActivityKind.RetestFailed => $"{actor}: retest failed{on}",
             ActivityKind.Attachment when oldValue is not null => $"{actor} removed {oldValue}",
             ActivityKind.Attachment => $"{actor} attached {body}",
+            ActivityKind.CarriedForward => $"{actor} carried the issue forward from {oldValue ?? "another sprint"} to {newValue ?? "another sprint"}",
             _ => body,
         };
     }

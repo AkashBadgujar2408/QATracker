@@ -35,6 +35,7 @@ import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { PriorityIcon } from '../../shared/ui/priority-icon/priority-icon';
 import { HealthBadge } from '../../shared/ui/health-badge/health-badge';
 import { OverdueBadge } from '../../shared/ui/overdue-badge/overdue-badge';
+import { SprintStatusBadge } from '../../shared/ui/sprint-status/sprint-status';
 import { SprintReportButton } from '../../shared/reports/sprint-report-button';
 import { SeverityBadge } from '../../shared/ui/severity-badge/severity-badge';
 import { SkeletonLines, SkeletonTable } from '../../shared/ui/skeleton/skeleton';
@@ -75,6 +76,7 @@ interface Swatch {
     SeverityBadge,
     HealthBadge,
     OverdueBadge,
+    SprintStatusBadge,
     SprintReportButton,
     PriorityIcon,
     UserAvatar,

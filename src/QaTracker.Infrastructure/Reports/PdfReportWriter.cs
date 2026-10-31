@@ -146,7 +146,8 @@ internal sealed class PdfReportWriter : IDisposable
             ("Started", ReportText.Date(h.StartedAt)),
             ("Testing completed", ReportText.Date(h.TestingCompletedAt) is { Length: > 0 } done ? done : "–"),
             ("Closed", ReportText.Date(h.ClosedAt) is { Length: > 0 } closed ? closed : "–"),
-            ("Issues", report.Summary.Total.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            ("Issues", report.Summary.Total.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                + (report.Summary.CarriedForward > 0 ? $" ({report.Summary.CarriedForward} carried forward, as they were when they left)" : "")),
             ("Generated", $"{ReportText.DateTime(h.GeneratedAt)} by {h.GeneratedBy}"),
         ];
         using var label = Font(_regular, 11);
@@ -231,6 +232,7 @@ internal sealed class PdfReportWriter : IDisposable
             issue.Screen,
             $"Priority {issue.Priority}",
             ReportText.Status(issue.Status),
+            issue.CarriedForwardTo is { } to ? $"Carried forward to {to}" : null,
             issue.Assignee is { } a ? $"Assigned to {a}" : "Unassigned",
             issue.DueDate is { } due ? $"Due {ReportText.Date(due)}" : null,
             issue.Environment is { } env ? $"Found on {env}" : null,

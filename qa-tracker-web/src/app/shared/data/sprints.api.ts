@@ -2,7 +2,7 @@ import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, SILENT_ERRORS } from '../../core/api/api';
-import { Severity } from '../models/issue-enums';
+import { IssueStatus, Severity } from '../models/issue-enums';
 import { DownloadedFile, getFile } from './download';
 import { LookupItem } from './masters.api';
 
@@ -36,6 +36,8 @@ export interface Sprint {
   readonly issueCount: number;
   /** Issues that are neither Closed nor Rejected. */
   readonly openIssueCount: number;
+  /** Issues carried forward out of this sprint to another one. */
+  readonly carriedForwardCount: number;
   readonly rowVersion: string;
 }
 
@@ -51,6 +53,51 @@ export interface CompletionSummary {
     readonly moduleName: string;
     readonly count: number;
   }[];
+}
+
+export type SprintEventKind =
+  | 'Started'
+  | 'TestingCompleted'
+  | 'ReopenedForTesting'
+  | 'Closed'
+  | 'IssuesCarriedForward'
+  | 'IssuesCarriedIn';
+
+/** One entry of the sprint's own history (plan 6.1). */
+export interface SprintEvent {
+  readonly kind: SprintEventKind;
+  readonly userName: string;
+  readonly note: string | null;
+  readonly at: string;
+}
+
+export interface SprintDetail {
+  readonly sprint: Sprint;
+  readonly events: readonly SprintEvent[];
+}
+
+/** An issue that is neither Closed nor Rejected – what closing the sprint would carry forward. */
+export interface OpenIssue {
+  readonly id: number;
+  readonly key: string;
+  readonly title: string;
+  readonly moduleName: string;
+  readonly severity: Severity;
+  readonly status: IssueStatus;
+  readonly assigneeName: string | null;
+  readonly rowVersion: string;
+}
+
+export interface CarryForwardResult {
+  readonly sprint: Sprint;
+  readonly target: Sprint;
+  readonly carriedCount: number;
+}
+
+/** Issues to carry forward to another open sprint of the project, each with the version it was read at. */
+export interface CarryForward {
+  readonly targetSprintId: number;
+  readonly issues: readonly { readonly id: number; readonly rowVersion: string }[];
 }
 
 export interface StartSprintFields {
@@ -106,6 +153,50 @@ export class SprintsApi {
     return this.http.post<Sprint>(
       `${this.base}/sprints/${sprintId}/complete-testing`,
       { rowVersion, note: note || null },
+      inline,
+    );
+  }
+
+  /** The sprint with its history. */
+  get(sprintId: number): Observable<SprintDetail> {
+    return this.http.get<SprintDetail>(`${this.base}/sprints/${sprintId}`);
+  }
+
+  openIssues(sprintId: number): Observable<OpenIssue[]> {
+    return this.http.get<OpenIssue[]>(`${this.base}/sprints/${sprintId}/open-issues`);
+  }
+
+  carryForward(
+    sprintId: number,
+    carry: CarryForward,
+    note?: string | null,
+  ): Observable<CarryForwardResult> {
+    return this.http.post<CarryForwardResult>(
+      `${this.base}/sprints/${sprintId}/carry-forward`,
+      { ...carry, note: note || null },
+      inline,
+    );
+  }
+
+  /** Close (422 while issues are open) – optionally carrying the open ones forward in the same request. */
+  close(
+    sprintId: number,
+    rowVersion: string,
+    note?: string | null,
+    carryForward?: CarryForward | null,
+  ): Observable<Sprint> {
+    return this.http.post<Sprint>(
+      `${this.base}/sprints/${sprintId}/close`,
+      { rowVersion, note: note || null, carryForward: carryForward ?? null },
+      inline,
+    );
+  }
+
+  /** Admin override – the note is required. */
+  reopenTesting(sprintId: number, rowVersion: string, note: string): Observable<Sprint> {
+    return this.http.post<Sprint>(
+      `${this.base}/sprints/${sprintId}/reopen-testing`,
+      { rowVersion, note },
       inline,
     );
   }

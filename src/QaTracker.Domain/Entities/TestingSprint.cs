@@ -50,7 +50,9 @@ public partial class TestingSprint
 
     public virtual ICollection<SprintEvent> SprintEvents { get; set; } = new List<SprintEvent>();
 
-    public virtual ICollection<SprintSnapshot> SprintSnapshots { get; set; } = new List<SprintSnapshot>();
+    public virtual ICollection<SprintSnapshot> SprintSnapshotCarriedToSprints { get; set; } = new List<SprintSnapshot>();
+
+    public virtual ICollection<SprintSnapshot> SprintSnapshotSprints { get; set; } = new List<SprintSnapshot>();
 
     public virtual User StartedBy { get; set; } = null!;
 

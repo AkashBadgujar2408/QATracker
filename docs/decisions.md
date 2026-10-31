@@ -641,3 +641,32 @@ new alerts/mails and background tasks configurable in the app; one database for 
 - **Overdue badge** `app-overdue-badge` (shared/ui, in /dev/ui): clock-alert icon + "Overdue" / "Overdue 3 d" in the
   critical tone, title "Was due …" – in the issue list Due column, on board cards (instead of the red date) and in
   the issue header.
+
+## ADR-039 – Sprint close and carry forward (31-Oct-2026, S29)
+- **Routes** (tester/admin): `POST /api/sprints/{id}/carry-forward` `{targetSprintId, issues: [{id, rowVersion}], note}`
+  → both sprints and the count; `POST /api/sprints/{id}/close` `{rowVersion, note, carryForward?}`; read
+  `GET /api/sprints/{id}/open-issues` (what closing would carry, with versions). The plan's `{issueIds}` became
+  `{issues: [{id, rowVersion}]}` – every update uses row versions (409 when an issue changed meanwhile).
+- **Carry forward** (`SprintRules.CanCarryForward`): from a Testing-Completed sprint, open issues only (not Closed /
+  Rejected), to another sprint of the same project that is not closed. The issue keeps key, assignee and history;
+  `SprintId` = target, `CarriedFromSprintId` = source. Into a sprint still in **Testing** the due date is cleared
+  (it is set again when that testing completes – developers cannot act before); into a completed sprint it is kept.
+  Timeline: `CarriedForward` activity ("… carried the issue forward from X to Y", note under it). Sprint history:
+  `IssuesCarriedForward` on the source and `IssuesCarriedIn` on the target, with the keys (≤ 20 listed).
+- **Close**: allowed when no open issue is left; the dialog carries all open ones in the same request and
+  transaction, so closing never half-happens. Each issue gets a `SprintEvent` activity "X closed."
+- **Snapshots** (script 007: `SprintSnapshots.CarriedToSprintId`, two new SprintEvent kinds): an issue is frozen in
+  the source sprint's snapshot **when it leaves** (status, severity, assignee, target sprint); the rest when the sprint
+  closes. The report of a closed sprint is built from its snapshot rows only; an open sprint's report shows its
+  issues plus those carried out (frozen) – "Carried forward to" column / status line / PDF meta, summary count.
+  `SprintDto.CarriedForwardCount` counts them for the list.
+- A carried-forward issue **cannot be deleted** (422 `issue_carried_forward`) – it belongs to the earlier report.
+- **Sprints page** `/sprints` (everyone; actions for testers/admins): client / project in the URL (falls back to the
+  Testing screen's remembered choice), a card per sprint, newest first – name, `app-sprint-status` (shared, in
+  /dev/ui; also used on the sprint dashboard), phase, the **lifecycle track** Started → Testing completed → Closed
+  with dates (reached stops filled in the sprint-state colour), finished-issues bar and counts, the next step beside
+  the sprint (Mark testing completed / Close sprint), report button, ⋮ Carry issues forward… / Reopen testing… (admin,
+  note required), links to Issues and Dashboard, History (sprint events) on demand. With no open sprint to carry to,
+  the close dialog offers "Start new sprint" (phase and environment carried over) and comes back with it as target.
+  Live refresh on sprint/issue changes.
+- Dark theme: `--qa-sprint-closed` is slate-400 (contrast on the dark surface).

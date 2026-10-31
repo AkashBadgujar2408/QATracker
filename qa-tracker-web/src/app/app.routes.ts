@@ -1,7 +1,6 @@
 import { Route, Routes } from '@angular/router';
 import { authGuard, guestGuard, roleGuard, signedInGuard } from './core/auth/auth.guards';
 import { Shell } from './core/layout/shell/shell';
-import { PlaceholderData } from './features/placeholder/placeholder-page';
 import { Role } from './shared/models/role';
 import { provideCharts } from './shared/charts/echarts';
 
@@ -20,25 +19,6 @@ import { provideCharts } from './shared/charts/echarts';
 }
 /** The overview dashboard (plan 9.1) – also the home page. */ const overviewPage = () =>
   import('./features/dashboards/overview-page').then((m) => m.OverviewPage);
-
-const placeholderPage = () =>
-  import('./features/placeholder/placeholder-page').then((m) => m.PlaceholderPage);
-
-/** A not-yet-built page: title, breadcrumb, the session that delivers it and (optionally) who may open it. */
-function placeholder(
-  path: string,
-  heading: string,
-  session: string,
-  roles?: readonly Role[],
-): Route {
-  const placeholderData: PlaceholderData = { heading, session };
-  return {
-    path,
-    title: heading,
-    data: { breadcrumb: heading, placeholder: placeholderData, roles },
-    loadComponent: placeholderPage,
-  };
-}
 
 export const routes: Routes = [
   {
@@ -134,7 +114,12 @@ export const routes: Routes = [
         data: { breadcrumb: 'Import from Excel', roles: ['Tester', 'Admin'] satisfies Role[] },
         loadComponent: () => import('./features/import/import-page').then((m) => m.ImportPage),
       },
-      placeholder('sprints', 'Sprints', 'S08 / S29'),
+      {
+        path: 'sprints',
+        title: 'Sprints',
+        data: { breadcrumb: 'Sprints' },
+        loadComponent: () => import('./features/sprints/sprints-page').then((m) => m.SprintsPage),
+      },
       {
         path: 'dashboards',
         data: { breadcrumb: 'Dashboards' },

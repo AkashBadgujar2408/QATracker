@@ -33,17 +33,7 @@
           <h2 id="sprint-name" class="m-0 min-w-0 flex-1 text-lg font-semibold">
             {{ d.sprint.name }}
           </h2>
-          <span
-            class="qa-sprint-chip"
-            [class]="
-              d.sprint.status === 'Testing'
-                ? 'qa-sprint-chip text-sprint-testing'
-                : d.sprint.status === 'TestingCompleted'
-                  ? 'qa-sprint-chip text-sprint-testing-completed'
-                  : 'qa-sprint-chip text-sprint-closed'
-            "
-            ><span class="qa-dot"></span>{{ sprintStatusLabels[d.sprint.status] }}</span
-          >
+          <app-sprint-status [status]="d.sprint.status" />
         </div>
         <p class="m-0 mt-1 text-sm text-muted">
           {{ d.sprint.projectName }} ({{ d.sprint.projectKey }}), {{ d.sprint.clientName }}

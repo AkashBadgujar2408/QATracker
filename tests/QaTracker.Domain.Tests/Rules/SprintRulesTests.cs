@@ -75,6 +75,27 @@ public sealed class SprintRulesTests
 
     [Theory]
     [MemberData(nameof(AllRolesAndStatuses))]
+    public void CarryForward_FromACompletedSprint_ByTesterOrAdmin(UserRole role, SprintStatus status, bool _)
+    {
+        var expected = role != UserRole.Developer && status == SprintStatus.TestingCompleted;
+        SprintRules.CanCarryForward(role, 1, 10, status, (2, 10, SprintStatus.Testing)).Allowed.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(2, 10, SprintStatus.Testing, null)]
+    [InlineData(2, 10, SprintStatus.TestingCompleted, null)]
+    [InlineData(1, 10, SprintStatus.TestingCompleted, "same_sprint")]
+    [InlineData(2, 11, SprintStatus.Testing, "other_project")]
+    [InlineData(2, 10, SprintStatus.Closed, "target_closed")]
+    public void CarryForward_GoesToAnotherOpenSprintOfTheProject(int targetId, int targetProjectId, SprintStatus targetStatus, string? code)
+    {
+        var check = SprintRules.CanCarryForward(UserRole.Tester, 1, 10, SprintStatus.TestingCompleted, (targetId, targetProjectId, targetStatus));
+        check.Allowed.ShouldBe(code is null);
+        check.Code.ShouldBe(code);
+    }
+
+    [Theory]
+    [MemberData(nameof(AllRolesAndStatuses))]
     public void IssueChanges_OnlyWhileTesting_ByTesterOrAdmin(UserRole role, SprintStatus status, bool _)
     {
         var expected = role != UserRole.Developer && status == SprintStatus.Testing;

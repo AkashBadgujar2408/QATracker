@@ -79,6 +79,7 @@ internal static class ExcelReportWriter
             ("Started", ReportText.Date(h.StartedAt)),
             ("Testing completed", ReportText.Date(h.TestingCompletedAt)),
             ("Closed", ReportText.Date(h.ClosedAt)),
+            ("Carried forward", report.Summary.CarriedForward > 0 ? $"{report.Summary.CarriedForward} issue(s), shown as they were when they left" : "None"),
             ("Generated", $"{ReportText.DateTime(h.GeneratedAt)} by {h.GeneratedBy}"),
         ];
         var row = 3;
@@ -171,7 +172,7 @@ internal static class ExcelReportWriter
             ws.Cell(row, 2).Value = IssueBlock(n, i);
             ws.Cell(row, 3).Value = $"Severity: {ReportText.Severity(i.Severity)}\nPriority: {i.Priority}";
             ws.Cell(row, 5).Value = i.Assignee ?? "";
-            ws.Cell(row, 6).Value = ReportText.Status(i.Status);
+            ws.Cell(row, 6).Value = ReportText.Status(i.Status) + (i.CarriedForwardTo is { } to ? $"\nCarried forward to {to}" : "");
             ws.Cell(row, 7).Value = i.Status is IssueStatus.Verified or IssueStatus.Closed ? "Yes" : "No";
             ws.Cell(row, 8).Value = i.Status == IssueStatus.OnHold ? i.HoldReason ?? "" : "";
             ws.Cell(row, 9).Value = i.Status == IssueStatus.Rejected ? ReportText.Reject(i.RejectType) : "Valid";
@@ -250,7 +251,7 @@ internal static class ExcelReportWriter
 
     private static void AllIssues(IXLWorksheet ws, SprintReport report)
     {
-        string[] headers = ["Key", "Module", "Screen", "Type", "Title", "Severity", "Priority", "Status", "Assignee", "Reporter", "Found on", "Created", "Due", "First fixed", "Closed", "Reopened", "Reject reason"];
+        string[] headers = ["Key", "Module", "Screen", "Type", "Title", "Severity", "Priority", "Status", "Assignee", "Reporter", "Found on", "Created", "Due", "First fixed", "Closed", "Reopened", "Reject reason", "Carried forward to"];
         HeaderRow(ws, 1, headers);
         var row = 1;
         foreach (var i in report.Issues)
@@ -264,6 +265,7 @@ internal static class ExcelReportWriter
             ws.Cell(row, 17).Value = i.Status == IssueStatus.Rejected
                 ? string.Join(" – ", new[] { ReportText.Reject(i.RejectType), i.RejectReason }.Where(t => !string.IsNullOrWhiteSpace(t)))
                 : "";
+            ws.Cell(row, 18).Value = i.CarriedForwardTo ?? "";
         }
 
         Table(ws, 1, row, headers.Length);

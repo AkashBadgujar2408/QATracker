@@ -1038,3 +1038,47 @@ in `shared/charts/dashboard-filters.ts` (now also used by Holidays – could mov
 **Libraries added (licence):** none.
 
 **Next session:** S29 – Sprint close & carry forward.
+
+---
+
+## S29 – Sprint close & carry forward   (31-Oct-2026)
+
+**Done:**
+- DB script `007_SprintCloseAndCarryForward.sql` (SprintEvents kinds IssuesCarriedForward / IssuesCarriedIn,
+  `SprintSnapshots.CarriedToSprintId`); re-scaffolded. ADR-039.
+- Domain `SprintRules.CanCarryForward`. Application `Sprints/CloseSprint.cs` (`CarryForwardStep`, carry-forward and
+  close handlers – close can carry the open issues in the same transaction), `OpenIssuesHandler`,
+  `SprintDto.CarriedForwardCount`; snapshot rows frozen when an issue leaves and at closing; timeline line for
+  CarriedForward; carried issues cannot be deleted. API `POST /api/sprints/{id}/carry-forward`, `POST …/close`,
+  `GET …/open-issues`.
+- Sprint report: a closed sprint is built from its snapshot only; carried-out issues stay in the report as they were
+  when they left ("Carried forward to" in Excel status cell and "All issues", PDF meta line, summary count).
+- Web: `/sprints` page (was a placeholder) with the lifecycle track, progress, next-step actions, report, history;
+  `CloseSprintDialog` (close / carry mode, "Start new sprint" when no target), `ReopenTestingDialog` (admin);
+  shared `app-sprint-status` (in /dev/ui, now also on the sprint dashboard); timeline shows the carry note.
+- Tests: domain (carry-forward role/state/target rules); integration – close blocked while issues are open, 403 for
+  developers, finished / same-sprint refused, open-issues list, close with carry-forward (keys kept, due date cleared
+  into a Testing sprint, snapshot with target, both histories, timeline line), **report after the issues moved on
+  still shows status / assignee / severity as of closing** (done-when), second close 422, delete of a carried issue
+  422; carry into a completed sprint keeps the due date, stale version 409, unknown target 404, empty list 400.
+  Web – lifecycle / progress / target helpers, dialog payloads (close + carry, plain close, carry chosen only,
+  start-new-sprint), page actions by role, history.
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 290/290 · `ng build` (initial 726 kB) · `ng test` 179/179 ·
+`ng lint`. In Chrome as `ui.tester` on project UCCIC: Mark testing completed → Close sprint → "no open sprint" →
+Start new sprint ("Sprint 1 – Early Testing Round 2") → back in the dialog with it as target → "Carry forward 4 and
+close" with a note → closed card "All 4 issues carried forward", history (started, completed, carried with the keys
+and note, closed), dark theme (fixed: the Closed chip was 3.7:1 on the dark surface).
+
+**Deviations from plan:** the carry-forward body sends `{id, rowVersion}` per issue instead of bare `issueIds`
+(ADR-039). Reopen testing UI is in the ⋮ menu of a Testing-Completed sprint (admin only).
+
+**Carry-over / known gaps:** flaky under load – `AnalyticsTests.Endpoints_AnswerWithin800ms_On5000Issues` failed in
+2 of 4 full runs (a 31 s DB wait; passes alone and in the other runs) and one web test timed out once ("admin opens
+users page", dev servers running) – S30/S31 look at both. Test data in the local DB: UCCIC sprint 1 closed, 4 issues
+carried to "Sprint 1 – Early Testing Round 2". Local `ui.*` accounts got a new local password (deactivate when not
+needed). Invalid enum in JSON → 500 still open (S30).
+
+**Libraries added (licence):** none.
+
+**Next session:** S30 – Security & integration test pass.

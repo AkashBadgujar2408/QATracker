@@ -42,6 +42,7 @@ function sprint(status: SprintStatus, overrides: Partial<Sprint> = {}): Sprint {
     closedAt: null,
     issueCount: 1,
     openIssueCount: 1,
+    carriedForwardCount: 0,
     rowVersion: 'AAAAAAAAB9E=',
     ...overrides,
   };

@@ -34,7 +34,11 @@ public sealed record SprintReportHeader(
     DateTimeOffset GeneratedAt,
     string GeneratedBy);
 
-/// <summary>One issue of the report. Rich-text fields are plain text with line breaks; thumbnails are the issue's own screenshots.</summary>
+/// <summary>
+/// One issue of the report. Rich-text fields are plain text with line breaks; thumbnails are the issue's own screenshots.
+/// <paramref name="CarriedForwardTo"/> names the sprint an issue was carried forward to – it is shown as it was when it
+/// left.
+/// </summary>
 public sealed record SprintReportIssue(
     string Key,
     int Number,
@@ -60,7 +64,8 @@ public sealed record SprintReportIssue(
     string? HoldReason,
     RejectType? RejectType,
     string? RejectReason,
-    IReadOnlyList<byte[]> Thumbnails);
+    IReadOnlyList<byte[]> Thumbnails,
+    string? CarriedForwardTo = null);
 
 public sealed record ModuleSummary(string Module, int Total, IReadOnlyDictionary<StatusGroup, int> ByGroup, IReadOnlyDictionary<Severity, int> BySeverity);
 
@@ -68,7 +73,8 @@ public sealed record SprintReportSummary(
     int Total,
     IReadOnlyDictionary<StatusGroup, int> ByGroup,
     IReadOnlyDictionary<Severity, int> BySeverity,
-    IReadOnlyList<ModuleSummary> ByModule);
+    IReadOnlyList<ModuleSummary> ByModule,
+    int CarriedForward);
 
 /// <summary>Sprint report (plan 7 "Sprint report", S25): header, summary and every issue of the sprint.</summary>
 public sealed record SprintReport(SprintReportHeader Header, IReadOnlyList<SprintReportIssue> Issues)
@@ -92,7 +98,7 @@ public sealed record SprintReport(SprintReportHeader Header, IReadOnlyList<Sprin
             .Select(g => new ModuleSummary(g.Key, g.Count(), Groups(g), Severities(g)))
             .ToList();
 
-        return new SprintReportSummary(issues.Count, Groups(issues), Severities(issues), modules);
+        return new SprintReportSummary(issues.Count, Groups(issues), Severities(issues), modules, issues.Count(i => i.CarriedForwardTo is not null));
     }
 }
 
@@ -108,7 +114,8 @@ public interface IReportRenderer
 
 /// <summary>
 /// Builds the sprint report. A closed sprint reports the status, severity and assignee frozen at closing
-/// (SprintSnapshots) so later changes do not alter it.
+/// (SprintSnapshots) so later changes do not alter it. Issues carried forward to another sprint stay in the report as
+/// they were when they left (ADR-039).
 /// </summary>
 public sealed class SprintReportHandler(IApplicationDbContext db, IFileStorage storage, IReportRenderer renderer, ICurrentUser currentUser, IClock clock)
 {
@@ -149,12 +156,15 @@ public sealed class SprintReportHandler(IApplicationDbContext db, IFileStorage s
         var userName = await db.Users.AsNoTracking().Where(u => u.Id == currentUser.UserId).Select(u => u.FullName).SingleAsync(cancellationToken);
         header = header with { GeneratedBy = userName };
 
+        // A closed sprint is exactly its snapshot; an open one is its issues plus those carried out of it.
+        var closed = header.Status == SprintStatus.Closed;
         var rows = await db.Issues.AsNoTracking()
-            .Where(i => i.SprintId == sprintId)
+            .Where(i => (!closed && i.SprintId == sprintId) || i.SprintSnapshots.Any(s => s.SprintId == sprintId && (closed || s.CarriedToSprintId != null)))
             .OrderBy(i => i.Module.Name).ThenBy(i => i.Number)
             .Select(i => new
             {
                 i.Id,
+                i.SprintId,
                 i.IssueKey,
                 i.Number,
                 Module = i.Module.Name,
@@ -182,18 +192,24 @@ public sealed class SprintReportHandler(IApplicationDbContext db, IFileStorage s
             })
             .ToListAsync(cancellationToken);
 
-        var snapshots = header.Status == SprintStatus.Closed
-            ? await db.SprintSnapshots.AsNoTracking()
-                .Where(s => s.SprintId == sprintId)
-                .Select(s => new { s.IssueId, s.StatusAtClose, s.SeverityAtClose, Assignee = s.AssigneeAtClose == null ? null : s.AssigneeAtClose.FullName })
-                .ToDictionaryAsync(s => s.IssueId, cancellationToken)
-            : [];
+        var snapshots = await db.SprintSnapshots.AsNoTracking()
+            .Where(s => s.SprintId == sprintId)
+            .Select(s => new
+            {
+                s.IssueId,
+                s.StatusAtClose,
+                s.SeverityAtClose,
+                Assignee = s.AssigneeAtClose == null ? null : s.AssigneeAtClose.FullName,
+                CarriedTo = s.CarriedToSprint == null ? null : s.CarriedToSprint.Name,
+            })
+            .ToDictionaryAsync(s => s.IssueId, cancellationToken);
 
         var thumbnails = await ThumbnailsAsync(rows.Select(r => r.Id).ToList(), cancellationToken);
 
         var issues = rows.Select(r =>
         {
-            var snapshot = snapshots.GetValueOrDefault(r.Id);
+            // Live values while the issue is still here and the sprint open; frozen ones otherwise.
+            var snapshot = closed || r.SprintId != sprintId ? snapshots.GetValueOrDefault(r.Id) : null;
             return new SprintReportIssue(
                 r.IssueKey,
                 r.Number,
@@ -219,7 +235,8 @@ public sealed class SprintReportHandler(IApplicationDbContext db, IFileStorage s
                 r.HoldReason,
                 r.RejectType,
                 r.RejectReason,
-                thumbnails.GetValueOrDefault(r.Id) ?? []);
+                thumbnails.GetValueOrDefault(r.Id) ?? [],
+                snapshot?.CarriedTo);
         }).ToList();
 
         return new SprintReport(header, issues);
