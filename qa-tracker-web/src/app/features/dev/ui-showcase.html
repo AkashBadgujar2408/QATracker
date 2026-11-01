@@ -171,6 +171,18 @@
   </section>
 
   <section class="qa-card p-6">
+    <h2 class="mt-0 mb-1 text-lg font-semibold">app-shortcuts-dialog</h2>
+    <p class="mt-0 mb-4 max-w-2xl text-sm text-muted">
+      Keyboard shortcuts for the signed-in role. Press <kbd>?</kbd> anywhere (not while typing), or
+      use the user menu. <kbd>g</kbd> then a letter goes to a page, <kbd>/</kbd> focuses the issue
+      search.
+    </p>
+    <button matButton="outlined" type="button" (click)="shortcuts.openHelp()">
+      Keyboard shortcuts
+    </button>
+  </section>
+
+  <section class="qa-card p-6">
     <h2 class="mt-0 mb-1 text-lg font-semibold">app-entity-picker</h2>
     <p class="mt-0 mb-4 max-w-2xl text-sm text-muted">
       Live against the API: type a name that does not exist and choose “Add … as new” to open the

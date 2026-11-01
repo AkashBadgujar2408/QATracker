@@ -22,7 +22,7 @@ const KIND_ICONS: Readonly<Record<EmptyStateKind, string>> = {
   template: `
     <div
       class="mb-3 flex size-12 items-center justify-center rounded-full bg-surface-muted"
-      [class.text-severity-critical]="kind() === 'error'"
+      [class.text-danger]="kind() === 'error'"
       [class.text-muted]="kind() !== 'error'"
     >
       <ng-icon [name]="icon()" size="24" aria-hidden="true" />

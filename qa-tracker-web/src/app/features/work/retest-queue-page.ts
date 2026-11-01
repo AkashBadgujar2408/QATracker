@@ -32,7 +32,7 @@ export const WAIT_CLASS: Readonly<Record<WaitBucket, string>> = {
   fresh: 'text-muted',
   days: 'text-text',
   aging: 'text-status-on-hold font-medium',
-  stale: 'text-severity-critical font-semibold',
+  stale: 'text-danger font-semibold',
 };
 
 /**

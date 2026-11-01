@@ -39,6 +39,7 @@ import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { SkeletonLines } from '../../shared/ui/skeleton/skeleton';
 import { CompleteTestingDialog, CompleteTestingDialogData } from './complete-testing-dialog';
 import { IssueForm, IssueFormMode, IssueSaved } from './issue-form';
+import { isTyping } from '../../core/shortcuts/shortcuts';
 import { SprintIssues } from './sprint-issues';
 import { StartSprintDialog, StartSprintDialogData } from './start-sprint-dialog';
 import { EMPTY_SELECTION, TestingContext, TestingSelection } from './testing-context';
@@ -379,6 +380,7 @@ export class TestingPage {
   protected onKey(event: KeyboardEvent): void {
     if (
       event.key.toLowerCase() !== 'n' ||
+      event.defaultPrevented ||
       event.ctrlKey ||
       event.metaKey ||
       event.altKey ||
@@ -414,17 +416,6 @@ function fromQuery(params: ParamMap): TestingSelection | null {
   };
   const selection = { clientId: id('client'), projectId: id('project'), sprintId: id('sprint') };
   return selection.clientId && selection.projectId ? selection : null;
-}
-
-function isTyping(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-  return (
-    target.isContentEditable ||
-    ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
-    target.closest('[role="listbox"], [role="combobox"], .mat-mdc-select') !== null
-  );
 }
 
 function toListItem(issue: Issue): IssueListItem {

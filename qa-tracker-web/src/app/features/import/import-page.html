@@ -73,7 +73,7 @@
         </label>
       }
       @if (fileError(); as message) {
-        <p role="alert" class="m-0 mt-3 text-sm text-severity-critical">{{ message }}</p>
+        <p role="alert" class="m-0 mt-3 text-sm text-danger">{{ message }}</p>
       }
 
       <div class="mt-5 flex justify-end">
@@ -138,7 +138,7 @@
       }
 
       @if (readError(); as message) {
-        <p role="alert" class="m-0 mt-3 text-sm text-severity-critical">{{ message }}</p>
+        <p role="alert" class="m-0 mt-3 text-sm text-danger">{{ message }}</p>
       }
 
       <div class="mt-5 flex flex-wrap justify-between gap-2">
@@ -412,7 +412,7 @@
       </section>
 
       @if (commitError(); as message) {
-        <p role="alert" class="qa-card m-0 mb-4 p-4 text-sm text-severity-critical">
+        <p role="alert" class="qa-card m-0 mb-4 p-4 text-sm text-danger">
           {{ message }}
         </p>
       }

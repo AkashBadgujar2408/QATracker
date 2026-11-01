@@ -31,7 +31,7 @@ export interface ReopenTestingDialogData {
         <mat-hint>Shown in the sprint history.</mat-hint>
       </mat-form-field>
       @if (error()) {
-        <p role="alert" class="m-0 mt-3 text-severity-critical">{{ error() }}</p>
+        <p role="alert" class="m-0 mt-3 text-danger">{{ error() }}</p>
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">

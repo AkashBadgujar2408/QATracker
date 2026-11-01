@@ -46,9 +46,7 @@ export interface CompleteTestingDialogData {
       @if (summary.isLoading()) {
         <app-skeleton-lines [lines]="5" />
       } @else if (summary.error()) {
-        <p role="alert" class="m-0 text-severity-critical">
-          Could not load the summary. {{ loadError() }}
-        </p>
+        <p role="alert" class="m-0 text-danger">Could not load the summary. {{ loadError() }}</p>
       } @else if (summary.value(); as s) {
         <p class="mt-0 mb-4 text-base text-text">
           Developers get {{ s.issueCount | plural: 'issue' }} to fix, with due dates from the SLA.
@@ -116,7 +114,7 @@ export interface CompleteTestingDialogData {
       }
 
       @if (error()) {
-        <p role="alert" class="m-0 mt-3 text-severity-critical">{{ error() }}</p>
+        <p role="alert" class="m-0 mt-3 text-danger">{{ error() }}</p>
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">

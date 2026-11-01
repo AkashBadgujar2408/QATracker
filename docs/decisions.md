@@ -698,3 +698,29 @@ new alerts/mails and background tasks configurable in the app; one database for 
   running. Admin password and signing key are random per run (environment only). `seed.setup.ts` creates users and
   masters through the API; `critical-flows.e2e.ts` runs the three flows of plan 15.1 serially on one issue through the UI.
   Not part of `npm test` (needs SQL Express and ~1.5 min).
+## ADR-041 – UX polish and performance (01-Nov-2026, S31)
+- **Keyboard shortcuts** (`core/shortcuts`): `?` help dialog (`app-shortcuts-dialog`, in /dev/ui; also user menu ›
+  Keyboard shortcuts), `/` focuses the issue search, `g` then a letter (h, t, w, i, b, r, s, n) goes to a page the role
+  may open (1.5 s window). Ignored while typing (inputs, editors, open selects), with Ctrl/Alt/⌘, or with a dialog open.
+  The dialog lists page keys too (n, Ctrl+Enter, Ctrl+V, arrows). It is loaded on the first `?` (dynamic import), so
+  MatDialog stays out of the shell. The shell's listener returns nothing on purpose – an Angular template listener
+  that returns `false` calls preventDefault() and would swallow typing (found in the browser check, E2E now types).
+- **Top-bar search** works (was a disabled placeholder since S02): an issue key (any case) opens the issue, other text
+  opens the issue list with `q`.
+- **Charts**: the canvas of `app-chart` is in `@defer (on viewport; prefetch on idle)` with a skeleton placeholder –
+  charts below the fold start ECharts when scrolled near (ECharts itself was already a lazy chunk).
+- **Contrast**: `--qa-text-muted` #5b6b82 (4.5:1 on surface-muted too); new text tokens `--qa-text-success / -danger /
+  -warning` (Tailwind `text-success`, `text-danger`, `text-warning`, light and dark) for **words** in a status or
+  severity colour – status/severity colours stay for dots, bars, chips' fills and icons. `text-severity-critical` →
+  `text-danger` for error messages (3.6:1 on the dark surface before). Sprint tokens: testing sky-700 / dark sky-400,
+  testing-completed indigo-600 / dark indigo-400 (chip text).
+- **ARIA**: comment box `aria-controls` only while the mention list is open (no `aria-expanded` on a textarea); user
+  menu named by hidden text "User menu, <name>" (avatar aria-hidden).
+- **Database**: script 008 – indexes from the missing-index DMVs during the heavy tests (Issues by project + status +
+  due date, project + severity + status, project + created, created, closed; IssueActivities kind + new value);
+  `IX_Issues_Project_Status` replaced. Script 009 – `READ_COMMITTED_SNAPSHOT ON`: reads see the last committed row
+  instead of waiting for writers (the 31 s analytics stall). Writers still block writers – row versions, pick and
+  numbering lock unchanged. Applying 009 ends other sessions (stop the API first).
+- **Measured**: Lighthouse accessibility 100 on 14 main pages (tester and developer, light and dark – audit signs in
+  through a persistent Chrome profile, script not in the repo); issue list < 500 ms with 1 000 matching rows of 3 000
+  (`IssueListPerformanceTests`); initial bundle 741 kB raw / 178 kB transferred.

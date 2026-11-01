@@ -1,5 +1,9 @@
-<label class="relative flex w-full max-w-md items-center">
-  <span class="sr-only">Search issues</span>
+<form
+  class="relative flex w-full max-w-md items-center"
+  role="search"
+  (submit)="search($event, query)"
+>
+  <label for="qa-global-search" class="sr-only">Search issues</label>
   <ng-icon
     name="lucideSearch"
     size="16"
@@ -7,14 +11,21 @@
     aria-hidden="true"
   />
   <input
+    #query
+    id="qa-global-search"
     type="search"
-    class="h-9 w-full rounded-control border border-border bg-bg pl-9 pr-3 text-sm text-text outline-none placeholder:text-muted focus:border-primary"
+    enterkeyhint="search"
+    autocomplete="off"
+    class="h-9 w-full rounded-control border border-border bg-bg pl-9 pr-10 text-sm text-text outline-none placeholder:text-muted focus:border-primary"
     placeholder="Search issue key or text…"
-    disabled
-    title="Global search arrives with the issue list (S15)"
+    (keydown.escape)="query.blur()"
   />
-</label>
-
+  <kbd
+    class="pointer-events-none absolute right-2 rounded-control border border-border bg-surface-muted px-1.5 text-xs leading-5 text-muted"
+    aria-hidden="true"
+    >/</kbd
+  >
+</form>
 <div class="ml-auto flex items-center gap-1">
   <button
     matIconButton
@@ -32,13 +43,14 @@
     type="button"
     class="ml-1 flex cursor-pointer items-center rounded-full border-0 bg-transparent p-1 hover:bg-surface-muted"
     [matMenuTriggerFor]="userMenu"
-    aria-label="User menu"
   >
     <app-user-avatar
+      aria-hidden="true"
       [name]="auth.user()?.fullName ?? '?'"
       [color]="auth.user()?.avatarColor ?? null"
       size="sm"
     />
+    <span class="sr-only">User menu, {{ auth.user()?.fullName }}</span>
   </button>
 
   <mat-menu #userMenu="matMenu" xPosition="before">
@@ -51,6 +63,11 @@
       <ng-icon name="lucideBellRing" size="16" class="mr-3" />
       <span>Notification settings</span>
     </a>
+    <button mat-menu-item (click)="shortcuts.openHelp()">
+      <ng-icon name="lucideKeyboard" size="16" class="mr-3" />
+      <span>Keyboard shortcuts</span>
+      <kbd class="ml-auto pl-4 text-xs text-muted" aria-hidden="true">?</kbd>
+    </button>
     <a mat-menu-item routerLink="/change-password">
       <ng-icon name="lucideKeyRound" size="16" class="mr-3" />
       <span>Change password</span>

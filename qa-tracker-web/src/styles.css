@@ -47,6 +47,9 @@
   --color-border-strong: var(--qa-border-strong);
   --color-text: var(--qa-text);
   --color-muted: var(--qa-text-muted);
+  --color-success: var(--qa-text-success);
+  --color-danger: var(--qa-text-danger);
+  --color-warning: var(--qa-text-warning);
 
   --color-severity-critical: var(--qa-severity-critical);
   --color-severity-high: var(--qa-severity-high);

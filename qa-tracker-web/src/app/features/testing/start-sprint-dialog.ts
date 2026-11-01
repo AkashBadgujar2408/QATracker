@@ -67,7 +67,7 @@ export interface StartSprintDialogData {
             }
           </mat-select>
           @if (phases.error()) {
-            <mat-hint class="text-severity-critical">Could not load phases.</mat-hint>
+            <mat-hint class="text-danger">Could not load phases.</mat-hint>
           }
           <mat-error>{{ fieldError(form.controls.phaseId, 'Phase') }}</mat-error>
         </mat-form-field>

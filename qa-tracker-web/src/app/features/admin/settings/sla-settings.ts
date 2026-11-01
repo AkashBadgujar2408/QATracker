@@ -76,7 +76,7 @@ interface SlaRow {
                   @if (r.valid && r.hours !== null) {
                     {{ describe(r.hours) }}
                   } @else {
-                    <span class="text-severity-critical">1 to {{ maxHours }} hours</span>
+                    <span class="text-danger">1 to {{ maxHours }} hours</span>
                   }
                 </span>
               </div>

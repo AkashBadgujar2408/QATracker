@@ -80,7 +80,7 @@ export function isBlankHtml(html: string | null | undefined): boolean {
     <div
       [id]="labelId"
       class="mb-1 block text-sm font-medium"
-      [class]="invalid() ? 'text-severity-critical' : 'text-muted'"
+      [class]="invalid() ? 'text-danger' : 'text-muted'"
     >
       {{ label() }}{{ required() ? ' *' : '' }}
     </div>
@@ -128,7 +128,7 @@ export function isBlankHtml(html: string | null | undefined): boolean {
       ></div>
     </div>
     @if (invalid()) {
-      <p class="m-0 mt-1 px-1 text-xs text-severity-critical" role="alert">{{ errorText() }}</p>
+      <p class="m-0 mt-1 px-1 text-xs text-danger" role="alert">{{ errorText() }}</p>
     } @else if (hint()) {
       <p class="m-0 mt-1 px-1 text-xs text-muted">{{ hint() }}</p>
     }

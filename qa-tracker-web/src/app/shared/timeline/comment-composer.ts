@@ -49,8 +49,7 @@ export function mentionQuery(text: string, caret: number): { start: number; quer
         class="block w-full resize-y rounded-t-card border-0 bg-transparent px-3 py-2.5 text-base text-text outline-none"
         placeholder="Write a comment – @ to mention, Ctrl+V to paste a screenshot"
         [value]="text()"
-        [attr.aria-expanded]="suggestions().length > 0"
-        aria-controls="qa-mention-list"
+        [attr.aria-controls]="suggestions().length > 0 ? 'qa-mention-list' : null"
         aria-autocomplete="list"
         (input)="onInput()"
         (click)="onInput()"
@@ -115,7 +114,7 @@ export function mentionQuery(text: string, caret: number): { start: number; quer
           (change)="addFiles(picker.files); picker.value = ''"
         />
         @if (error()) {
-          <span role="alert" class="min-w-0 flex-1 truncate text-sm text-severity-critical">{{
+          <span role="alert" class="min-w-0 flex-1 truncate text-sm text-danger">{{
             error()
           }}</span>
         } @else {

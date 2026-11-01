@@ -87,7 +87,7 @@ export function carryTargets(sprint: Sprint, sprints: readonly Sprint[]): Sprint
       @if (issues.isLoading()) {
         <app-skeleton-lines [lines]="5" />
       } @else if (issues.error()) {
-        <p role="alert" class="m-0 text-severity-critical">
+        <p role="alert" class="m-0 text-danger">
           Could not load the open issues. {{ loadError() }}
         </p>
       } @else if (issues.value(); as open) {
@@ -176,7 +176,7 @@ export function carryTargets(sprint: Sprint, sprints: readonly Sprint[]): Sprint
       }
 
       @if (error()) {
-        <p role="alert" class="m-0 mt-3 text-severity-critical">{{ error() }}</p>
+        <p role="alert" class="m-0 mt-3 text-danger">{{ error() }}</p>
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">

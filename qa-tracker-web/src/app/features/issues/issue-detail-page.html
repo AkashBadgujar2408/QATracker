@@ -28,7 +28,7 @@
       <app-severity-badge [severity]="i.severity" />
       <app-priority-icon [priority]="i.priority" [showLabel]="true" />
       @if (i.reopenCount > 0) {
-        <span class="text-xs font-medium text-status-reopened">Reopened {{ i.reopenCount }}×</span>
+        <span class="text-xs font-medium text-danger">Reopened {{ i.reopenCount }}×</span>
       }
     </div>
     <h1 class="mt-2 mb-3 text-xl leading-snug font-semibold tracking-tight text-text">
@@ -85,7 +85,7 @@
     </div>
   }
   @if (actionError()) {
-    <p role="alert" class="mt-0 mb-5 text-sm text-severity-critical">
+    <p role="alert" class="mt-0 mb-5 text-sm text-danger">
       {{ actionError() }}
       <button matButton type="button" (click)="actionError.set(null); reloadAll()">Reload</button>
     </p>
@@ -106,19 +106,19 @@
                 <span class="font-semibold text-text">{{ env.name }}</span>
                 @switch (d.retestResult) {
                   @case ('Passed') {
-                    <span class="flex items-center gap-1 text-sm text-status-verified">
+                    <span class="flex items-center gap-1 text-sm text-success">
                       <ng-icon name="lucideCircleCheck" size="15" /> Verified
                       {{ d.retestedAt | istDate }}
                     </span>
                   }
                   @case ('Failed') {
-                    <span class="flex items-center gap-1 text-sm text-status-reopened">
+                    <span class="flex items-center gap-1 text-sm text-danger">
                       <ng-icon name="lucideCircleX" size="15" /> Retest failed
                       {{ d.retestedAt | istDate }}
                     </span>
                   }
                   @default {
-                    <span class="flex items-center gap-1 text-sm text-status-on-hold">
+                    <span class="flex items-center gap-1 text-sm text-warning">
                       <ng-icon name="lucideClock" size="15" /> Awaiting retest
                     </span>
                   }

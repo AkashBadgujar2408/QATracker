@@ -52,7 +52,7 @@ export function isOverdue(item: Pick<WorkItem, 'dueDate' | 'status'>, now = new 
       <span
         class="flex w-44 items-center gap-1 text-sm whitespace-nowrap tabular-nums"
         [class.text-muted]="!overdue()"
-        [class.text-severity-critical]="overdue()"
+        [class.text-danger]="overdue()"
         [class.font-medium]="overdue()"
       >
         @if (item().dueDate) {

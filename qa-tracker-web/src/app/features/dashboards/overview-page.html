@@ -9,7 +9,7 @@
 
 @if (error(); as message) {
   <p role="alert" class="qa-card m-0 mb-4 flex items-center justify-between gap-3 p-4">
-    <span class="text-severity-critical">The dashboard could not be loaded: {{ message }}</span>
+    <span class="text-danger">The dashboard could not be loaded: {{ message }}</span>
     <button matButton="outlined" type="button" (click)="overview.reload()">Try again</button>
   </p>
 }

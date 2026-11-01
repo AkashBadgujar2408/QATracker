@@ -77,7 +77,7 @@ export function screenshotName(file: File, now = new Date()): string {
     />
 
     @if (errors().length) {
-      <ul role="alert" class="m-0 mt-2 list-none p-0 text-sm text-severity-critical">
+      <ul role="alert" class="m-0 mt-2 list-none p-0 text-sm text-danger">
         @for (error of errors(); track $index) {
           <li>{{ error }}</li>
         }

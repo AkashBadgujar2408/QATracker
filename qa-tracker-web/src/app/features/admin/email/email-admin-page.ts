@@ -293,7 +293,7 @@ type TestState =
                       · next {{ m.nextAttemptAt | istDate: 'datetime' }}
                     }
                   </p>
-                  <p class="m-0 mt-1 text-sm text-severity-critical">{{ m.lastError }}</p>
+                  <p class="m-0 mt-1 text-sm text-danger">{{ m.lastError }}</p>
                 </div>
                 <button
                   matButton="outlined"

@@ -1,3 +1,4 @@
+import { KeyboardShortcuts } from '../../core/shortcuts/keyboard-shortcuts.service';
 import { NOTIFICATION_META, NotificationItem } from '../../core/notifications/notification-item';
 import { AppNotification, NotificationType } from '../../shared/data/notifications.api';
 import { IssueTimeline } from '../../shared/timeline/issue-timeline';
@@ -171,6 +172,7 @@ export class UiShowcase {
   ];
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
+  protected readonly shortcuts = inject(KeyboardShortcuts);
 
   /** app-rich-text-editor demo: the value is sanitised HTML (null when empty). */
   /** app-issue-timeline demo: live data of an existing issue (pick one with comments). */

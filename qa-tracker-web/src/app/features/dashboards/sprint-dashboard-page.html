@@ -138,7 +138,7 @@
           @for (r of data()!.reopened.items; track r.key) {
             <li class="flex items-center gap-3 border-b border-border py-2">
               <span
-                class="w-8 shrink-0 text-right font-semibold text-status-reopened tabular-nums"
+                class="w-8 shrink-0 text-right font-semibold text-danger tabular-nums"
                 [title]="'Reopened ' + r.reopenCount + ' times'"
                 >{{ r.reopenCount }}×</span
               >

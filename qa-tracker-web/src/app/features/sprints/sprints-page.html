@@ -189,9 +189,7 @@
             @if (history.isLoading()) {
               <app-skeleton-lines [lines]="3" />
             } @else if (history.error()) {
-              <p role="alert" class="m-0 text-sm text-severity-critical">
-                The history could not be loaded.
-              </p>
+              <p role="alert" class="m-0 text-sm text-danger">The history could not be loaded.</p>
             } @else if (history.value(); as detail) {
               <ol class="m-0 list-none p-0">
                 @for (e of detail.events; track $index) {

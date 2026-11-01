@@ -81,6 +81,10 @@ test('tester retests the fix from the retest queue', async ({ page }) => {
   await row.getByRole('button', { name: 'Pass' }).click();
   await expect(row).toBeHidden();
 
-  await page.goto(`/issues/${w.project.key}-1`);
+  // Real keystrokes (not fill): "/" focuses the search, the key opens the issue (S31 – the shell must not swallow keys).
+  await page.keyboard.press('/');
+  await page.keyboard.type(`${w.project.key.toLowerCase()}-1`);
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp(`/issues/${w.project.key}-1$`));
   await expect(page.getByText('Verified', { exact: true }).first()).toBeVisible();
 });

@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterOutlet } from '@angular/router';
 import { Breadcrumb } from '../../../shared/ui/breadcrumb/breadcrumb';
 import { AuthService } from '../../auth/auth.service';
+import { KeyboardShortcuts } from '../../shortcuts/keyboard-shortcuts.service';
 import { BreadcrumbService } from '../breadcrumb.service';
 import { LayoutService } from '../layout.service';
 import { navItemsFor } from '../nav-items';
 import { Sidebar } from '../sidebar/sidebar';
 import { Topbar } from '../topbar/topbar';
 
-/** Authenticated application frame: sidebar | top bar + breadcrumb + routed page. */
+/** Authenticated application frame: sidebar | top bar + breadcrumb + routed page; app-wide keyboard shortcuts. */
 @Component({
   selector: 'app-shell',
   imports: [RouterOutlet, Sidebar, Topbar, Breadcrumb],
@@ -33,12 +34,24 @@ import { Topbar } from '../topbar/topbar';
       </main>
     </div>
   `,
-  host: { class: 'flex h-dvh overflow-hidden bg-bg' },
+  host: {
+    class: 'flex h-dvh overflow-hidden bg-bg',
+    '(document:keydown)': 'onKeydown($event)',
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Shell {
   protected readonly layout = inject(LayoutService);
   protected readonly breadcrumbs = inject(BreadcrumbService);
+  private readonly shortcuts = inject(KeyboardShortcuts);
   private readonly auth = inject(AuthService);
   protected readonly navItems = computed(() => navItemsFor(this.auth.role()));
+
+  /**
+   * Must return nothing: Angular calls preventDefault() when a template listener returns false, and handle()
+   * returns false for every ordinary key – that would swallow all typing.
+   */
+  protected onKeydown(event: KeyboardEvent): void {
+    this.shortcuts.handle(event);
+  }
 }

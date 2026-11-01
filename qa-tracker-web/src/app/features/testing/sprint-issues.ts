@@ -156,7 +156,7 @@ interface IssueGroup {
                       <button
                         matIconButton
                         type="button"
-                        class="text-severity-critical"
+                        class="text-danger"
                         [attr.aria-label]="'Delete ' + issue.key"
                         matTooltip="Delete"
                         (click)="remove.emit(issue)"

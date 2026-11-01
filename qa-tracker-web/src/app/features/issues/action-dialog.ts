@@ -156,7 +156,7 @@ const COPY: Partial<Record<IssueAction | 'RetestFailed', Copy>> = {
                 {{ env.name }} <span class="text-xs text-muted">· {{ env.url }}</span>
               </mat-checkbox>
             } @empty {
-              <p class="m-0 text-sm text-severity-critical">
+              <p class="m-0 text-sm text-danger">
                 The project has no environments – add one in Masters first.
               </p>
             }
@@ -195,7 +195,7 @@ const COPY: Partial<Record<IssueAction | 'RetestFailed', Copy>> = {
         }
 
         @if (error()) {
-          <p role="alert" class="m-0 text-sm text-severity-critical">{{ error() }}</p>
+          <p role="alert" class="m-0 text-sm text-danger">{{ error() }}</p>
         }
       </div>
     </mat-dialog-content>

@@ -58,10 +58,7 @@
                 [queryParams]="cardParams(card, { status: openStatuses, severity: 'Critical' })"
               >
                 <span class="block text-sm text-muted">Critical</span>
-                <span
-                  class="block text-xl font-semibold"
-                  [class.text-severity-critical]="card.critical > 0"
-                >
+                <span class="block text-xl font-semibold" [class.text-danger]="card.critical > 0">
                   {{ card.critical }}
                 </span>
               </a>
@@ -71,10 +68,7 @@
                 [queryParams]="cardParams(card, { overdue: 1 })"
               >
                 <span class="block text-sm text-muted">Overdue</span>
-                <span
-                  class="block text-xl font-semibold"
-                  [class.text-severity-critical]="card.overdue > 3"
-                >
+                <span class="block text-xl font-semibold" [class.text-danger]="card.overdue > 3">
                   {{ card.overdue }}
                 </span>
               </a>

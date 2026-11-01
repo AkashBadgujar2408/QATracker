@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatIconButton } from '@angular/material/button';
 import { MatDivider } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
@@ -7,6 +7,7 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideBellRing,
+  lucideKeyboard,
   lucideKeyRound,
   lucideLogOut,
   lucideMoon,
@@ -17,8 +18,13 @@ import { UserAvatar } from '../../../shared/ui/user-avatar/user-avatar';
 import { AuthService } from '../../auth/auth.service';
 import { NotificationBell } from '../../notifications/notification-bell';
 import { ThemeService } from '../../theme/theme.service';
+import { KeyboardShortcuts } from '../../shortcuts/keyboard-shortcuts.service';
+import { issueKeyFrom } from '../../shortcuts/shortcuts';
 
-/** Top bar: global search (placeholder until S15), theme toggle, notifications bell and user menu. */
+/**
+ * Top bar: issue search (a key such as "ord-12" opens that issue, other text searches the issue list; "/" focuses it),
+ * theme toggle, notifications bell and user menu (incl. keyboard shortcuts).
+ */
 @Component({
   selector: 'app-topbar',
   imports: [
@@ -34,6 +40,7 @@ import { ThemeService } from '../../theme/theme.service';
   viewProviders: [
     provideIcons({
       lucideBellRing,
+      lucideKeyboard,
       lucideKeyRound,
       lucideLogOut,
       lucideMoon,
@@ -52,4 +59,20 @@ export class Topbar {
   protected readonly theme = inject(ThemeService);
 
   protected readonly auth = inject(AuthService);
+  protected readonly shortcuts = inject(KeyboardShortcuts);
+  private readonly router = inject(Router);
+
+  protected search(event: Event, input: HTMLInputElement): void {
+    event.preventDefault();
+    const text = input.value.trim();
+    if (!text) {
+      return;
+    }
+    const key = issueKeyFrom(text);
+    void (key
+      ? this.router.navigate(['/issues', key])
+      : this.router.navigate(['/issues'], { queryParams: { q: text } }));
+    input.value = '';
+    input.blur();
+  }
 }

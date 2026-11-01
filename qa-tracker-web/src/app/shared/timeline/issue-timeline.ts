@@ -147,7 +147,7 @@ const NOTE_KINDS: ReadonlySet<ActivityKind> = new Set([
     @if (loading() && !items().length) {
       <app-skeleton-lines [lines]="5" />
     } @else if (error()) {
-      <p role="alert" class="m-0 text-sm text-severity-critical">
+      <p role="alert" class="m-0 text-sm text-danger">
         Could not load the activity. {{ error() }}
         <button matButton type="button" (click)="reload()">Try again</button>
       </p>
@@ -197,7 +197,7 @@ const NOTE_KINDS: ReadonlySet<ActivityKind> = new Set([
                     (keydown.escape)="editingId.set(null)"
                   ></textarea>
                   @if (editError()) {
-                    <p role="alert" class="m-0 mt-1 text-sm text-severity-critical">
+                    <p role="alert" class="m-0 mt-1 text-sm text-danger">
                       {{ editError() }}
                     </p>
                   }

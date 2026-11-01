@@ -125,7 +125,7 @@
           <input matInput [(ngModel)]="version" maxlength="100" autocomplete="off" />
         </mat-form-field>
         @if (error()) {
-          <p role="alert" class="m-0 text-sm text-severity-critical">{{ error() }}</p>
+          <p role="alert" class="m-0 text-sm text-danger">{{ error() }}</p>
         }
         <button matButton="filled" type="button" [disabled]="busy()" (click)="send()">
           {{ busy() ? 'Sending…' : 'Send deploy notice' }}

@@ -56,7 +56,7 @@ let nextUploadId = 1;
           }
         </div>
         @if (item.error) {
-          <p role="alert" class="m-0 mt-1 text-severity-critical">{{ item.error }}</p>
+          <p role="alert" class="m-0 mt-1 text-danger">{{ item.error }}</p>
         } @else {
           <mat-progress-bar mode="determinate" [value]="item.percent" class="mt-2" />
         }
@@ -66,7 +66,7 @@ let nextUploadId = 1;
     @if (attachments.isLoading() && !attachments.hasValue()) {
       <app-skeleton-lines [lines]="2" />
     } @else if (attachments.error()) {
-      <p role="alert" class="m-0 text-sm text-severity-critical">
+      <p role="alert" class="m-0 text-sm text-danger">
         Could not load attachments. {{ loadError() }}
         <button matButton type="button" (click)="attachments.reload()">Try again</button>
       </p>

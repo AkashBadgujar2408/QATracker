@@ -128,11 +128,7 @@ const TAKEN_CODES: Readonly<Record<string, 'name' | 'key'>> = {
             role="alert"
             class="mb-3 flex items-start gap-2 rounded-control border border-severity-critical/40 bg-severity-critical/10 px-3 py-2 text-sm text-text"
           >
-            <ng-icon
-              name="lucideCircleAlert"
-              size="16"
-              class="mt-0.5 shrink-0 text-severity-critical"
-            />
+            <ng-icon name="lucideCircleAlert" size="16" class="mt-0.5 shrink-0 text-danger" />
             <div class="min-w-0 flex-1">
               <strong class="font-semibold">{{ match.name }}</strong> already exists{{
                 match.isActive ? '.' : ', but it is inactive – activate it in Masters.'

@@ -83,7 +83,7 @@ import { OverdueBadge } from '../../shared/ui/overdue-badge/overdue-badge';
       }
       @if (card().reopenCount > 0) {
         <span
-          class="inline-flex items-center gap-1 font-medium text-status-reopened"
+          class="inline-flex items-center gap-1 font-medium text-danger"
           [title]="'Reopened ' + card().reopenCount + ' times'"
         >
           <ng-icon name="lucideRotateCcw" size="14" />{{ card().reopenCount }}

@@ -32,14 +32,12 @@ export function trendText(value: number, previous: number, since: string): strin
       <a class="qa-kpi-link" [routerLink]="link()" [queryParams]="queryParams()">
         <span class="block text-sm text-muted">{{ label() }}</span>
         <span class="mt-1 flex items-center gap-2">
-          <span class="qa-kpi-value" [class.text-severity-critical]="attention()">{{
-            value()
-          }}</span>
+          <span class="qa-kpi-value" [class.text-danger]="attention()">{{ value() }}</span>
           @if (attention()) {
             <ng-icon
               name="lucideTriangleAlert"
               size="20"
-              class="text-severity-critical"
+              class="text-danger"
               aria-label="Needs attention"
               role="img"
             />

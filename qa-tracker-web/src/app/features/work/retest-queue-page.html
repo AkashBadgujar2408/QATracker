@@ -48,7 +48,7 @@
                 <span
                   class="rounded-full border border-solid px-2 text-xs leading-5 font-semibold"
                   [class.border-severity-critical]="group.environmentType === 'LIVE'"
-                  [class.text-severity-critical]="group.environmentType === 'LIVE'"
+                  [class.text-danger]="group.environmentType === 'LIVE'"
                   [class.border-border-strong]="group.environmentType !== 'LIVE'"
                   [class.text-muted]="group.environmentType !== 'LIVE'"
                   >{{ group.environmentType }}</span
@@ -123,9 +123,7 @@
                     >
                   }
                   @if (item.reopenCount > 0) {
-                    <span class="font-medium text-status-reopened"
-                      >Reopened {{ item.reopenCount }}×</span
-                    >
+                    <span class="font-medium text-danger">Reopened {{ item.reopenCount }}×</span>
                   }
                 </div>
                 <p class="mt-2 mb-0 text-sm text-muted">

@@ -89,7 +89,7 @@
           class="mb-1 text-sm font-medium"
           [class]="
             form.controls.severity.invalid && form.controls.severity.touched
-              ? 'text-severity-critical'
+              ? 'text-danger'
               : 'text-muted'
           "
         >
@@ -120,7 +120,7 @@
           class="mb-1 text-sm font-medium"
           [class]="
             form.controls.priority.invalid && form.controls.priority.touched
-              ? 'text-severity-critical'
+              ? 'text-danger'
               : 'text-muted'
           "
         >
@@ -207,7 +207,7 @@
     class="qa-form-footer sticky z-10 flex flex-wrap items-center gap-2 border-t border-border bg-surface px-5 py-3"
   >
     @if (error()) {
-      <p role="alert" class="m-0 w-full text-sm text-severity-critical">
+      <p role="alert" class="m-0 w-full text-sm text-danger">
         {{ error() }}
         @if (conflict()) {
           <button matButton type="button" (click)="reloadLatest()">Load latest version</button>

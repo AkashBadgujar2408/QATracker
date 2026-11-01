@@ -207,11 +207,19 @@ public partial class QaTrackerDbContext : DbContext
         {
             entity.HasIndex(e => new { e.AssigneeId, e.Status }, "IX_Issues_Assignee_Status");
 
+            entity.HasIndex(e => e.ClosedAt, "IX_Issues_ClosedAt").HasFilter("([ClosedAt] IS NOT NULL)");
+
+            entity.HasIndex(e => e.CreatedAt, "IX_Issues_CreatedAt");
+
             entity.HasIndex(e => e.DuplicateOfIssueId, "IX_Issues_DuplicateOfIssue").HasFilter("([DuplicateOfIssueId] IS NOT NULL)");
 
             entity.HasIndex(e => new { e.ModuleId, e.ScreenName }, "IX_Issues_Module_ScreenName");
 
-            entity.HasIndex(e => new { e.ProjectId, e.Status }, "IX_Issues_Project_Status");
+            entity.HasIndex(e => new { e.ProjectId, e.CreatedAt }, "IX_Issues_Project_CreatedAt");
+
+            entity.HasIndex(e => new { e.ProjectId, e.Severity, e.Status }, "IX_Issues_Project_Severity_Status");
+
+            entity.HasIndex(e => new { e.ProjectId, e.Status, e.DueDate }, "IX_Issues_Project_Status_DueDate");
 
             entity.HasIndex(e => new { e.SprintId, e.Status }, "IX_Issues_Sprint_Status");
 
@@ -274,6 +282,8 @@ public partial class QaTrackerDbContext : DbContext
         modelBuilder.Entity<IssueActivity>(entity =>
         {
             entity.HasIndex(e => new { e.IssueId, e.CreatedAt }, "IX_IssueActivities_Issue_CreatedAt");
+
+            entity.HasIndex(e => new { e.Kind, e.NewValue }, "IX_IssueActivities_Kind_NewValue");
 
             entity.Property(e => e.Kind).HasMaxLength(20);
             entity.Property(e => e.NewValue).HasMaxLength(500);

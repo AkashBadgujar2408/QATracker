@@ -1117,3 +1117,36 @@ Git Bash was quarantined once by the K7 antivirus during the session (restored);
 **Libraries added (licence):** `@playwright/test` 1.64.1 (Apache-2.0, dev dependency).
 
 **Next session:** S31 – UX polish & performance.
+---
+
+## S31 – UX polish & performance   (01-Nov-2026)
+
+**Done:**
+- Keyboard shortcuts: `?` help dialog (`app-shortcuts-dialog`, /dev/ui, user menu entry), `/` search, `g` + letter
+  navigation by role; the Testing screen's `n` ignores keys the shell already handled. Top-bar search now works
+  (key → issue, text → issue list) – it had stayed a disabled placeholder. ADR-041.
+- Consistency sweep: every page has loading / empty / error states (dashboards through `app-chart` / `app-kpi-card`);
+  unused `placeholder-page` removed; contrast fixed with new text tokens (`text-success/-danger/-warning`), muted text
+  and sprint chip colours, error texts `text-danger` in both themes; two ARIA fixes (comment box, user menu).
+- Performance: charts `@defer (on viewport)`; script 008 (6 indexes from the missing-index DMVs, one replaced) and
+  009 (READ_COMMITTED_SNAPSHOT) – applied locally, re-scaffolded (indexes only); `IssueListPerformanceTests`.
+- Found in the browser check: the shell's keydown listener returned `false` for ordinary keys, which Angular turns
+  into preventDefault() – no typing anywhere in the shell. Fixed (void wrapper) and the E2E retest flow now types the
+  issue key into the search with real keystrokes.
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 306/306 · `ng build` (initial 741 kB raw / 178 kB transfer) ·
+`ng test` 187/187 · `ng lint` · `npm run e2e` 4/4 (three runs this session, all green) · Lighthouse accessibility
+**100** on 14 main pages (tester + developer, light and dark; first run 92–100) · issue list < 500 ms with 1 000 of
+3 000 rows matching.
+
+**Deviations from plan:** Lighthouse was run with a scratch script (Lighthouse 12.8.2 from npx, not a project
+dependency) against the E2E database, not in CI. Bundle: +16 kB raw / +4.7 kB transfer (search, shortcuts, chunk
+re-split) – accepted, budget 1 MB.
+
+**Carry-over / known gaps:** the S29 flaky analytics test did not recur in this session's runs (RCSI should remove
+the cause – watch in S32). No phone layout for the shell (from S27b). Admin pages were not in the Lighthouse set (no
+admin password kept for the E2E DB). Local DB QaTracker_E2E is left with the last E2E data (recreated every run).
+
+**Libraries added (licence):** none (Lighthouse used via scratch install only).
+
+**Next session:** S32 – Deployment & handover.

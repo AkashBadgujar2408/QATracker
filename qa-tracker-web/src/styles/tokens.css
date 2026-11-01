@@ -54,7 +54,13 @@
   --qa-border: var(--qa-slate-200);
   --qa-border-strong: var(--qa-slate-400);
   --qa-text: var(--qa-slate-900);
-  --qa-text-muted: var(--qa-slate-500);
+  /* Between slate-500 and -600: 4.5:1 also on surface-muted (slate-500 gave 4.34:1 there – S31 Lighthouse). */
+  --qa-text-muted: #5b6b82;
+  /* Words in a status colour ("Verified on UAT", "Reopened 2×"): the status colours are for dots, bars and icons
+     (3:1 is enough there); text uses these 4.5:1 variants. */
+  --qa-text-success: #15803d;
+  --qa-text-danger: #b91c1c;
+  --qa-text-warning: #b45309;
   --qa-focus-ring: var(--qa-primary);
 
   /* Severity */
@@ -87,8 +93,9 @@
   --qa-chart-6: #eda100;
 
   /* Sprint state */
-  --qa-sprint-testing: #0ea5e9;
-  --qa-sprint-testing-completed: #6366f1;
+  /* 600/700 shades: also chip text on white (sky-500 / indigo-500 were 2.8:1 / 4.46:1). */
+  --qa-sprint-testing: #0369a1;
+  --qa-sprint-testing-completed: #4f46e5;
   --qa-sprint-closed: #64748b;
 
   /* Brand mark (same in both themes) */
@@ -147,6 +154,11 @@
   --qa-text-muted: var(--qa-slate-400);
   /* The light value is too dim on the dark surface for chip text (3.7:1) – slate-400 reads at 6.9:1. */
   --qa-sprint-closed: var(--qa-slate-400);
+  --qa-sprint-testing: #38bdf8;
+  --qa-sprint-testing-completed: #818cf8;
+  --qa-text-success: #4ade80;
+  --qa-text-danger: #f87171;
+  --qa-text-warning: #fbbf24;
   --qa-shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
   --qa-shadow-dialog: 0 10px 30px rgb(0 0 0 / 0.5);
   --qa-sidebar-bg: var(--qa-slate-950);

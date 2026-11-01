@@ -75,7 +75,7 @@ export abstract class ChartInputs {
         ></div>
       } @else if (error()) {
         <div class="qa-chart-state" role="alert" [style.height.px]="height()">
-          <p class="m-0 text-severity-critical">{{ error() }}</p>
+          <p class="m-0 text-danger">{{ error() }}</p>
           <button matButton="outlined" type="button" (click)="retry.emit()">Try again</button>
         </div>
       } @else if (!hasData()) {
@@ -108,15 +108,20 @@ export abstract class ChartInputs {
           </table>
         </div>
       } @else {
-        <div
-          echarts
-          class="w-full"
-          [style.height.px]="height()"
-          [options]="options()"
-          [autoResize]="true"
-          [class.qa-clickable]="clickable()"
-          (chartClick)="onClick($event)"
-        ></div>
+        <!-- Charts below the fold start ECharts only when scrolled near (S31); the table view needs no canvas. -->
+        @defer (on viewport; prefetch on idle) {
+          <div
+            echarts
+            class="w-full"
+            [style.height.px]="height()"
+            [options]="options()"
+            [autoResize]="true"
+            [class.qa-clickable]="clickable()"
+            (chartClick)="onClick($event)"
+          ></div>
+        } @placeholder {
+          <div class="qa-skeleton w-full rounded-card" [style.height.px]="height()"></div>
+        }
       }
     </div>
   `,

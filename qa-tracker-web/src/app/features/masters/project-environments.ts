@@ -136,7 +136,7 @@ export class ProjectEnvironments {
   protected typeClass(environment: ProjectEnvironment): string {
     switch (environment.type) {
       case 'LIVE':
-        return 'bg-status-verified/15 text-status-verified';
+        return 'bg-status-verified/15 text-success';
       case 'UAT':
         return 'bg-primary/10 text-primary';
       default:
