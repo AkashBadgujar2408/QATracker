@@ -32,7 +32,12 @@ try
     builder.Services.ConfigureHttpJsonOptions(options =>
         options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
+    builder.WebHost.ConfigureKestrel(kestrel => kestrel.AddServerHeader = false);
     builder.Services.AddProblemDetails();
+    builder.Services.AddExceptionHandler<BadRequestExceptionHandler>();
+    // Unreadable requests throw in every environment, so BadRequestExceptionHandler answers them as ProblemDetails
+    // (otherwise Production answers an empty 400 and Development a 500).
+    builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
     builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecurityTransformer>());
     builder.Services.AddHealthChecks();
     builder.Services.AddSignalR().AddJsonProtocol(options =>
@@ -56,7 +61,9 @@ try
         await scope.ServiceProvider.GetRequiredService<DatabaseSeeder>().SeedAsync(CancellationToken.None);
     }
 
+    app.UseSecurityHeaders();
     app.UseExceptionHandler();
+    app.UseRequestCharsetGuard();
     app.UseStatusCodePages();
     app.UseSerilogRequestLogging(options =>
         options.EnrichDiagnosticContext = (diagnostics, http) =>

@@ -21,4 +21,8 @@
     <ProjectReference Include="..\..\src\QaTracker.Api\QaTracker.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Security/endpoint-policies.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

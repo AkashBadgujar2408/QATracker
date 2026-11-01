@@ -68,6 +68,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Database:SeedOnStartup", "false");
         builder.UseSetting("Storage:Root", StorageRoot);
         builder.UseSetting("RateLimiting:LoginPermitLimit", "10000");
+        builder.UseSetting("RateLimiting:ApiPermitLimit", "1000000");
         // Mails are queued (and checked by the tests) but not sent; the SMTP port is closed on purpose.
         builder.UseSetting("Email:Enabled", "true");
         builder.UseSetting("Email:Workers", "false");

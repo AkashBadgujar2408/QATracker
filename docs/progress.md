@@ -1082,3 +1082,38 @@ needed). Invalid enum in JSON → 500 still open (S30).
 **Libraries added (licence):** none.
 
 **Next session:** S30 – Security & integration test pass.
+
+---
+
+## S30 – Security & integration test pass   (01-Nov-2026)
+
+**Done:**
+- Malformed bodies answer 400 ProblemDetails (`malformed_request`) instead of 500 – invalid enum value, non-UTF-8
+  bytes, truncated / non-JSON body, wrong types, unknown charset, unparsable query values (**open since S08 – closed**).
+  `BadRequestExceptionHandler`, `RequestCharsetGuard`, `ThrowOnBadRequest` in every environment. ADR-040.
+- Security headers on every response (`SecurityHeaders`), no Server banner; global per-user rate limit (600/min) and
+  the sign-in limit now also covers password change; 429 as ProblemDetails with Retry-After.
+- `SecurityTests` (15): anonymous sweep over every endpoint (401 except the reviewed public ones, hub negotiate too),
+  reviewed policy list for all 102 endpoints (`Security/endpoint-policies.txt`), developer / tester refused on 18
+  role-restricted calls across masters, sprints, issues, attachments, import, users, settings and mail, comment edit
+  by others (developer and admin → 403 `not_author`), six malformed-body cases + query values, headers, rate limits
+  (login, password change, API), upload names (path traversal stays a display name, random storage path, script
+  disguised as PNG refused). Existing ownership tests (notifications, signed attachment URLs) reviewed – kept.
+- Playwright E2E (`npm run e2e`): fresh `QaTracker_E2E` DB, API :5129, ng serve :4300, installed Chrome. Flows:
+  tester logs an issue with a pasted screenshot and marks testing completed → developer picks and marks it fixed on
+  UAT → tester passes it from the retest queue (Verified).
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 305/305 · `ng build` (initial 725 kB) · `ng test` 179/179 ·
+`ng lint` · `npm run e2e` 4/4 (setup + 3 flows, 1.4 min).
+
+**Deviations from plan:** 15.1 says Testcontainers – the suite keeps the `TestDatabase` fixture on .\SQLEXPRESS (as
+since S03). E2E is not part of `npm test` (needs SQL Express). Pick assigns and starts work in one step, so the
+developer flow has no separate "Start work".
+
+**Carry-over / known gaps:** `ng lint` does not cover `e2e/` (Prettier does). The flaky
+`AnalyticsTests.Endpoints_AnswerWithin800ms_On5000Issues` was not hit in this session's full run – S31 (performance).
+Git Bash was quarantined once by the K7 antivirus during the session (restored); later commands ran in PowerShell.
+
+**Libraries added (licence):** `@playwright/test` 1.64.1 (Apache-2.0, dev dependency).
+
+**Next session:** S31 – UX polish & performance.

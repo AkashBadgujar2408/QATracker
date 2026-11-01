@@ -49,6 +49,7 @@ public static class AuthEndpoints
         group.MapPost("/change-password", async (ChangePasswordCommand command, ChangePasswordHandler handler, HttpContext http, CancellationToken ct) =>
                 (await handler.HandleAsync(command, http.Request.Cookies[RefreshCookie.Name], ct)).ToHttp(session => SignIn(http, session)))
             .RequireAuthorization(Policies.SignedIn)
+            .RequireRateLimiting(AuthSetup.LoginRateLimitPolicy)
             .WithSummary("Change own password (also completes a forced change). Returns a fresh session.");
 
         return app;

@@ -54,18 +54,44 @@ public static class AuthSetup
             .SetFallbackPolicy(PasswordChanged(new AuthorizationPolicyBuilder()).Build());
 
         var loginPermitLimit = configuration.GetValue("RateLimiting:LoginPermitLimit", 10);
+        var apiPermitLimit = configuration.GetValue("RateLimiting:ApiPermitLimit", 600);
         services.AddRateLimiter(limiter =>
         {
             limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            // Sign-in and password change: per client address, so passwords cannot be guessed quickly.
             limiter.AddPolicy(LoginRateLimitPolicy, http => RateLimitPartition.GetFixedWindowLimiter(
                 http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = loginPermitLimit, Window = TimeSpan.FromMinutes(1) }));
-            limiter.OnRejected = (context, cancellationToken) =>
+
+            // Everything else: per signed-in user (else per address) – generous, it only stops runaway scripts.
+            // The SignalR hub keeps its long-lived connection outside the limit.
+            limiter.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(http =>
+                http.Request.Path.StartsWithSegments("/hubs")
+                    ? RateLimitPartition.GetNoLimiter("hub")
+                    : RateLimitPartition.GetFixedWindowLimiter(
+                        http.User.FindFirst(QaClaims.UserId)?.Value is { } userId
+                            ? $"user:{userId}"
+                            : $"ip:{http.Connection.RemoteIpAddress}",
+                        _ => new FixedWindowRateLimiterOptions { PermitLimit = apiPermitLimit, Window = TimeSpan.FromMinutes(1) }));
+
+            limiter.OnRejected = (context, _) =>
             {
-                context.HttpContext.Response.ContentType = "application/problem+json";
-                return new ValueTask(context.HttpContext.Response.WriteAsJsonAsync(
-                    new { title = "Too many requests", status = 429, detail = "Too many sign-in attempts. Wait a minute and try again." },
-                    cancellationToken));
+                var http = context.HttpContext;
+                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                {
+                    http.Response.Headers.RetryAfter = ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
+                }
+
+                var detail = http.Request.Path.StartsWithSegments("/api/auth")
+                    ? "Too many sign-in attempts. Wait a minute and try again."
+                    : "Too many requests. Wait a minute and try again.";
+                return new ValueTask(TypedResults.Problem(
+                        detail: detail,
+                        statusCode: StatusCodes.Status429TooManyRequests,
+                        title: "Too many requests",
+                        extensions: new Dictionary<string, object?> { ["code"] = "rate_limited" })
+                    .ExecuteAsync(http));
             };
         });
 

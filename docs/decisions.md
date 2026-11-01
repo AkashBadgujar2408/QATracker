@@ -670,3 +670,31 @@ new alerts/mails and background tasks configurable in the app; one database for 
   the close dialog offers "Start new sprint" (phase and environment carried over) and comes back with it as target.
   Live refresh on sprint/issue changes.
 - Dark theme: `--qa-sprint-closed` is slate-400 (contrast on the dark surface).
+
+## ADR-040 – Security pass and E2E tests (01-Nov-2026, S30)
+- **Unreadable requests → 400 ProblemDetails** (`code: malformed_request`), never 500: `RouteHandlerOptions.ThrowOnBadRequest`
+  is on in every environment and `BadRequestExceptionHandler` (IExceptionHandler) answers `BadHttpRequestException` –
+  invalid / truncated JSON, bytes that are not UTF-8, a wrong value type, an unknown enum value (body or query), a
+  route/query value that does not parse. A JSON error names the field (`errors.severity`); messages never contain
+  .NET type names. 413 stays 413. A Content-Type with an unknown charset is refused by `RequestCharsetGuard` before
+  binding (it would otherwise throw InvalidOperationException).
+- **Headers** (`SecurityHeaders`, every response): `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy: same-origin`, `Permissions-Policy` (camera, microphone,
+  geolocation, payment off), CSP `default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`
+  unless the endpoint sets its own (attachments) – not on /scalar and /openapi (Development). Kestrel's `Server` header
+  is off. HSTS + HTTPS redirect as before (outside Development).
+- **Rate limits**: sign-in **and password change** share the per-address policy (`RateLimiting:LoginPermitLimit`, 10/min);
+  a global fixed window per signed-in user (else per address), `RateLimiting:ApiPermitLimit` = 600/min, the SignalR hub
+  excluded. 429 is ProblemDetails `rate_limited` with `Retry-After`.
+- **Authorization inventory** (`SecurityTests`): every endpoint except the reviewed public ones (health, login, refresh,
+  logout, signed attachment URLs) answers 401 without a token; every endpoint's policy is compared with
+  `tests/.../Security/endpoint-policies.txt` – a new endpoint or a changed policy fails until the list is reviewed.
+  Endpoints open to every role (`Authenticated`) enforce ownership or the workflow in the handler (comment edit: author
+  only, also for admins; notifications: own; workflow: IssueWorkflow). Everyone may read every project (plan 4) – there
+  is no per-project read restriction, so IDOR here means ownership and role, not visibility.
+- **E2E** (Playwright `@playwright/test` 1.64.1, Apache-2.0; `npm run e2e` in qa-tracker-web): the installed Chrome
+  (channel `chrome`, no browser download); `e2e/start-api.ps1` drops and rebuilds `QaTracker_E2E` from database/scripts
+  and runs the API on :5129, `ng serve` on :4300 with `e2e/proxy.e2e.json` – the dev servers (5029 / 4200) can keep
+  running. Admin password and signing key are random per run (environment only). `seed.setup.ts` creates users and
+  masters through the API; `critical-flows.e2e.ts` runs the three flows of plan 15.1 serially on one issue through the UI.
+  Not part of `npm test` (needs SQL Express and ~1.5 min).
