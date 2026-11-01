@@ -18,6 +18,13 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    // Production secrets and server paths live in a JSON file outside the app folder, so a redeploy never touches
+    // them (ADR-042). The IIS app pool sets QATRACKER_SETTINGS (deploy/install-server.ps1).
+    if (Environment.GetEnvironmentVariable("QATRACKER_SETTINGS") is { Length: > 0 } serverSettings)
+    {
+        builder.Configuration.AddJsonFile(serverSettings, optional: false, reloadOnChange: false);
+    }
+
     // preserveStaticLogger: the bootstrap logger is not frozen, so several hosts (integration tests) can start.
     builder.Services.AddSerilog(
         (services, configuration) => configuration
@@ -39,7 +46,7 @@ try
     // (otherwise Production answers an empty 400 and Development a 500).
     builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
     builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecurityTransformer>());
-    builder.Services.AddHealthChecks();
+    builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
     builder.Services.AddSignalR().AddJsonProtocol(options =>
         options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
     builder.Services.AddSingleton<IRealtimePublisher, SignalRRealtimePublisher>();
@@ -81,6 +88,7 @@ try
     }
 
     app.UseHttpsRedirection();
+    app.UseWebAppFiles();
     app.UseAuthentication();
     app.UseAuthorization();
     app.UseRateLimiter();
@@ -101,6 +109,7 @@ try
     app.MapAnalyticsEndpoints();
     app.MapImportEndpoints();
     app.MapHub<TrackerHub>(TrackerHub.Path);
+    app.MapWebApp();
 
     await app.RunAsync();
 }

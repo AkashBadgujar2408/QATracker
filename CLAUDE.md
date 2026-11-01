@@ -54,6 +54,7 @@
 - Backend: `dotnet build` · `dotnet test` · `dotnet run --project src/QaTracker.Api` (http://localhost:5029, Scalar at /scalar)
 - Frontend (in qa-tracker-web): `npm start` (http://localhost:4200) · `npm run build` · `npm test -- --watch=false` · `npm run lint` · `npm run format` · `npm run e2e` (Playwright, fresh QaTracker_E2E DB, ADR-040)
 - DB: `.\database\apply-scripts.ps1`, then the scaffold command in `database/scaffold-command.txt` (add `--no-build` if code already uses the new columns).
+- Release / ops: `.\deploy\build-release.ps1` → zip in artifacts\release; server install, deploy, backup, restore in `deploy/README.md` (IIS, ADR-042). Production secrets live in the server's `QATRACKER_SETTINGS` file, never in the repo.
 
 ## Never
 - Add libraries without noting name + licence in docs/progress.md.

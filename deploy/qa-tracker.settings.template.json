@@ -1,0 +1,36 @@
+{
+  "_comment": "QA Tracker server settings (ADR-042). Lives outside the app folder; the IIS app pool points QATRACKER_SETTINGS here. Readable by Administrators, SYSTEM and the app pool only. install-server.ps1 fills the {{...}} values.",
+  "ConnectionStrings": {
+    "QaTracker": "Server={{SqlServer}};Database={{Database}};Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=False"
+  },
+  "Auth": {
+    "SigningKey": "{{SigningKey}}"
+  },
+  "Storage": {
+    "Root": "{{AttachmentsPath}}"
+  },
+  "Email": {
+    "AppBaseUrl": "{{AppBaseUrl}}",
+    "From": "{{MailFrom}}"
+  },
+  "Seed": {
+    "AdminUserName": "admin",
+    "AdminEmail": "{{AdminEmail}}",
+    "AdminFullName": "Administrator",
+    "AdminPassword": "{{AdminPassword}}"
+  },
+  "Serilog": {
+    "WriteTo": [
+      { "Name": "Console" },
+      {
+        "Name": "File",
+        "Args": {
+          "path": "{{LogPath}}",
+          "rollingInterval": "Day",
+          "retainedFileCountLimit": 30
+        }
+      }
+    ]
+  },
+  "AllowedHosts": "{{HostName}};localhost"
+}

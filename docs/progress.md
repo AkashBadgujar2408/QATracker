@@ -1150,3 +1150,49 @@ admin password kept for the E2E DB). Local DB QaTracker_E2E is left with the las
 **Libraries added (licence):** none (Lighthouse used via scratch install only).
 
 **Next session:** S32 – Deployment & handover.
+---
+
+## S32 – Deployment & handover   (01-Nov-2026)
+
+**Done:**
+- The API hosts the Angular build (`WebAppHosting`): one HTTPS site, deep links answer `index.html`, unknown `/api`
+  stays 404, hashed bundles cached for a year, page CSP with the hash of Angular's inline script computed at start-up.
+  Nothing changes in development / tests (no `wwwroot`). ADR-042.
+- Production configuration: `appsettings.Production.json` (seeding + mail on), server secrets and paths in the
+  `QATRACKER_SETTINGS` file outside the app folder; IIS `web.config` (in-process, WebSockets, 60 MB request limit, no
+  Server / X-Powered-By). `/health` checks the database (503 when it is down).
+- `deploy/`: `build-release.ps1` (tests → `ng build` → win-x64 publish → 41 MB zip), `install-server.ps1` (IIS
+  features, Hosting Bundle check, app pool AlwaysRunning + preload, HTTPS binding, folders + ACLs, settings file with
+  random JWT key and one-time admin password, DB scripts + least-privilege logins, firewall, nightly backup task),
+  `deploy.ps1` (pre-deploy backup, maintenance page, DB scripts, `app-previous`, mirror, smoke test, removes the
+  temporary admin password), `backup.ps1` (full backup WITH CHECKSUM + VERIFYONLY, attachments tar.gz, 14 days,
+  optional off-server copy), `restore.ps1` (live restore or side-by-side drill), `app_offline.htm`.
+- `deploy/README.md`: server prerequisites, build, install, deploy, **go-live checklist** (mail, users, masters,
+  workbook import, first backup check, Excel retired), rollback, backup / restore, day-to-day.
+- `WebAppHostingTests` (9): deep links + CSP hash, bundle caching, `/api` and `/hubs` never answered with the page,
+  POST outside the API, API/health unchanged, no fallback without a build.
+
+**Verified:** `dotnet build` 0 warnings · `dotnet test` 315/315 · `ng test` 187/187 · `ng lint` · deploy scripts parse
+in Windows PowerShell 5.1 · release zip built · **production trial**: the published release run with
+`ASPNETCORE_ENVIRONMENT=Production` + a settings file on a fresh DB (`QaTracker_ProdTrial`, from apply-scripts) –
+admin + reference data seeded, `/health` 200, Chrome: sign-in, forced password change, Overview dashboard, lazy
+chunks, font, SignalR negotiate, **no CSP violations** · `backup.ps1` against the trial DB (bak + VERIFYONLY + tar.gz)
+· `restore.ps1 -TargetDatabase` drill (row counts printed). Trial DBs dropped afterwards.
+
+**Deviations from plan:** IIS chosen, Docker not built (ADR-042). The trial ran on Kestrel (http://localhost), not
+IIS – IIS is not installed on the dev machine and the shell was not elevated, so `install-server.ps1`, `deploy.ps1`
+and the live branch of `restore.ps1` have only been parse-checked, not executed. `npm run e2e` not run (no
+frontend change).
+
+**Carry-over / known gaps (needs the real server – the card's "Done when" is not met yet):**
+- Run `install-server.ps1` + `deploy.ps1` on the office server (host name, certificate, SMTP relay to be decided),
+  fix whatever the first real run shows, then the go-live checklist: import the current Pardi Gears workbook into
+  production, create the real users, retire the Excel sheet. **Milestone M6** after that.
+- Pick the off-server backup target (`-BackupCopyTo`) and run the first restore drill on the server.
+- Unauthenticated requests to URLs without an endpoint (e.g. a missing `.js` file) answer 401 from the fallback
+  policy rather than 404 – harmless, kept.
+- From S31: no phone layout for the shell; admin pages not in the Lighthouse set.
+
+**Libraries added (licence):** none.
+
+**Next session:** go-live on the server (carry-over above), then post-launch fixes from the team's feedback.
